@@ -314,9 +314,11 @@ class DoubleToStringConverter {
   // DoubleToAscii expects the given buffer to be big enough to hold all
   // digits and a terminating null-character. In SHORTEST-mode it expects a
   // buffer of at least kBase10MaximalLength + 1. In all other modes the
-  // requested_digits parameter (+ 1 for the null-character) limits the size of
-  // the output. The given length is only used in debug mode to ensure the
-  // buffer is big enough.
+  // requested_digits parameter and the padding-zeroes limit the size of the
+  // output. Don't forget the decimal point, the exponent character and the
+  // terminating null-character when computing the maximal output size.
+  // The given length is only used in debug mode to ensure the buffer is big
+  // enough.
   static void DoubleToAscii(double v,
                             DtoaMode mode,
                             int requested_digits,
