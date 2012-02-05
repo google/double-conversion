@@ -285,7 +285,8 @@ class DoubleToStringConverter {
   // should be at least kBase10MaximalLength + 1 characters long.
   static const int kBase10MaximalLength = 17;
 
-  // Converts the given double 'v' to ascii.
+  // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
+  // -Infinity.
   // The result should be interpreted as buffer * 10^(point-length).
   //
   // The output depends on the given mode:
