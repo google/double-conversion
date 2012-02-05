@@ -4,10 +4,11 @@
 
 #include "cctest.h"
 #include "diy-fp.h"
-#include "double.h"
 #include "fast-dtoa.h"
 #include "gay-precision.h"
 #include "gay-shortest.h"
+#include "gay-shortest-single.h"
+#include "ieee.h"
 #include "utils.h"
 
 using namespace double_conversion;
@@ -93,6 +94,82 @@ TEST(FastDtoaShortestVariousDoubles) {
     CHECK_EQ("2225073858507201", buffer.start());
     CHECK_EQ(-307, point);
   }
+}
+
+
+TEST(FastDtoaShortestVariousFloats) {
+  char buffer_container[kBufferSize];
+  Vector<char> buffer(buffer_container, kBufferSize);
+  int length;
+  int point;
+  int status;
+
+  float min_float = 1e-45f;
+  status = FastDtoa(min_float, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("1", buffer.start());
+  CHECK_EQ(-44, point);
+
+
+  float max_float = 3.4028234e38f;
+  status = FastDtoa(max_float, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("34028235", buffer.start());
+  CHECK_EQ(39, point);
+
+  status = FastDtoa(4294967272.0f, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("42949673", buffer.start());
+  CHECK_EQ(10, point);
+
+  status = FastDtoa(3.32306998946228968226e+35f, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("332307", buffer.start());
+  CHECK_EQ(36, point);
+
+  status = FastDtoa(1.23405349260765015351e-41f, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("12341", buffer.start());
+  CHECK_EQ(-40, point);
+
+  status = FastDtoa(3.3554432e7, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("33554432", buffer.start());
+  CHECK_EQ(8, point);
+
+  status = FastDtoa(3.26494756798464e14f, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("32649476", buffer.start());
+  CHECK_EQ(15, point);
+
+  status = FastDtoa(3.91132223637771935344e37f, FAST_DTOA_SHORTEST_SINGLE, 0,
+                    buffer, &length, &point);
+  if (status) {  // Not all FastDtoa variants manage to compute this number.
+    CHECK_EQ("39113222", buffer.start());
+    CHECK_EQ(38, point);
+  }
+
+  uint32_t smallest_normal32 = 0x00800000;
+  float v = Single(smallest_normal32).value();
+  status = FastDtoa(v, FAST_DTOA_SHORTEST_SINGLE, 0, buffer, &length, &point);
+  if (status) {
+    CHECK_EQ("11754944", buffer.start());
+    CHECK_EQ(-37, point);
+  }
+
+  uint32_t largest_denormal32 = 0x007FFFFF;
+  v = Single(largest_denormal32).value();
+  status = FastDtoa(v, FAST_DTOA_SHORTEST_SINGLE, 0, buffer, &length, &point);
+  CHECK(status);
+  CHECK_EQ("11754942", buffer.start());
+  CHECK_EQ(-37, point);
 }
 
 
@@ -222,6 +299,35 @@ TEST(FastDtoaGayShortest) {
     CHECK_EQ(current_test.representation, buffer.start());
   }
   CHECK(succeeded*1.0/total > 0.99);
+  CHECK(needed_max_length);
+}
+
+
+TEST(FastDtoaGayShortestSingle) {
+  char buffer_container[kBufferSize];
+  Vector<char> buffer(buffer_container, kBufferSize);
+  bool status;
+  int length;
+  int point;
+  int succeeded = 0;
+  int total = 0;
+  bool needed_max_length = false;
+
+  Vector<const PrecomputedShortestSingle> precomputed =
+      PrecomputedShortestSingleRepresentations();
+  for (int i = 0; i < precomputed.length(); ++i) {
+    const PrecomputedShortestSingle current_test = precomputed[i];
+    total++;
+    float v = current_test.v;
+    status = FastDtoa(v, FAST_DTOA_SHORTEST_SINGLE, 0, buffer, &length, &point);
+    CHECK(kFastDtoaMaximalSingleLength >= length);
+    if (!status) continue;
+    if (length == kFastDtoaMaximalSingleLength) needed_max_length = true;
+    succeeded++;
+    CHECK_EQ(current_test.decimal_point, point);
+    CHECK_EQ(current_test.representation, buffer.start());
+  }
+  CHECK(succeeded*1.0/total > 0.98);
   CHECK(needed_max_length);
 }
 

@@ -30,10 +30,11 @@
 #include "double-conversion.h"
 
 #include "cctest.h"
-#include "double.h"
 #include "gay-fixed.h"
 #include "gay-precision.h"
 #include "gay-shortest.h"
+#include "gay-shortest-single.h"
+#include "ieee.h"
 
 
 using namespace double_conversion;
@@ -41,6 +42,7 @@ using namespace double_conversion;
 
 enum DtoaMode {
   SHORTEST,
+  SHORTEST_SINGLE,
   FIXED,
   PRECISION
 };
@@ -51,6 +53,9 @@ static void DoubleToAscii(double v, DtoaMode test_mode, int requested_digits,
   DoubleToStringConverter::DtoaMode mode = DoubleToStringConverter::SHORTEST;
   switch (test_mode) {
     case SHORTEST: mode = DoubleToStringConverter::SHORTEST; break;
+    case SHORTEST_SINGLE:
+        mode = DoubleToStringConverter::SHORTEST_SINGLE;
+        break;
     case FIXED: mode = DoubleToStringConverter::FIXED; break;
     case PRECISION: mode = DoubleToStringConverter::PRECISION; break;
   }
@@ -84,6 +89,10 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("0", buffer.start());
   CHECK_EQ(1, point);
 
+  DoubleToAscii(0.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("0", buffer.start());
+  CHECK_EQ(1, point);
+
   DoubleToAscii(0.0, FIXED, 2, buffer, &sign, &length, &point);
   CHECK_EQ(1, length);
   CHECK_EQ("0", buffer.start());
@@ -95,6 +104,10 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ(1, point);
 
   DoubleToAscii(1.0, SHORTEST, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("1", buffer.start());
+  CHECK_EQ(1, point);
+
+  DoubleToAscii(1.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
   CHECK_EQ("1", buffer.start());
   CHECK_EQ(1, point);
 
@@ -111,6 +124,10 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ(1, point);
 
   DoubleToAscii(1.5, SHORTEST, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("15", buffer.start());
+  CHECK_EQ(1, point);
+
+  DoubleToAscii(1.5f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
   CHECK_EQ("15", buffer.start());
   CHECK_EQ(1, point);
 
@@ -131,6 +148,11 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("5", buffer.start());
   CHECK_EQ(-323, point);
 
+  float min_float = 1e-45f;
+  DoubleToAscii(min_float, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("1", buffer.start());
+  CHECK_EQ(-44, point);
+
   DoubleToAscii(min_double, FIXED, 5, buffer, &sign, &length, &point);
   CHECK_GE(5, length - point);
   TrimRepresentation(buffer);
@@ -148,6 +170,12 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("17976931348623157", buffer.start());
   CHECK_EQ(309, point);
 
+  float max_float = 3.4028234e38f;
+  DoubleToAscii(max_float, SHORTEST_SINGLE, 0,
+                buffer, &sign, &length, &point);
+  CHECK_EQ("34028235", buffer.start());
+  CHECK_EQ(39, point);
+
   DoubleToAscii(max_double, PRECISION, 7, buffer, &sign, &length, &point);
   CHECK_GE(7, length);
   TrimRepresentation(buffer);
@@ -158,12 +186,15 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("4294967272", buffer.start());
   CHECK_EQ(10, point);
 
+  DoubleToAscii(4294967272.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("42949673", buffer.start());
+  CHECK_EQ(10, point);
+
   DoubleToAscii(4294967272.0, FIXED, 5, buffer, &sign, &length, &point);
   CHECK_GE(5, length - point);
   TrimRepresentation(buffer);
   CHECK_EQ("4294967272", buffer.start());
   CHECK_EQ(10, point);
-
 
   DoubleToAscii(4294967272.0, PRECISION, 14,
                 buffer, &sign, &length, &point);
@@ -202,6 +233,12 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("2147483648", buffer.start());
   CHECK_EQ(10, point);
 
+  DoubleToAscii(-2147483648.0, SHORTEST_SINGLE, 0,
+                buffer, &sign, &length, &point);
+  CHECK_EQ(1, sign);
+  CHECK_EQ("21474836", buffer.start());
+  CHECK_EQ(10, point);
+
 
   DoubleToAscii(-2147483648.0, FIXED, 2, buffer, &sign, &length, &point);
   CHECK_GE(2, length - point);
@@ -238,6 +275,12 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("22250738585072014", buffer.start());
   CHECK_EQ(-307, point);
 
+  uint32_t smallest_normal32 = 0x00800000;
+  float f = Single(smallest_normal32).value();
+  DoubleToAscii(f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("11754944", buffer.start());
+  CHECK_EQ(-37, point);
+
   DoubleToAscii(v, PRECISION, 20, buffer, &sign, &length, &point);
   CHECK_GE(20, length);
   TrimRepresentation(buffer);
@@ -249,6 +292,12 @@ TEST(DtoaVariousDoubles) {
   DoubleToAscii(v, SHORTEST, 0, buffer, &sign, &length, &point);
   CHECK_EQ("2225073858507201", buffer.start());
   CHECK_EQ(-307, point);
+
+  uint32_t largest_denormal32 = 0x007FFFFF;
+  f = Single(largest_denormal32).value();
+  DoubleToAscii(f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("11754942", buffer.start());
+  CHECK_EQ(-37, point);
 
   DoubleToAscii(v, PRECISION, 20, buffer, &sign, &length, &point);
   CHECK_GE(20, length);
@@ -265,6 +314,10 @@ TEST(DtoaVariousDoubles) {
   v = -3.9292015898194142585311918e-10;
   DoubleToAscii(v, SHORTEST, 0, buffer, &sign, &length, &point);
   CHECK_EQ("39292015898194143", buffer.start());
+
+  f = -3.9292015898194142585311918e-10f;
+  DoubleToAscii(f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("39292017", buffer.start());
 
   v = 4194304.0;
   DoubleToAscii(v, FIXED, 5, buffer, &sign, &length, &point);
@@ -298,6 +351,18 @@ TEST(DtoaSign) {
   CHECK(!sign);
 
   DoubleToAscii(-1.0, SHORTEST, 0, buffer, &sign, &length, &point);
+  CHECK(sign);
+
+  DoubleToAscii(0.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK(!sign);
+
+  DoubleToAscii(-0.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK(sign);
+
+  DoubleToAscii(1.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK(!sign);
+
+  DoubleToAscii(-1.0f, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
   CHECK(sign);
 
   DoubleToAscii(0.0, PRECISION, 1, buffer, &sign, &length, &point);
@@ -368,6 +433,26 @@ TEST(DtoaGayShortest) {
     const PrecomputedShortest current_test = precomputed[i];
     double v = current_test.v;
     DoubleToAscii(v, SHORTEST, 0, buffer, &sign, &length, &point);
+    CHECK(!sign);  // All precomputed numbers are positive.
+    CHECK_EQ(current_test.decimal_point, point);
+    CHECK_EQ(current_test.representation, buffer.start());
+  }
+}
+
+
+TEST(DtoaGayShortestSingle) {
+  char buffer_container[kBufferSize];
+  Vector<char> buffer(buffer_container, kBufferSize);
+  bool sign;
+  int length;
+  int point;
+
+  Vector<const PrecomputedShortestSingle> precomputed =
+      PrecomputedShortestSingleRepresentations();
+  for (int i = 0; i < precomputed.length(); ++i) {
+    const PrecomputedShortestSingle current_test = precomputed[i];
+    float v = current_test.v;
+    DoubleToAscii(v, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
     CHECK(!sign);  // All precomputed numbers are positive.
     CHECK_EQ(current_test.decimal_point, point);
     CHECK_EQ(current_test.representation, buffer.start());

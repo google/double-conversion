@@ -29,9 +29,9 @@
 
 
 #include "cctest.h"
-#include "double.h"
 #include "fixed-dtoa.h"
 #include "gay-fixed.h"
+#include "ieee.h"
 #include "utils.h"
 
 using namespace double_conversion;

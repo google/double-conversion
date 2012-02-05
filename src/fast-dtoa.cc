@@ -1,4 +1,4 @@
-// Copyright 2010 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -29,7 +29,7 @@
 
 #include "cached-powers.h"
 #include "diy-fp.h"
-#include "double.h"
+#include "ieee.h"
 
 namespace double_conversion {
 
@@ -241,7 +241,7 @@ static void BiggestPowerTen(uint32_t number,
                             int number_bits,
                             uint32_t* power,
                             int* exponent_plus_one) {
-  ASSERT(number < (static_cast<uint32_t>(1) << (number_bits + 1)));
+  ASSERT(number < (1u << (number_bits + 1)));
   // 1233/4096 is approximately 1/lg(10).
   int exponent_plus_one_guess = ((number_bits + 1) * 1233 >> 12);
   // We increment to skip over the first entry in the kPowersOf10 table.
@@ -516,6 +516,7 @@ static bool DigitGenCounted(DiyFp w,
 // digits might correctly yield 'v' when read again, the closest will be
 // computed.
 static bool Grisu3(double v,
+                   FastDtoaMode mode,
                    Vector<char> buffer,
                    int* length,
                    int* decimal_exponent) {
@@ -525,7 +526,13 @@ static bool Grisu3(double v,
   // boundary_minus and boundary_plus will round to v when convert to a double.
   // Grisu3 will never output representations that lie exactly on a boundary.
   DiyFp boundary_minus, boundary_plus;
-  Double(v).NormalizedBoundaries(&boundary_minus, &boundary_plus);
+  if (mode == FAST_DTOA_SHORTEST) {
+    Double(v).NormalizedBoundaries(&boundary_minus, &boundary_plus);
+  } else {
+    assert(mode == FAST_DTOA_SHORTEST_SINGLE);
+    float single_v = static_cast<float>(v);
+    Single(single_v).NormalizedBoundaries(&boundary_minus, &boundary_plus);
+  }
   ASSERT(boundary_plus.e() == w.e());
   DiyFp ten_mk;  // Cached power of ten: 10^-k
   int mk;        // -k
@@ -637,7 +644,8 @@ bool FastDtoa(double v,
   int decimal_exponent = 0;
   switch (mode) {
     case FAST_DTOA_SHORTEST:
-      result = Grisu3(v, buffer, length, &decimal_exponent);
+    case FAST_DTOA_SHORTEST_SINGLE:
+      result = Grisu3(v, mode, buffer, length, &decimal_exponent);
       break;
     case FAST_DTOA_PRECISION:
       result = Grisu3Counted(v, requested_digits,

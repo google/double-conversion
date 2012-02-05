@@ -1,4 +1,4 @@
-// Copyright 2010 the V8 project authors. All rights reserved.
+// Copyright 2011, the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -25,21 +25,20 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef DOUBLE_CONVERSION_STRTOD_H_
-#define DOUBLE_CONVERSION_STRTOD_H_
-
-#include "utils.h"
+#ifndef GAY_SHORTEST_SINGLE_H_
+#define GAY_SHORTEST_SINGLE_H_
 
 namespace double_conversion {
 
-// The buffer must only contain digits in the range [0-9]. It must not
-// contain a dot or a sign. It must not start with '0', and must not be empty.
-double Strtod(Vector<const char> buffer, int exponent);
+struct PrecomputedShortestSingle {
+  float v;
+  const char* representation;
+  int decimal_point;
+};
 
-// The buffer must only contain digits in the range [0-9]. It must not
-// contain a dot or a sign. It must not start with '0', and must not be empty.
-float Strtof(Vector<const char> buffer, int exponent);
+Vector<const PrecomputedShortestSingle>
+    PrecomputedShortestSingleRepresentations();
 
 }  // namespace double_conversion
 
-#endif  // DOUBLE_CONVERSION_STRTOD_H_
+#endif  // GAY_SHORTEST_SINGLE_H_

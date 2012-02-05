@@ -1,4 +1,4 @@
-// Copyright 2010 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -30,10 +30,11 @@
 #include "bignum-dtoa.h"
 
 #include "cctest.h"
-#include "double.h"
 #include "gay-fixed.h"
 #include "gay-precision.h"
 #include "gay-shortest.h"
+#include "gay-shortest-single.h"
+#include "ieee.h"
 #include "utils.h"
 
 using namespace double_conversion;
@@ -252,6 +253,69 @@ TEST(BignumDtoaVariousDoubles) {
 }
 
 
+TEST(BignumDtoaShortestVariousFloats) {
+  char buffer_container[kBufferSize];
+  Vector<char> buffer(buffer_container, kBufferSize);
+  int length;
+  int point;
+
+  float min_float = 1e-45f;
+  BignumDtoa(min_float, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("1", buffer.start());
+  CHECK_EQ(-44, point);
+
+
+  float max_float = 3.4028234e38f;
+  BignumDtoa(max_float, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("34028235", buffer.start());
+  CHECK_EQ(39, point);
+
+  BignumDtoa(4294967272.0f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("42949673", buffer.start());
+  CHECK_EQ(10, point);
+
+  BignumDtoa(3.32306998946228968226e+35f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("332307", buffer.start());
+  CHECK_EQ(36, point);
+
+  BignumDtoa(1.23405349260765015351e-41f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("12341", buffer.start());
+  CHECK_EQ(-40, point);
+
+  BignumDtoa(3.3554432e7, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("33554432", buffer.start());
+  CHECK_EQ(8, point);
+
+  BignumDtoa(3.26494756798464e14f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("32649476", buffer.start());
+  CHECK_EQ(15, point);
+
+  BignumDtoa(3.91132223637771935344e37f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+             buffer, &length, &point);
+  CHECK_EQ("39113222", buffer.start());
+  CHECK_EQ(38, point);
+
+  uint32_t smallest_normal32 = 0x00800000;
+  double v = Single(smallest_normal32).value();
+  BignumDtoa(v, BIGNUM_DTOA_SHORTEST_SINGLE, 0, buffer, &length, &point);
+  CHECK_EQ("11754944", buffer.start());
+  CHECK_EQ(-37, point);
+
+  uint32_t largest_denormal32 = 0x007FFFFF;
+  v = Single(largest_denormal32).value();
+  BignumDtoa(v, BIGNUM_DTOA_SHORTEST_SINGLE, 0, buffer, &length, &point);
+  CHECK_EQ("11754942", buffer.start());
+  CHECK_EQ(-37, point);
+}
+
+
 TEST(BignumDtoaGayShortest) {
   char buffer_container[kBufferSize];
   Vector<char> buffer(buffer_container, kBufferSize);
@@ -264,6 +328,24 @@ TEST(BignumDtoaGayShortest) {
     const PrecomputedShortest current_test = precomputed[i];
     double v = current_test.v;
     BignumDtoa(v, BIGNUM_DTOA_SHORTEST, 0, buffer, &length, &point);
+    CHECK_EQ(current_test.decimal_point, point);
+    CHECK_EQ(current_test.representation, buffer.start());
+  }
+}
+
+
+TEST(BignumDtoaGayShortestSingle) {
+  char buffer_container[kBufferSize];
+  Vector<char> buffer(buffer_container, kBufferSize);
+  int length;
+  int point;
+
+  Vector<const PrecomputedShortestSingle> precomputed =
+      PrecomputedShortestSingleRepresentations();
+  for (int i = 0; i < precomputed.length(); ++i) {
+    const PrecomputedShortestSingle current_test = precomputed[i];
+    float v = current_test.v;
+    BignumDtoa(v, BIGNUM_DTOA_SHORTEST_SINGLE, 0, buffer, &length, &point);
     CHECK_EQ(current_test.decimal_point, point);
     CHECK_EQ(current_test.representation, buffer.start());
   }

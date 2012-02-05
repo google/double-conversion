@@ -5,7 +5,7 @@
 #include "bignum.h"
 #include "cctest.h"
 #include "diy-fp.h"
-#include "double.h"
+#include "ieee.h"
 #include "strtod.h"
 #include "utils.h"
 
@@ -18,6 +18,11 @@ static Vector<const char> StringToVector(const char* str) {
 
 static double StrtodChar(const char* str, int exponent) {
   return Strtod(StringToVector(str), exponent);
+}
+
+
+static float StrtofChar(const char* str, int exponent) {
+  return Strtof(StringToVector(str), exponent);
 }
 
 
@@ -345,6 +350,223 @@ TEST(Strtod) {
 }
 
 
+TEST(Strtof) {
+  Vector<const char> vector;
+
+  vector = StringToVector("0");
+  CHECK_EQ(0.0f, Strtof(vector, 1));
+  CHECK_EQ(0.0f, Strtof(vector, 2));
+  CHECK_EQ(0.0f, Strtof(vector, -2));
+  CHECK_EQ(0.0f, Strtof(vector, -999));
+  CHECK_EQ(0.0f, Strtof(vector, +999));
+
+  vector = StringToVector("1");
+  CHECK_EQ(1.0f, Strtof(vector, 0));
+  CHECK_EQ(10.0f, Strtof(vector, 1));
+  CHECK_EQ(100.0f, Strtof(vector, 2));
+  CHECK_EQ(1e20f, Strtof(vector, 20));
+  CHECK_EQ(1e22f, Strtof(vector, 22));
+  CHECK_EQ(1e23f, Strtof(vector, 23));
+  CHECK_EQ(1e35f, Strtof(vector, 35));
+  CHECK_EQ(1e36f, Strtof(vector, 36));
+  CHECK_EQ(1e37f, Strtof(vector, 37));
+  CHECK_EQ(1e-1f, Strtof(vector, -1));
+  CHECK_EQ(1e-2f, Strtof(vector, -2));
+  CHECK_EQ(1e-5f, Strtof(vector, -5));
+  CHECK_EQ(1e-20f, Strtof(vector, -20));
+  CHECK_EQ(1e-22f, Strtof(vector, -22));
+  CHECK_EQ(1e-23f, Strtof(vector, -23));
+  CHECK_EQ(1e-25f, Strtof(vector, -25));
+  CHECK_EQ(1e-39f, Strtof(vector, -39));
+
+  vector = StringToVector("2");
+  CHECK_EQ(2.0f, Strtof(vector, 0));
+  CHECK_EQ(20.0f, Strtof(vector, 1));
+  CHECK_EQ(200.0f, Strtof(vector, 2));
+  CHECK_EQ(2e20f, Strtof(vector, 20));
+  CHECK_EQ(2e22f, Strtof(vector, 22));
+  CHECK_EQ(2e23f, Strtof(vector, 23));
+  CHECK_EQ(2e35f, Strtof(vector, 35));
+  CHECK_EQ(2e36f, Strtof(vector, 36));
+  CHECK_EQ(2e37f, Strtof(vector, 37));
+  CHECK_EQ(2e-1f, Strtof(vector, -1));
+  CHECK_EQ(2e-2f, Strtof(vector, -2));
+  CHECK_EQ(2e-5f, Strtof(vector, -5));
+  CHECK_EQ(2e-20f, Strtof(vector, -20));
+  CHECK_EQ(2e-22f, Strtof(vector, -22));
+  CHECK_EQ(2e-23f, Strtof(vector, -23));
+  CHECK_EQ(2e-25f, Strtof(vector, -25));
+  CHECK_EQ(2e-39f, Strtof(vector, -39));
+
+  vector = StringToVector("9");
+  CHECK_EQ(9.0f, Strtof(vector, 0));
+  CHECK_EQ(90.0f, Strtof(vector, 1));
+  CHECK_EQ(900.0f, Strtof(vector, 2));
+  CHECK_EQ(9e20f, Strtof(vector, 20));
+  CHECK_EQ(9e22f, Strtof(vector, 22));
+  CHECK_EQ(9e23f, Strtof(vector, 23));
+  CHECK_EQ(9e35f, Strtof(vector, 35));
+  CHECK_EQ(9e36f, Strtof(vector, 36));
+  CHECK_EQ(9e37f, Strtof(vector, 37));
+  CHECK_EQ(9e-1f, Strtof(vector, -1));
+  CHECK_EQ(9e-2f, Strtof(vector, -2));
+  CHECK_EQ(9e-5f, Strtof(vector, -5));
+  CHECK_EQ(9e-20f, Strtof(vector, -20));
+  CHECK_EQ(9e-22f, Strtof(vector, -22));
+  CHECK_EQ(9e-23f, Strtof(vector, -23));
+  CHECK_EQ(9e-25f, Strtof(vector, -25));
+  CHECK_EQ(9e-39f, Strtof(vector, -39));
+
+  vector = StringToVector("12345");
+  CHECK_EQ(12345.0f, Strtof(vector, 0));
+  CHECK_EQ(123450.0f, Strtof(vector, 1));
+  CHECK_EQ(1234500.0f, Strtof(vector, 2));
+  CHECK_EQ(12345e20f, Strtof(vector, 20));
+  CHECK_EQ(12345e22f, Strtof(vector, 22));
+  CHECK_EQ(12345e23f, Strtof(vector, 23));
+  CHECK_EQ(12345e30f, Strtof(vector, 30));
+  CHECK_EQ(12345e31f, Strtof(vector, 31));
+  CHECK_EQ(12345e32f, Strtof(vector, 32));
+  CHECK_EQ(12345e-1f, Strtof(vector, -1));
+  CHECK_EQ(12345e-2f, Strtof(vector, -2));
+  CHECK_EQ(12345e-5f, Strtof(vector, -5));
+  CHECK_EQ(12345e-20f, Strtof(vector, -20));
+  CHECK_EQ(12345e-22f, Strtof(vector, -22));
+  CHECK_EQ(12345e-23f, Strtof(vector, -23));
+  CHECK_EQ(12345e-25f, Strtof(vector, -25));
+  CHECK_EQ(12345e-39f, Strtof(vector, -39));
+
+  vector = StringToVector("12345678901234");
+  CHECK_EQ(12345678901234.0f, Strtof(vector, 0));
+  CHECK_EQ(123456789012340.0f, Strtof(vector, 1));
+  CHECK_EQ(1234567890123400.0f, Strtof(vector, 2));
+  CHECK_EQ(12345678901234e20f, Strtof(vector, 20));
+  CHECK_EQ(12345678901234e22f, Strtof(vector, 22));
+  CHECK_EQ(12345678901234e23f, Strtof(vector, 23));
+  CHECK_EQ(12345678901234e-1f, Strtof(vector, -1));
+  CHECK_EQ(12345678901234e-2f, Strtof(vector, -2));
+  CHECK_EQ(12345678901234e-5f, Strtof(vector, -5));
+  CHECK_EQ(12345678901234e-20f, Strtof(vector, -20));
+  CHECK_EQ(12345678901234e-22f, Strtof(vector, -22));
+  CHECK_EQ(12345678901234e-23f, Strtof(vector, -23));
+  CHECK_EQ(12345678901234e-25f, Strtof(vector, -25));
+  CHECK_EQ(12345678901234e-39f, Strtof(vector, -39));
+
+  vector = StringToVector("123456789012345");
+  CHECK_EQ(123456789012345.0f, Strtof(vector, 0));
+  CHECK_EQ(1234567890123450.0f, Strtof(vector, 1));
+  CHECK_EQ(12345678901234500.0f, Strtof(vector, 2));
+  CHECK_EQ(123456789012345e20f, Strtof(vector, 20));
+  CHECK_EQ(123456789012345e22f, Strtof(vector, 22));
+  CHECK_EQ(123456789012345e23f, Strtof(vector, 23));
+  CHECK_EQ(123456789012345e-1f, Strtof(vector, -1));
+  CHECK_EQ(123456789012345e-2f, Strtof(vector, -2));
+  CHECK_EQ(123456789012345e-5f, Strtof(vector, -5));
+  CHECK_EQ(123456789012345e-20f, Strtof(vector, -20));
+  CHECK_EQ(123456789012345e-22f, Strtof(vector, -22));
+  CHECK_EQ(123456789012345e-23f, Strtof(vector, -23));
+  CHECK_EQ(123456789012345e-25f, Strtof(vector, -25));
+  CHECK_EQ(123456789012345e-39f, Strtof(vector, -39));
+
+  CHECK_EQ(0.0f, StrtofChar("0", 12345));
+  CHECK_EQ(0.0f, StrtofChar("", 1324));
+  CHECK_EQ(0.0f, StrtofChar("000000000", 123));
+  CHECK_EQ(0.0f, StrtofChar("2", -324));
+  CHECK_EQ(1e-45f, StrtofChar("1", -45));
+  // It would be more readable to put non-zero literals on the left side (i.e.
+  //   CHECK_EQ(1e-46, StrtofChar("1", -45))), but then Gcc complains that
+  // they are truncated to zero.
+  CHECK_EQ(0.0f, StrtofChar("1", -46));
+  CHECK_EQ(0.0f, StrtofChar("1", -47));
+  CHECK_EQ(1e-45f, StrtofChar("1", -45));
+  CHECK_EQ(1e-45f, StrtofChar("8", -46));
+  CHECK_EQ(0.0f, StrtofChar("200000", -51));
+  CHECK_EQ(100000e-50f, StrtofChar("100000", -50));
+  CHECK_EQ(0.0f, StrtofChar("100000", -51));
+  CHECK_EQ(0.0f, StrtofChar("900000", -52));
+  CHECK_EQ(0.0f, StrtofChar("000000001", -47));
+  CHECK_EQ(0.0f, StrtofChar("000000001", -47));
+  CHECK_EQ(0.0f, StrtofChar("00000000200000", -51));
+  CHECK_EQ(800000e-50f, StrtofChar("000000800000", -50));
+  CHECK_EQ(0.0f, StrtofChar("00000000100000", -51));
+  CHECK_EQ(1e-45f, StrtofChar("00000000900000", -51));
+
+  // It would be more readable to put the literals (and not Double::Infinity())
+  // on the left side (i.e. CHECK_EQ(3e38, StrtofChar("3", 38))), but then Gcc
+  // complains that the floating constant exceeds range of 'double'.
+  CHECK_EQ(Single::Infinity(), StrtofChar("3", 39));
+  CHECK_EQ(3e38f, StrtofChar("3", 38));
+  CHECK_EQ(3401e35f, StrtofChar("3401", 35));
+  CHECK_EQ(3401e34f, StrtofChar("3401", 34));
+  CHECK_EQ(Single::Infinity(), StrtofChar("3410", 35));
+  CHECK_EQ(34e37f, StrtofChar("34", 37));
+  CHECK_EQ(Single::Infinity(), StrtofChar("0000001", 39));
+  CHECK_EQ(3401e35f, StrtofChar("0000003401", 35));
+  CHECK_EQ(3401e34f, StrtofChar("0000003401", 34));
+  CHECK_EQ(Single::Infinity(), StrtofChar("0000003410", 35));
+  CHECK_EQ(34e37f, StrtofChar("00000034", 37));
+  CHECK_EQ(1e38f, StrtofChar("100000", 33));
+  CHECK_EQ(3401e35f, StrtofChar("340100000", 30));
+  CHECK_EQ(3401e34f, StrtofChar("340100000", 29));
+  CHECK_EQ(Single::Infinity(), StrtofChar("341000000", 30));
+  CHECK_EQ(34e37f, StrtofChar("3400000", 32));
+  CHECK_EQ(1e38f, StrtofChar("00000100000", 33));
+  CHECK_EQ(3401e35f, StrtofChar("00000340100000", 30));
+  CHECK_EQ(3401e34f, StrtofChar("00000340100000", 29));
+  CHECK_EQ(Single::Infinity(), StrtofChar("00000341000000", 30));
+  CHECK_EQ(34e37f, StrtofChar("000003400000", 32));
+  CHECK_EQ(3.4028235676e+38f, StrtofChar("34028235676", 28));
+  CHECK_EQ(3.4028235677e+38f, StrtofChar("34028235677", 28));
+  CHECK_EQ(Single::Infinity(), StrtofChar("34028235678", 28));
+
+  // The following number is the result of 89255.0/1e-22. Both floating-point
+  // numbers can be accurately represented with doubles. However on Linux,x86
+  // the floating-point stack is set to 80bits and the double-rounding
+  // introduces an error.
+  CHECK_EQ(89255e-22f, StrtofChar("89255", -22));
+
+  // Boundary cases. Boundaries themselves should round to even.
+  //
+  // 0x4f012334 = 2166567936
+  //      next:   2166568192
+  //  boundary:   2166568064 should round down.
+  CHECK_EQ(2166567936.0f, StrtofChar("2166567936", 0));
+  CHECK_EQ(2166568192.0f, StrtofChar("2166568192", 0));
+  CHECK_EQ(2166567936.0f, StrtofChar("2166568064", 0));
+  CHECK_EQ(2166567936.0f, StrtofChar("216656806399999", -5));
+  CHECK_EQ(2166568192.0f, StrtofChar("216656806400001", -5));
+  // Verify that we don't double round.
+  // Get the boundary of the boundary.
+  CHECK_EQ(2.1665680640000002384185791015625e9, 2166568064.0);
+  CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
+  CHECK_EQ(2166568192.0f, StrtofChar("21665680640000002384185791015625", -22));
+
+  // 0x4fffffff = 8589934080
+  //      next:   8589934592
+  //  boundary:   8589934336 should round up.
+  CHECK_EQ(8589934080.0f, StrtofChar("8589934080", 0));
+  CHECK_EQ(8589934592.0f, StrtofChar("8589934592", 0));
+  CHECK_EQ(8589934592.0f, StrtofChar("8589934336", 0));
+  CHECK_EQ(8589934080.0f, StrtofChar("858993433599999", -5));
+  CHECK_EQ(8589934592.0f, StrtofChar("858993433600001", -5));
+  // Verify that we don't double round.
+  // Get the boundary of the boundary.
+  CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
+  CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
+  CHECK_EQ(8589934080.0f, StrtofChar("8589934335999999523162841796875", -21));
+
+  // 0x4f000000 = 2147483648
+  //      next:   2147483904
+  //  boundary:   2147483776 should round down.
+  CHECK_EQ(2147483648.0f, StrtofChar("2147483648", 0));
+  CHECK_EQ(2147483904.0f, StrtofChar("2147483904", 0));
+  CHECK_EQ(2147483648.0f, StrtofChar("2147483776", 0));
+  CHECK_EQ(2147483648.0f, StrtofChar("214748377599999", -5));
+  CHECK_EQ(2147483904.0f, StrtofChar("214748377600001", -5));
+
+}
+
+
 static int CompareBignumToDiyFp(const Bignum& bignum_digits,
                                 int bignum_exponent,
                                 DiyFp diy_fp) {
@@ -447,6 +669,73 @@ TEST(RandomStrtod) {
       Vector<const char> vector(buffer, pos);
       double strtod_result = Strtod(vector, exponent);
       CHECK(CheckDouble(vector, exponent, strtod_result));
+    }
+  }
+}
+
+
+static bool CheckFloat(Vector<const char> buffer,
+                        int exponent,
+                        float to_check) {
+  DiyFp lower_boundary;
+  DiyFp upper_boundary;
+  Bignum input_digits;
+  input_digits.AssignDecimalString(buffer);
+  if (to_check == 0.0) {
+    const float kMinFloat = 1e-45f;
+    // Check that the buffer*10^exponent < (0 + kMinFloat)/2.
+    Single s(kMinFloat);
+    s.NormalizedBoundaries(&lower_boundary, &upper_boundary);
+    return CompareBignumToDiyFp(input_digits, exponent, lower_boundary) <= 0;
+  }
+  if (to_check == static_cast<float>(Double::Infinity())) {
+    const float kMaxFloat = 3.4028234e38f;
+    // Check that the buffer*10^exponent >= boundary between kMaxFloat and inf.
+    Single s(kMaxFloat);
+    s.NormalizedBoundaries(&lower_boundary, &upper_boundary);
+    return CompareBignumToDiyFp(input_digits, exponent, upper_boundary) >= 0;
+  }
+  Single s(to_check);
+  s.NormalizedBoundaries(&lower_boundary, &upper_boundary);
+  if ((s.Significand() & 1) == 0) {
+    return CompareBignumToDiyFp(input_digits, exponent, lower_boundary) >= 0 &&
+        CompareBignumToDiyFp(input_digits, exponent, upper_boundary) <= 0;
+  } else {
+    return CompareBignumToDiyFp(input_digits, exponent, lower_boundary) > 0 &&
+        CompareBignumToDiyFp(input_digits, exponent, upper_boundary) < 0;
+  }
+}
+
+
+static const int kShortStrtofRandomCount = 2;
+static const int kLargeStrtofRandomCount = 2;
+
+TEST(RandomStrtof) {
+  char buffer[kBufferSize];
+  for (int length = 1; length < 15; length++) {
+    for (int i = 0; i < kShortStrtofRandomCount; ++i) {
+      int pos = 0;
+      for (int j = 0; j < length; ++j) {
+        buffer[pos++] = random() % 10 + '0';
+      }
+      int exponent = DeterministicRandom() % (5*2 + 1) - 5 - length;
+      buffer[pos] = '\0';
+      Vector<const char> vector(buffer, pos);
+      float strtof_result = Strtof(vector, exponent);
+      CHECK(CheckFloat(vector, exponent, strtof_result));
+    }
+  }
+  for (int length = 15; length < 800; length += 2) {
+    for (int i = 0; i < kLargeStrtofRandomCount; ++i) {
+      int pos = 0;
+      for (int j = 0; j < length; ++j) {
+        buffer[pos++] = random() % 10 + '0';
+      }
+      int exponent = DeterministicRandom() % (38*2 + 1) - 38 - length;
+      buffer[pos] = '\0';
+      Vector<const char> vector(buffer, pos);
+      float strtof_result = Strtof(vector, exponent);
+      CHECK(CheckFloat(vector, exponent, strtof_result));
     }
   }
 }

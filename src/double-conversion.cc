@@ -31,9 +31,9 @@
 #include "double-conversion.h"
 
 #include "bignum-dtoa.h"
-#include "double.h"
 #include "fast-dtoa.h"
 #include "fixed-dtoa.h"
+#include "ieee.h"
 #include "strtod.h"
 #include "utils.h"
 
@@ -157,8 +157,11 @@ void DoubleToStringConverter::CreateDecimalRepresentation(
 }
 
 
-bool DoubleToStringConverter::ToShortest(double value,
-                                         StringBuilder* result_builder) const {
+bool DoubleToStringConverter::ToShortestIeeeNumber(
+    double value,
+    StringBuilder* result_builder,
+    DoubleToStringConverter::DtoaMode mode) const {
+  assert(mode == SHORTEST || mode == SHORTEST_SINGLE);
   if (Double(value).IsSpecial()) {
     return HandleSpecialValues(value, result_builder);
   }
@@ -169,7 +172,7 @@ bool DoubleToStringConverter::ToShortest(double value,
   char decimal_rep[kDecimalRepCapacity];
   int decimal_rep_length;
 
-  DoubleToAscii(value, SHORTEST, 0, decimal_rep, kDecimalRepCapacity,
+  DoubleToAscii(value, mode, 0, decimal_rep, kDecimalRepCapacity,
                 &sign, &decimal_rep_length, &decimal_point);
 
   bool unique_zero = (flags_ & UNIQUE_ZERO) != 0;
@@ -338,6 +341,8 @@ static BignumDtoaMode DtoaToBignumDtoaMode(
     DoubleToStringConverter::DtoaMode dtoa_mode) {
   switch (dtoa_mode) {
     case DoubleToStringConverter::SHORTEST:  return BIGNUM_DTOA_SHORTEST;
+    case DoubleToStringConverter::SHORTEST_SINGLE:
+        return BIGNUM_DTOA_SHORTEST_SINGLE;
     case DoubleToStringConverter::FIXED:     return BIGNUM_DTOA_FIXED;
     case DoubleToStringConverter::PRECISION: return BIGNUM_DTOA_PRECISION;
     default:
@@ -357,7 +362,7 @@ void DoubleToStringConverter::DoubleToAscii(double v,
                                             int* point) {
   Vector<char> vector(buffer, buffer_length);
   ASSERT(!Double(v).IsSpecial());
-  ASSERT(mode == SHORTEST || requested_digits >= 0);
+  ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
 
   if (Double(v).Sign() < 0) {
     *sign = true;
@@ -384,6 +389,10 @@ void DoubleToStringConverter::DoubleToAscii(double v,
   switch (mode) {
     case SHORTEST:
       fast_worked = FastDtoa(v, FAST_DTOA_SHORTEST, 0, vector, length, point);
+      break;
+    case SHORTEST_SINGLE:
+      fast_worked = FastDtoa(v, FAST_DTOA_SHORTEST_SINGLE, 0,
+                             vector, length, point);
       break;
     case FIXED:
       fast_worked = FastFixedDtoa(v, requested_digits, vector, length, point);
@@ -454,13 +463,18 @@ static double SignedZero(bool sign) {
 
 // Parsing integers with radix 2, 4, 8, 16, 32. Assumes current != end.
 template <int radix_log_2>
-static double RadixStringToDouble(const char* current,
-                                  const char* end,
-                                  bool sign,
-                                  bool allow_trailing_junk,
-                                  double junk_string_value,
-                                  const char** trailing_pointer) {
+static double RadixStringToIeee(const char* current,
+                                const char* end,
+                                bool sign,
+                                bool allow_trailing_junk,
+                                double junk_string_value,
+                                bool read_as_double,
+                                const char** trailing_pointer) {
   ASSERT(current != end);
+
+  const int kDoubleSize = Double::kSignificandSize;
+  const int kSingleSize = Single::kSignificandSize;
+  const int kSignificandSize = read_as_double? kDoubleSize: kSingleSize;
 
   // Skip leading 0s.
   while (*current == '0') {
@@ -492,7 +506,7 @@ static double RadixStringToDouble(const char* current,
     }
 
     number = number * radix + digit;
-    int overflow = static_cast<int>(number >> 53);
+    int overflow = static_cast<int>(number >> kSignificandSize);
     if (overflow != 0) {
       // Overflow occurred. Need to determine which direction to round the
       // result.
@@ -531,7 +545,7 @@ static double RadixStringToDouble(const char* current,
       }
 
       // Rounding up may cause overflow.
-      if ((number & ((int64_t)1 << 53)) != 0) {
+      if ((number & ((int64_t)1 << kSignificandSize)) != 0) {
         exponent++;
         number >>= 1;
       }
@@ -540,7 +554,7 @@ static double RadixStringToDouble(const char* current,
     ++current;
   } while (current != end);
 
-  ASSERT(number < ((int64_t)1 << 53));
+  ASSERT(number < ((int64_t)1 << kSignificandSize));
   ASSERT(static_cast<int64_t>(static_cast<double>(number)) == number);
 
   *trailing_pointer = current;
@@ -558,10 +572,11 @@ static double RadixStringToDouble(const char* current,
 }
 
 
-double StringToDoubleConverter::StringToDouble(
+double StringToDoubleConverter::StringToIeee(
     const char* input,
     int length,
-    int* processed_characters_count) {
+    int* processed_characters_count,
+    bool read_as_double) {
   const char* current = input;
   const char* end = input + length;
 
@@ -675,12 +690,13 @@ double StringToDoubleConverter::StringToDouble(
       }
 
       const char* tail_pointer = NULL;
-      double result = RadixStringToDouble<4>(current,
-                                             end,
-                                             sign,
-                                             allow_trailing_junk,
-                                             junk_string_value_,
-                                             &tail_pointer);
+      double result = RadixStringToIeee<4>(current,
+                                           end,
+                                           sign,
+                                           allow_trailing_junk,
+                                           junk_string_value_,
+                                           read_as_double,
+                                           &tail_pointer);
       if (tail_pointer != NULL) {
         if (allow_trailing_spaces) AdvanceToNonspace(&tail_pointer, end);
         *processed_characters_count = tail_pointer - input;
@@ -839,12 +855,13 @@ double StringToDoubleConverter::StringToDouble(
   if (octal) {
     double result;
     const char* tail_pointer = NULL;
-    result = RadixStringToDouble<3>(buffer,
-                                    buffer + buffer_pos,
-                                    sign,
-                                    allow_trailing_junk,
-                                    junk_string_value_,
-                                    &tail_pointer);
+    result = RadixStringToIeee<3>(buffer,
+                                  buffer + buffer_pos,
+                                  sign,
+                                  allow_trailing_junk,
+                                  junk_string_value_,
+                                  read_as_double,
+                                  &tail_pointer);
     ASSERT(tail_pointer != NULL);
     *processed_characters_count = current - input;
     return result;
@@ -858,7 +875,12 @@ double StringToDoubleConverter::StringToDouble(
   ASSERT(buffer_pos < kBufferSize);
   buffer[buffer_pos] = '\0';
 
-  double converted = Strtod(Vector<const char>(buffer, buffer_pos), exponent);
+  double converted;
+  if (read_as_double) {
+    converted = Strtod(Vector<const char>(buffer, buffer_pos), exponent);
+  } else {
+    converted = Strtof(Vector<const char>(buffer, buffer_pos), exponent);
+  }
   *processed_characters_count = current - input;
   return sign? -converted: converted;
 }

@@ -28,7 +28,7 @@
 #include <math.h>
 
 #include "fixed-dtoa.h"
-#include "double.h"
+#include "ieee.h"
 
 namespace double_conversion {
 

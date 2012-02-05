@@ -1,10 +1,10 @@
-// Copyright 2010 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 
 #include <string.h>
 
 #include "cctest.h"
-#include "double.h"
 #include "double-conversion.h"
+#include "ieee.h"
 #include "utils.h"
 
 // DoubleToString is already tested in test-dtoa.cc.
@@ -164,6 +164,162 @@ TEST(DoubleToShortest) {
 
   builder.Reset();
   CHECK(dc6.ToShortest(-Double::NaN(), &builder));
+  CHECK_EQ("NaN", builder.Finalize());
+}
+
+
+TEST(DoubleToShortestSingle) {
+  const int kBufferSize = 128;
+  char buffer[kBufferSize];
+  StringBuilder builder(buffer, kBufferSize);
+  int flags = DoubleToStringConverter::UNIQUE_ZERO |
+      DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN;
+  DoubleToStringConverter dc(flags, NULL, NULL, 'e', -6, 21, 0, 0);
+
+  CHECK(dc.ToShortestSingle(0.0f, &builder));
+  CHECK_EQ("0", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(12345.0f, &builder));
+  CHECK_EQ("12345", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(12345e23f, &builder));
+  CHECK_EQ("1.2345e+27", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(1e21f, &builder));
+  CHECK_EQ("1e+21", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(1e20f, &builder));
+  CHECK_EQ("100000000000000000000", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(111111111111111111111.0f, &builder));
+  CHECK_EQ("111111110000000000000", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(1111111111111111111111.0f, &builder));
+  CHECK_EQ("1.11111114e+21", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(11111111111111111111111.0f, &builder));
+  CHECK_EQ("1.1111111e+22", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(-0.00001f, &builder));
+  CHECK_EQ("-0.00001", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(-0.000001f, &builder));
+  CHECK_EQ("-0.000001", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(-0.0000001f, &builder));
+  CHECK_EQ("-1e-7", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToShortestSingle(-0.0f, &builder));
+  CHECK_EQ("0", builder.Finalize());
+
+  flags = DoubleToStringConverter::NO_FLAGS;
+  DoubleToStringConverter dc2(flags, NULL, NULL, 'e', -1, 1, 0, 0);
+  builder.Reset();
+  CHECK(dc2.ToShortestSingle(0.1f, &builder));
+  CHECK_EQ("0.1", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc2.ToShortestSingle(0.01f, &builder));
+  CHECK_EQ("1e-2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc2.ToShortestSingle(1.0f, &builder));
+  CHECK_EQ("1", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc2.ToShortestSingle(10.0f, &builder));
+  CHECK_EQ("1e1", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc2.ToShortestSingle(-0.0f, &builder));
+  CHECK_EQ("-0", builder.Finalize());
+
+  flags = DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
+      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT;
+  DoubleToStringConverter dc3(flags, NULL, NULL, 'E', -5, 5, 0, 0);
+
+  builder.Reset();
+  CHECK(dc3.ToShortestSingle(0.1f, &builder));
+  CHECK_EQ("0.1", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc3.ToShortestSingle(1.0f, &builder));
+  CHECK_EQ("1.0", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc3.ToShortestSingle(10000.0f, &builder));
+  CHECK_EQ("10000.0", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc3.ToShortestSingle(100000.0f, &builder));
+  CHECK_EQ("1E5", builder.Finalize());
+
+  // Test the examples in the comments of ToShortestSingle.
+  flags = DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN;
+  DoubleToStringConverter dc4(flags, NULL, NULL, 'e', -6, 21, 0, 0);
+
+  builder.Reset();
+  CHECK(dc4.ToShortestSingle(0.000001f, &builder));
+  CHECK_EQ("0.000001", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc4.ToShortestSingle(0.0000001f, &builder));
+  CHECK_EQ("1e-7", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc4.ToShortestSingle(111111111111111111111.0f, &builder));
+  CHECK_EQ("111111110000000000000", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc4.ToShortestSingle(100000000000000000000.0f, &builder));
+  CHECK_EQ("100000000000000000000", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc4.ToShortestSingle(1111111111111111111111.0f, &builder));
+  CHECK_EQ("1.11111114e+21", builder.Finalize());
+
+  // Test special value handling.
+  DoubleToStringConverter dc5(flags, NULL, NULL, 'e', 0, 0, 0, 0);
+
+  builder.Reset();
+  CHECK(!dc5.ToShortestSingle(Single::Infinity(), &builder));
+
+  builder.Reset();
+  CHECK(!dc5.ToShortestSingle(-Single::Infinity(), &builder));
+
+  builder.Reset();
+  CHECK(!dc5.ToShortestSingle(Single::NaN(), &builder));
+
+  builder.Reset();
+  CHECK(!dc5.ToShortestSingle(-Single::NaN(), &builder));
+
+  DoubleToStringConverter dc6(flags, "Infinity", "NaN", 'e', 0, 0, 0, 0);
+
+  builder.Reset();
+  CHECK(dc6.ToShortestSingle(Single::Infinity(), &builder));
+  CHECK_EQ("Infinity", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc6.ToShortestSingle(-Single::Infinity(), &builder));
+  CHECK_EQ("-Infinity", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc6.ToShortestSingle(Single::NaN(), &builder));
+  CHECK_EQ("NaN", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc6.ToShortestSingle(-Single::NaN(), &builder));
   CHECK_EQ("NaN", builder.Finalize());
 }
 
@@ -1568,7 +1724,8 @@ static double StrToD(const char* str, int flags, double empty_string_value,
                                     NULL, NULL);
   double result = converter.StringToDouble(str, strlen(str),
                                            processed_characters_count);
-  *processed_all = ((strlen(str) == *processed_characters_count));
+  *processed_all =
+      ((strlen(str) == static_cast<unsigned>(*processed_characters_count)));
   return result;
 }
 
@@ -3036,4 +3193,1379 @@ TEST(StringToDoubleCommentExamples) {
 
   CHECK_EQ(Double::NaN(), StrToD("NaN", flags, 0.0, &processed, &all_used));
   CHECK_EQ(0, processed);
+}
+
+
+static float StrToF(const char* str, int flags, float empty_string_value,
+                    int* processed_characters_count, bool* processed_all) {
+  StringToDoubleConverter converter(flags, empty_string_value, Single::NaN(),
+                                    NULL, NULL);
+  float result = converter.StringToFloat(str, strlen(str),
+                                         processed_characters_count);
+  *processed_all =
+      ((strlen(str) == static_cast<unsigned>(*processed_characters_count)));
+  return result;
+}
+
+
+TEST(StringToFloatVarious) {
+  int flags;
+  int processed;
+  bool all_used;
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES;
+
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("  ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("  ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF("42", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF(" + 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-42.0f, StrToF(" - 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToF("x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("42x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" + 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" - 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("  ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("  ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF("42", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF(" + 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-42.0f, StrToF(" - 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToF("x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(42.0f, StrToF("42x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(42.0f, StrToF("42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(42.0f, StrToF(" + 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(6, processed);
+
+  CHECK_EQ(-42.0f, StrToF(" - 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(6, processed);
+
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("  ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("  ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF("42", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF(" + 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(5, processed);
+
+  CHECK_EQ(-42.0f, StrToF(" - 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(5, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(42.0f, StrToF("42x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(42.0f, StrToF("42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(42.0f, StrToF(" + 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(5, processed);
+
+  CHECK_EQ(-42.0f, StrToF(" - 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(5, processed);
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+
+  CHECK_EQ(42.0f, StrToF(" +42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(4, processed);
+
+  CHECK_EQ(-42.0f, StrToF(" -42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(4, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" + 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" - 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+
+  flags = StringToDoubleConverter::NO_FLAGS;
+
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToF("  ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("  ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(42.0f, StrToF("42", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToF(" + 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" - 42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" x", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("42x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF("42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" + 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToF(" - 42 x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES;
+
+  CHECK_EQ(0.0f, StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF(" 42", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToF("42 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+
+  flags = StringToDoubleConverter::ALLOW_TRAILING_SPACES;
+
+  CHECK_EQ(0.0f, StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(42.0f, StrToF("42 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToF(" 42", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+}
+
+TEST(StringToFloatEmptyString) {
+  int flags;
+  int processed;
+  bool all_used;
+
+  flags = StringToDoubleConverter::NO_FLAGS;
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN;
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES;
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  flags = StringToDoubleConverter::ALLOW_TRAILING_SPACES;
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+  CHECK_EQ(0.0f, StrToF("", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.0f, StrToF("", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" x", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+}
+
+TEST(StringToFloatHexString) {
+  int flags;
+  int processed;
+  bool all_used;
+  double d;
+  float f;
+
+  flags = StringToDoubleConverter::ALLOW_HEX |
+      StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN;
+
+  // Check that no double rounding occurs:
+  const char* double_rounding_example1 = "0x100000100000008";
+  d = StrToD(double_rounding_example1, flags, 0.0, &processed, &all_used);
+  f = StrToF(double_rounding_example1, flags, 0.0f, &processed, &all_used);
+  CHECK(f != static_cast<float>(d));
+  CHECK_EQ(72057602627862528.0f, StrToF(double_rounding_example1,
+                                        flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  const char* double_rounding_example2 = "0x1000002FFFFFFF8";
+  d = StrToD(double_rounding_example2, flags, 0.0, &processed, &all_used);
+  f = StrToF(double_rounding_example2, flags, 0.0f, &processed, &all_used);
+  CHECK(f != static_cast<float>(d));
+  CHECK_EQ(72057602627862528.0f, StrToF(double_rounding_example2,
+                                        flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(18.0f, StrToF("0x12", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x0", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF("0x123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(18.0f, StrToF(" 0x12 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" 0x0 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF(" 0x123456789 ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xabcdef", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xABCDEF", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF(" 0xabcdef ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF(" 0xABCDEF ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x ", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x 3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3g", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3.23", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("x3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3 foo", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x3 foo", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ 0x3 foo", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("-", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(-5.0f, StrToF("-0x5", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-5.0f, StrToF(" - 0x5 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(5.0f, StrToF(" + 0x5 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("- -0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_HEX;
+
+  CHECK_EQ(18.0f, StrToF("0x12", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x0", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF("0x123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x12 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x0 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x123456789 ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xabcdef", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xABCDEF", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0xabcdef ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0xABCDEF ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x ", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x 3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3g", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3.23", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("x3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ 0x3 foo", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("-", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(-5.0f, StrToF("-0x5", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" - 0x5 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" + 0x5 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- -0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
+      StringToDoubleConverter::ALLOW_HEX;
+
+  CHECK_EQ(18.0f, StrToF("0x12", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x0", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF("0x123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x12 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x0 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(18.0f, StrToF("0x12 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(4, processed);
+
+  CHECK_EQ(0.0f, StrToF("0x0 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0x123456789 ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xabcdef", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xABCDEF", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0xabcdef ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0xABCDEF ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xabcdef ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xABCDEF ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0xabcdef", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0xABCDEF", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x ", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x 3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(3.0f, StrToF("0x3g", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(3.0f, StrToF("0x3.234", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x3g", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0x3.234", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("x3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ 0x3 foo", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("-", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(-5.0f, StrToF("-0x5", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" - 0x5 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" + 0x5 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- -0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
+      StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN |
+      StringToDoubleConverter::ALLOW_HEX;
+
+  CHECK_EQ(18.0f, StrToF("0x12", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x0", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF("0x123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(18.0f, StrToF(" 0x12 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" 0x0 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF(" 0x123456789 ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xabcdef", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF("0xABCDEF", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF(" 0xabcdef ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabcdef),
+           StrToF(" 0xABCDEF ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0xabc),
+           StrToF(" 0xabc def ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(7, processed);
+
+  CHECK_EQ(static_cast<float>(0xabc),
+           StrToF(" 0xABC DEF ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(7, processed);
+
+  CHECK_EQ(static_cast<float>(0x12),
+           StrToF(" 0x12 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" 0x0 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(static_cast<float>(0x123456789),
+           StrToF(" 0x123456789 ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x ", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x 3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ((float)0x3, StrToF("0x3g", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ((float)0x3, StrToF("0x3.234", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("x3", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+}
+
+
+TEST(StringToFloatOctalString) {
+  int flags;
+  int processed;
+  bool all_used;
+  double d;
+  float f;
+
+  flags = StringToDoubleConverter::ALLOW_OCTALS |
+      StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN;
+
+  // Check that no double rounding occurs:
+  const char* double_rounding_example1 = "04000000040000000010";
+  d = StrToD(double_rounding_example1, flags, 0.0, &processed, &all_used);
+  f = StrToF(double_rounding_example1, flags, 0.0f, &processed, &all_used);
+  CHECK(f != static_cast<float>(d));
+  CHECK_EQ(72057602627862528.0f, StrToF(double_rounding_example1,
+                                        flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  const char* double_rounding_example2 = "04000000137777777770";
+  d = StrToD(double_rounding_example2, flags, 0.0, &processed, &all_used);
+  f = StrToF(double_rounding_example2, flags, 0.0f, &processed, &all_used);
+  CHECK(f != static_cast<float>(d));
+  CHECK_EQ(72057602627862528.0f, StrToF(double_rounding_example2,
+                                        flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("00", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF(" 012", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" 00", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF(" 012", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF(" 0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF(" 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF(" + 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF(" - 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF(" 012 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF(" 00 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF(" 012 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF(" 0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF(" 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF(" + 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF(" - 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("00 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF("01234567e0", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+
+  flags = StringToDoubleConverter::ALLOW_OCTALS;
+  CHECK_EQ(10.0f, StrToF("012", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("00", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 00", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" + 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" - 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 00 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" + 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" - 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("012 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("00 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("012 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF("0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF("01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF("01234567e0", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+
+  flags = StringToDoubleConverter::ALLOW_OCTALS |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+  CHECK_EQ(10.0f, StrToF("012", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("00", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 00", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" + 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" - 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 00 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" + 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" - 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(10.0f, StrToF("012 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(0.0f, StrToF("00 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(10, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012foo ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(0.0f, StrToF("00foo ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789foo ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(10, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567foo ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567foo", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567foo", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(10.0f, StrToF("012 foo ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(0.0f, StrToF("00 foo ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789 foo ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(10, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567 foo ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567 foo", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567 foo", flags, Single::NaN(), &processed,
+                  &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567e0", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567e", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  flags = StringToDoubleConverter::ALLOW_OCTALS |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+  CHECK_EQ(10.0f, StrToF("012", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("00", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 00", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0123456789", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" + 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" - 01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012 ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 00 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 012 ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" + 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(),
+           StrToF(" - 01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(10.0f, StrToF("012 ", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("00 ", flags, 1.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567 ", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567", flags, Single::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0f, StrToF("012foo ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(0.0f, StrToF("00foo ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789foo ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(10, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567foo ", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567foo", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567foo", flags, Single::NaN(), &processed, &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(10.0f, StrToF("012 foo ", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(4, processed);
+
+  CHECK_EQ(0.0f, StrToF("00 foo ", flags, 1.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(123456789.0f,
+           StrToF("0123456789 foo ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(11, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("01234567 foo ", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(342391.0f,
+           StrToF("+01234567 foo", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(10, processed);
+
+  CHECK_EQ(-342391.0f,
+           StrToF("-01234567 foo", flags, Single::NaN(),
+                  &processed, &all_used));
+  CHECK_EQ(10, processed);
+}
+
+
+TEST(StringToFloatSpecialValues) {
+  int processed;
+  int flags = StringToDoubleConverter::NO_FLAGS;
+
+  {
+    // Use 1.0 as junk_string_value.
+    StringToDoubleConverter converter(flags, 0.0f, 1.0f, "infinity", "NaN");
+
+    CHECK_EQ(Single::NaN(), converter.StringToDouble("+NaN", 4, &processed));
+    CHECK_EQ(4, processed);
+
+    CHECK_EQ(-Single::Infinity(),
+             converter.StringToDouble("-infinity", 9, &processed));
+    CHECK_EQ(9, processed);
+
+    CHECK_EQ(1.0f, converter.StringToDouble("Infinity", 8, &processed));
+    CHECK_EQ(0, processed);
+
+    CHECK_EQ(1.0f, converter.StringToDouble("++NaN", 5, &processed));
+    CHECK_EQ(0, processed);
+  }
+
+  {
+    // Use 1.0 as junk_string_value.
+    StringToDoubleConverter converter(flags, 0.0f, 1.0f, "+infinity", "1NaN");
+
+    // The '+' is consumed before trying to match the infinity string.
+    CHECK_EQ(1.0f, converter.StringToDouble("+infinity", 9, &processed));
+    CHECK_EQ(0, processed);
+
+    // The match for "1NaN" triggers, and doesn't let the 1234.0 complete.
+    CHECK_EQ(1.0f, converter.StringToDouble("1234.0", 6, &processed));
+    CHECK_EQ(0, processed);
+  }
 }
