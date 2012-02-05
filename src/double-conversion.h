@@ -295,7 +295,10 @@ class DoubleToStringConverter {
   static const int kBase10MaximalLength = 17;
 
   // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
-  // -Infinity.
+  // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
+  // after it has been casted to a single-precision float. That is, in this
+  // mode static_cast<float>(v) must not be NaN, +Infinity or -Infinity.
+  //
   // The result should be interpreted as buffer * 10^(point-length).
   //
   // The output depends on the given mode:
@@ -306,6 +309,7 @@ class DoubleToStringConverter {
   //   'v'. If there are two at the same distance, than the one farther away
   //   from 0 is chosen (halfway cases - ending with 5 - are rounded up).
   //   In this mode the 'requested_digits' parameter is ignored.
+  //  - SHORTEST_SINGLE: same as SHORTEST but with single-precision.
   //  - FIXED: produces digits necessary to print a given number with
   //   'requested_digits' digits after the decimal point. The produced digits
   //   might be too short in which case the caller has to fill the remainder
