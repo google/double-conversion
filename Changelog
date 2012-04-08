@@ -1,3 +1,9 @@
+2012-04-08:
+  String-to-Double|Float: ALLOW_LEADING_SPACES and similar flags now include
+  new-lines, tabs and all Unicode whitespace characters.
+  This is a potentially breaking change and the version number is therefore
+  bumped to v2.0.
+
 2012-02-05:
   Merged in Single-branch with single-precision support.
   Tagged v1.1 (based on b28450f33e1db493948a535d8f84e88fa211bd10).

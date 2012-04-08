@@ -416,8 +416,9 @@ void DoubleToStringConverter::DoubleToAscii(double v,
 
 // Consumes the given substring from the iterator.
 // Returns false, if the substring does not match.
-static bool ConsumeSubString(const char** current,
-                             const char* end,
+template <class Iterator>
+static bool ConsumeSubString(Iterator* current,
+                             Iterator end,
                              const char* substring) {
   ASSERT(**current == *substring);
   for (substring++; *substring != '\0'; substring++) {
@@ -439,10 +440,36 @@ static bool ConsumeSubString(const char** current,
 const int kMaxSignificantDigits = 772;
 
 
+static const char kWhitespaceTable7[] = { 32, 13, 10, 9, 11, 12 };
+static const int kWhitespaceTable7Length = ARRAY_SIZE(kWhitespaceTable7);
+
+
+static const uc16 kWhitespaceTable16[] = {
+  160, 8232, 8233, 5760, 6158, 8192, 8193, 8194, 8195,
+  8196, 8197, 8198, 8199, 8200, 8201, 8202, 8239, 8287, 12288, 65279
+};
+static const int kWhitespaceTable16Length = ARRAY_SIZE(kWhitespaceTable16);
+
+
+static bool isWhitespace(int x) {
+  if (x < 128) {
+    for (int i = 0; i < kWhitespaceTable7Length; i++) {
+      if (kWhitespaceTable7[i] == x) return true;
+    }
+  } else {
+    for (int i = 0; i < kWhitespaceTable16Length; i++) {
+      if (kWhitespaceTable16[i] == x) return true;
+    }
+  }
+  return false;
+}
+
+
 // Returns true if a nonspace found and false if the end has reached.
-static inline bool AdvanceToNonspace(const char** current, const char* end) {
+template <class Iterator>
+static inline bool AdvanceToNonspace(Iterator* current, Iterator end) {
   while (*current != end) {
-    if (**current != ' ') return true;
+    if (!isWhitespace(**current)) return true;
     ++*current;
   }
   return false;
@@ -462,25 +489,27 @@ static double SignedZero(bool sign) {
 
 
 // Parsing integers with radix 2, 4, 8, 16, 32. Assumes current != end.
-template <int radix_log_2>
-static double RadixStringToIeee(const char* current,
-                                const char* end,
+template <int radix_log_2, class Iterator>
+static double RadixStringToIeee(Iterator* current,
+                                Iterator end,
                                 bool sign,
                                 bool allow_trailing_junk,
                                 double junk_string_value,
                                 bool read_as_double,
-                                const char** trailing_pointer) {
-  ASSERT(current != end);
+                                bool* result_is_junk) {
+  ASSERT(*current != end);
 
   const int kDoubleSize = Double::kSignificandSize;
   const int kSingleSize = Single::kSignificandSize;
   const int kSignificandSize = read_as_double? kDoubleSize: kSingleSize;
 
+  *result_is_junk = true;
+
   // Skip leading 0s.
-  while (*current == '0') {
-    ++current;
-    if (current == end) {
-      *trailing_pointer = end;
+  while (**current == '0') {
+    ++(*current);
+    if (*current == end) {
+      *result_is_junk = false;
       return SignedZero(sign);
     }
   }
@@ -491,14 +520,14 @@ static double RadixStringToIeee(const char* current,
 
   do {
     int digit;
-    if (*current >= '0' && *current <= '9' && *current < '0' + radix) {
-      digit = static_cast<char>(*current) - '0';
-    } else if (radix > 10 && *current >= 'a' && *current < 'a' + radix - 10) {
-      digit = static_cast<char>(*current) - 'a' + 10;
-    } else if (radix > 10 && *current >= 'A' && *current < 'A' + radix - 10) {
-      digit = static_cast<char>(*current) - 'A' + 10;
+    if (**current >= '0' && **current <= '9' && **current < '0' + radix) {
+      digit = static_cast<char>(**current) - '0';
+    } else if (radix > 10 && **current >= 'a' && **current < 'a' + radix - 10) {
+      digit = static_cast<char>(**current) - 'a' + 10;
+    } else if (radix > 10 && **current >= 'A' && **current < 'A' + radix - 10) {
+      digit = static_cast<char>(**current) - 'A' + 10;
     } else {
-      if (allow_trailing_junk || !AdvanceToNonspace(&current, end)) {
+      if (allow_trailing_junk || !AdvanceToNonspace(current, end)) {
         break;
       } else {
         return junk_string_value;
@@ -523,13 +552,13 @@ static double RadixStringToIeee(const char* current,
 
       bool zero_tail = true;
       while (true) {
-        ++current;
-        if (current == end || !isDigit(*current, radix)) break;
-        zero_tail = zero_tail && *current == '0';
+        ++(*current);
+        if (*current == end || !isDigit(**current, radix)) break;
+        zero_tail = zero_tail && **current == '0';
         exponent += radix_log_2;
       }
 
-      if (!allow_trailing_junk && AdvanceToNonspace(&current, end)) {
+      if (!allow_trailing_junk && AdvanceToNonspace(current, end)) {
         return junk_string_value;
       }
 
@@ -551,13 +580,13 @@ static double RadixStringToIeee(const char* current,
       }
       break;
     }
-    ++current;
-  } while (current != end);
+    ++(*current);
+  } while (*current != end);
 
   ASSERT(number < ((int64_t)1 << kSignificandSize));
   ASSERT(static_cast<int64_t>(static_cast<double>(number)) == number);
 
-  *trailing_pointer = current;
+  *result_is_junk = false;
 
   if (exponent == 0) {
     if (sign) {
@@ -572,13 +601,13 @@ static double RadixStringToIeee(const char* current,
 }
 
 
-double StringToDoubleConverter::StringToIeee(
-    const char* input,
-    int length,
-    int* processed_characters_count,
-    bool read_as_double) {
-  const char* current = input;
-  const char* end = input + length;
+template <class Iterator>
+double StringToDoubleConverter::StringToIeee(Iterator input,
+                                             int length,
+                                             bool read_as_double,
+                                             int* processed_characters_count) {
+  Iterator current = input;
+  Iterator end = input + length;
 
   *processed_characters_count = 0;
 
@@ -625,7 +654,7 @@ double StringToDoubleConverter::StringToIeee(
   if (*current == '+' || *current == '-') {
     sign = (*current == '-');
     ++current;
-    const char* next_non_space = current;
+    Iterator next_non_space = current;
     // Skip following spaces (if allowed).
     if (!AdvanceToNonspace(&next_non_space, end)) return junk_string_value_;
     if (!allow_spaces_after_sign && (current != next_non_space)) {
@@ -689,17 +718,17 @@ double StringToDoubleConverter::StringToIeee(
         return junk_string_value_;  // "0x".
       }
 
-      const char* tail_pointer = NULL;
-      double result = RadixStringToIeee<4>(current,
+      bool result_is_junk;
+      double result = RadixStringToIeee<4>(&current,
                                            end,
                                            sign,
                                            allow_trailing_junk,
                                            junk_string_value_,
                                            read_as_double,
-                                           &tail_pointer);
-      if (tail_pointer != NULL) {
-        if (allow_trailing_spaces) AdvanceToNonspace(&tail_pointer, end);
-        *processed_characters_count = tail_pointer - input;
+                                           &result_is_junk);
+      if (!result_is_junk) {
+        if (allow_trailing_spaces) AdvanceToNonspace(&current, end);
+        *processed_characters_count = current - input;
       }
       return result;
     }
@@ -854,15 +883,16 @@ double StringToDoubleConverter::StringToIeee(
 
   if (octal) {
     double result;
-    const char* tail_pointer = NULL;
-    result = RadixStringToIeee<3>(buffer,
+    bool result_is_junk;
+    char* start = buffer;
+    result = RadixStringToIeee<3>(&start,
                                   buffer + buffer_pos,
                                   sign,
                                   allow_trailing_junk,
                                   junk_string_value_,
                                   read_as_double,
-                                  &tail_pointer);
-    ASSERT(tail_pointer != NULL);
+                                  &result_is_junk);
+    ASSERT(!result_is_junk);
     *processed_characters_count = current - input;
     return result;
   }
@@ -883,6 +913,38 @@ double StringToDoubleConverter::StringToIeee(
   }
   *processed_characters_count = current - input;
   return sign? -converted: converted;
+}
+
+
+double StringToDoubleConverter::StringToDouble(
+    const char* buffer,
+    int length,
+    int* processed_characters_count) {
+  return StringToIeee(buffer, length, true, processed_characters_count);
+}
+
+
+double StringToDoubleConverter::StringToDouble(
+    const uc16* buffer,
+    int length,
+    int* processed_characters_count) {
+  return StringToIeee(buffer, length, true, processed_characters_count);
+}
+
+
+float StringToDoubleConverter::StringToFloat(const char* buffer,
+                                             int length,
+                                             int* processed_characters_count) {
+  return static_cast<float>(StringToIeee(buffer, length, false,
+                                         processed_characters_count));
+}
+
+
+float StringToDoubleConverter::StringToFloat(const uc16* buffer,
+                                             int length,
+                                             int* processed_characters_count) {
+  return static_cast<float>(StringToIeee(buffer, length, false,
+                                         processed_characters_count));
 }
 
 }  // namespace double_conversion
