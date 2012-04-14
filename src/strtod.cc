@@ -519,7 +519,7 @@ float Strtof(Vector<const char> buffer, int exponent) {
 
   // If the guess doesn't lie near a single-precision boundary we can simply
   // return its float-value.
-  if ((f1 == f4)) {
+  if (f1 == f4) {
     return float_guess;
   }
 
