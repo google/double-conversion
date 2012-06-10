@@ -1,2 +1,7 @@
+2012-06-10:
+  Tagged v1.0.1.
+  Null terminate exponent buffer (only an issue when asserts are enabled).
+  Support more architectures.
+
 2012-02-05:
   Tagged v1.0 (based on eda0196e9ac8fcdf59e92cb62885ee0af5391969).
