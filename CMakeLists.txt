@@ -3,7 +3,7 @@ project(double-conversion)
 
 # pick a version #
 set(double-conversion_VERSION
-  1.0.0)
+  1.1.1)
 
 # set paths for install -- empty initially
 # Offer the user the choice of overriding the installation directories
