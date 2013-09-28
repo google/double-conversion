@@ -345,6 +345,12 @@ TEST(Strtod) {
 }
 
 
+  // same doubles. We want to test our conversion and not the compiler. We
+  // therefore disable the check.
+  // CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
+  // compiler. The real test is still active.
+  // CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
+  // CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
 static int CompareBignumToDiyFp(const Bignum& bignum_digits,
                                 int bignum_exponent,
                                 DiyFp diy_fp) {
@@ -427,7 +433,7 @@ TEST(RandomStrtod) {
     for (int i = 0; i < kShortStrtodRandomCount; ++i) {
       int pos = 0;
       for (int j = 0; j < length; ++j) {
-        buffer[pos++] = random() % 10 + '0';
+        buffer[pos++] = DeterministicRandom() % 10 + '0';
       }
       int exponent = DeterministicRandom() % (25*2 + 1) - 25 - length;
       buffer[pos] = '\0';
@@ -440,7 +446,7 @@ TEST(RandomStrtod) {
     for (int i = 0; i < kLargeStrtodRandomCount; ++i) {
       int pos = 0;
       for (int j = 0; j < length; ++j) {
-        buffer[pos++] = random() % 10 + '0';
+        buffer[pos++] = DeterministicRandom() % 10 + '0';
       }
       int exponent = DeterministicRandom() % (308*2 + 1) - 308 - length;
       buffer[pos] = '\0';
