@@ -515,8 +515,8 @@ TEST(Strtof) {
   CHECK_EQ(3401e34f, StrtofChar("00000340100000", 29));
   CHECK_EQ(Single::Infinity(), StrtofChar("00000341000000", 30));
   CHECK_EQ(34e37f, StrtofChar("000003400000", 32));
-  CHECK_EQ(3.4028235676e+38f, StrtofChar("34028235676", 28));
-  CHECK_EQ(3.4028235677e+38f, StrtofChar("34028235677", 28));
+  CHECK_EQ(3.4028234e+38f, StrtofChar("34028235676", 28));
+  CHECK_EQ(3.4028234e+38f, StrtofChar("34028235677", 28));
   CHECK_EQ(Single::Infinity(), StrtofChar("34028235678", 28));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
@@ -538,7 +538,10 @@ TEST(Strtof) {
   // Verify that we don't double round.
   // Get the boundary of the boundary.
   CHECK_EQ(2.1665680640000002384185791015625e9, 2166568064.0);
-  CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
+  // Visual Studio gets this wrong and believes that these two numbers are the
+  // same doubles. We want to test our conversion and not the compiler. We
+  // therefore disable the check.
+  // CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
   CHECK_EQ(2166568192.0f, StrtofChar("21665680640000002384185791015625", -22));
 
   // 0x4fffffff = 8589934080
@@ -551,8 +554,11 @@ TEST(Strtof) {
   CHECK_EQ(8589934592.0f, StrtofChar("858993433600001", -5));
   // Verify that we don't double round.
   // Get the boundary of the boundary.
-  CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
-  CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
+  // Visual Studio gets this wrong. To avoid failing tests because of a broken
+  // compiler we disable the following two tests. They were only testing the
+  // compiler. The real test is still active.
+  // CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
+  // CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
   CHECK_EQ(8589934080.0f, StrtofChar("8589934335999999523162841796875", -21));
 
   // 0x4f000000 = 2147483648
@@ -649,7 +655,7 @@ TEST(RandomStrtod) {
     for (int i = 0; i < kShortStrtodRandomCount; ++i) {
       int pos = 0;
       for (int j = 0; j < length; ++j) {
-        buffer[pos++] = random() % 10 + '0';
+        buffer[pos++] = DeterministicRandom() % 10 + '0';
       }
       int exponent = DeterministicRandom() % (25*2 + 1) - 25 - length;
       buffer[pos] = '\0';
@@ -662,7 +668,7 @@ TEST(RandomStrtod) {
     for (int i = 0; i < kLargeStrtodRandomCount; ++i) {
       int pos = 0;
       for (int j = 0; j < length; ++j) {
-        buffer[pos++] = random() % 10 + '0';
+        buffer[pos++] = DeterministicRandom() % 10 + '0';
       }
       int exponent = DeterministicRandom() % (308*2 + 1) - 308 - length;
       buffer[pos] = '\0';
@@ -716,7 +722,7 @@ TEST(RandomStrtof) {
     for (int i = 0; i < kShortStrtofRandomCount; ++i) {
       int pos = 0;
       for (int j = 0; j < length; ++j) {
-        buffer[pos++] = random() % 10 + '0';
+        buffer[pos++] = DeterministicRandom() % 10 + '0';
       }
       int exponent = DeterministicRandom() % (5*2 + 1) - 5 - length;
       buffer[pos] = '\0';
@@ -729,7 +735,7 @@ TEST(RandomStrtof) {
     for (int i = 0; i < kLargeStrtofRandomCount; ++i) {
       int pos = 0;
       for (int j = 0; j < length; ++j) {
-        buffer[pos++] = random() % 10 + '0';
+        buffer[pos++] = DeterministicRandom() % 10 + '0';
       }
       int exponent = DeterministicRandom() % (38*2 + 1) - 38 - length;
       buffer[pos] = '\0';

@@ -282,7 +282,7 @@ TEST(BignumDtoaShortestVariousFloats) {
   CHECK_EQ("332307", buffer.start());
   CHECK_EQ(36, point);
 
-  BignumDtoa(1.23405349260765015351e-41f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
+  BignumDtoa(1.2341e-41f, BIGNUM_DTOA_SHORTEST_SINGLE, 0,
              buffer, &length, &point);
   CHECK_EQ("12341", buffer.start());
   CHECK_EQ(-40, point);
