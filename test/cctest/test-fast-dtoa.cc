@@ -101,7 +101,7 @@ TEST(FastDtoaPrecisionVariousDoubles) {
   Vector<char> buffer(buffer_container, kBufferSize);
   int length;
   int point;
-  int status;
+  bool status;
 
   status = FastDtoa(1.0, FAST_DTOA_PRECISION, 3, buffer, &length, &point);
   CHECK(status);
