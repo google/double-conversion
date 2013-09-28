@@ -102,7 +102,7 @@ TEST(FastDtoaShortestVariousFloats) {
   Vector<char> buffer(buffer_container, kBufferSize);
   int length;
   int point;
-  int status;
+  bool status;
 
   float min_float = 1e-45f;
   status = FastDtoa(min_float, FAST_DTOA_SHORTEST_SINGLE, 0,
@@ -178,7 +178,7 @@ TEST(FastDtoaPrecisionVariousDoubles) {
   Vector<char> buffer(buffer_container, kBufferSize);
   int length;
   int point;
-  int status;
+  bool status;
 
   status = FastDtoa(1.0, FAST_DTOA_PRECISION, 3, buffer, &length, &point);
   CHECK(status);
