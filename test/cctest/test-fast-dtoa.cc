@@ -32,7 +32,7 @@ TEST(FastDtoaShortestVariousDoubles) {
   Vector<char> buffer(buffer_container, kBufferSize);
   int length;
   int point;
-  int status;
+  bool status;
 
   double min_double = 5e-324;
   status = FastDtoa(min_double, FAST_DTOA_SHORTEST, 0,
