@@ -541,7 +541,9 @@ TEST(Strtof) {
   // Visual Studio gets this wrong and believes that these two numbers are the
   // same doubles. We want to test our conversion and not the compiler. We
   // therefore disable the check.
-  // CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
+#ifndef _MSC_VER
+  CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
+#endif
   CHECK_EQ(2166568192.0f, StrtofChar("21665680640000002384185791015625", -22));
 
   // 0x4fffffff = 8589934080
@@ -557,8 +559,10 @@ TEST(Strtof) {
   // Visual Studio gets this wrong. To avoid failing tests because of a broken
   // compiler we disable the following two tests. They were only testing the
   // compiler. The real test is still active.
-  // CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
-  // CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
+#ifndef _MSC_VER
+  CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
+  CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
+#endif
   CHECK_EQ(8589934080.0f, StrtofChar("8589934335999999523162841796875", -21));
 
   // 0x4f000000 = 2147483648
