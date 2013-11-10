@@ -1,3 +1,11 @@
+2013-11-09:
+  Tagged v1.0.2.
+  Backport:
+    ARM 64, OsX ppc support.
+    Test fixes for Visual Studio.
+    Quell GCC unused typedef warning.
+    Rewrite to avoid clang's unused variable warning (when not used in ASSERT).
+
 2012-06-10:
   Tagged v1.0.1.
   Null terminate exponent buffer (only an issue when asserts are enabled).
