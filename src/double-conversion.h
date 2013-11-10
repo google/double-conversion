@@ -508,7 +508,7 @@ class StringToDoubleConverter {
   // Same as StringToDouble above but for 16 bit characters.
   double StringToDouble(const uc16* buffer,
                         int length,
-                        int* processed_characters_count);
+                        int* processed_characters_count) const;
 
   // Same as StringToDouble but reads a float.
   // Note that this is not equivalent to static_cast<float>(StringToDouble(...))
@@ -520,7 +520,7 @@ class StringToDoubleConverter {
   // Same as StringToFloat above but for 16 bit characters.
   float StringToFloat(const uc16* buffer,
                       int length,
-                      int* processed_characters_count);
+                      int* processed_characters_count) const;
 
  private:
   const int flags_;
