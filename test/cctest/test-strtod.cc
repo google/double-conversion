@@ -345,16 +345,6 @@ TEST(Strtod) {
 }
 
 
-  // same doubles. We want to test our conversion and not the compiler. We
-  // therefore disable the check.
-#ifndef _MSC_VER
-  CHECK(2.16656806400000023841857910156251e9 != 2166568064.0);
-#endif
-  // compiler. The real test is still active.
-#ifndef _MSC_VER
-  CHECK_EQ(8.589934335999999523162841796875e+09, 8589934336.0);
-  CHECK(8.5899343359999995231628417968749e+09 != 8589934336.0);
-#endif
 static int CompareBignumToDiyFp(const Bignum& bignum_digits,
                                 int bignum_exponent,
                                 DiyFp diy_fp) {
