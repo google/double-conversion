@@ -1,4 +1,9 @@
 2013-11-09:
+  Tagged v2.0.0.
+  String-to-Double|Float: ALLOW_LEADING_SPACES and similar flags now include
+  new-lines, tabs and all Unicode whitespace characters.
+
+2013-11-09:
   Tagged v1.1.2.
   Add support for ARM 64 and OsX ppc.
   Rewrite tests so they pass under Visual Studio.

@@ -100,6 +100,8 @@ typedef unsigned __int64 uint64_t;
 
 #endif
 
+typedef uint16_t uc16;
+
 // The following macro works on both 32 and 64-bit platforms.
 // Usage: instead of writing 0x1234567890123456
 //      write UINT64_2PART_C(0x12345678,90123456);

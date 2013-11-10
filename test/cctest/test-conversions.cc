@@ -1718,6 +1718,18 @@ TEST(DoubleToStringJavaScript) {
 }
 
 
+static double StrToD16(const uc16* str16, int length, int flags,
+                       double empty_string_value,
+                       int* processed_characters_count, bool* processed_all) {
+  StringToDoubleConverter converter(flags, empty_string_value, Double::NaN(),
+                                    NULL, NULL);
+  double result =
+      converter.StringToDouble(str16, length, processed_characters_count);
+  *processed_all = (length == *processed_characters_count);
+  return result;
+}
+
+
 static double StrToD(const char* str, int flags, double empty_string_value,
                      int* processed_characters_count, bool* processed_all) {
   StringToDoubleConverter converter(flags, empty_string_value, Double::NaN(),
@@ -1726,6 +1738,19 @@ static double StrToD(const char* str, int flags, double empty_string_value,
                                            processed_characters_count);
   *processed_all =
       ((strlen(str) == static_cast<unsigned>(*processed_characters_count)));
+
+  uc16 buffer16[256];
+  ASSERT(strlen(str) < ARRAY_SIZE(buffer16));
+  int len = strlen(str);
+  for (int i = 0; i < len; i++) {
+    buffer16[i] = str[i];
+  }
+  int processed_characters_count16;
+  bool processed_all16;
+  double result16 = StrToD16(buffer16, len, flags, empty_string_value,
+                             &processed_characters_count16, &processed_all16);
+  CHECK_EQ(result, result16);
+  CHECK_EQ(*processed_characters_count, processed_characters_count16);
   return result;
 }
 
@@ -2530,10 +2555,19 @@ TEST(StringToDoubleOctalString) {
   CHECK_EQ(10.0, StrToD(" 012", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
 
+  CHECK_EQ(10.0, StrToD("\n012", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
   CHECK_EQ(0.0, StrToD(" 00", flags, 1.0, &processed, &all_used));
   CHECK(all_used);
 
+  CHECK_EQ(0.0, StrToD("\t00", flags, 1.0, &processed, &all_used));
+  CHECK(all_used);
+
   CHECK_EQ(10.0, StrToD(" 012", flags, 1.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(10.0, StrToD("\n012", flags, 1.0, &processed, &all_used));
   CHECK(all_used);
 
   CHECK_EQ(123456789.0,
@@ -2545,11 +2579,19 @@ TEST(StringToDoubleOctalString) {
   CHECK(all_used);
 
   CHECK_EQ(342391.0,
+           StrToD("\n01234567", flags, Double::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(342391.0,
            StrToD(" + 01234567", flags, Double::NaN(), &processed, &all_used));
   CHECK(all_used);
 
   CHECK_EQ(-342391.0,
            StrToD(" - 01234567", flags, Double::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-342391.0,
+           StrToD("\n-\t01234567", flags, Double::NaN(), &processed, &all_used));
   CHECK(all_used);
 
   CHECK_EQ(10.0, StrToD(" 012 ", flags, 0.0, &processed, &all_used));
@@ -3196,14 +3238,41 @@ TEST(StringToDoubleCommentExamples) {
 }
 
 
-static float StrToF(const char* str, int flags, float empty_string_value,
-                    int* processed_characters_count, bool* processed_all) {
+static float StrToF16(const uc16* str16, int length, int flags,
+                      double empty_string_value,
+                      int* processed_characters_count,
+                      bool* processed_all) {
+  StringToDoubleConverter converter(flags, empty_string_value, Double::NaN(),
+                                    NULL, NULL);
+  double result =
+      converter.StringToFloat(str16, length, processed_characters_count);
+  *processed_all = (length == *processed_characters_count);
+  return result;
+}
+
+
+static double StrToF(const char* str, int flags, double empty_string_value,
+                     int* processed_characters_count, bool* processed_all) {
   StringToDoubleConverter converter(flags, empty_string_value, Single::NaN(),
                                     NULL, NULL);
   float result = converter.StringToFloat(str, strlen(str),
                                          processed_characters_count);
   *processed_all =
       ((strlen(str) == static_cast<unsigned>(*processed_characters_count)));
+
+  uc16 buffer16[256];
+  ASSERT(strlen(str) < ARRAY_SIZE(buffer16));
+  int len = strlen(str);
+  for (int i = 0; i < len; i++) {
+    buffer16[i] = str[i];
+  }
+  int processed_characters_count16;
+  bool processed_all16;
+  float result16 = StrToF16(buffer16, len, flags, empty_string_value,
+                            &processed_characters_count16,
+                            &processed_all16);
+  CHECK_EQ(result, result16);
+  CHECK_EQ(*processed_characters_count, processed_characters_count16);
   return result;
 }
 
@@ -4568,4 +4637,76 @@ TEST(StringToFloatSpecialValues) {
     CHECK_EQ(1.0f, converter.StringToDouble("1234.0", 6, &processed));
     CHECK_EQ(0, processed);
   }
+}
+
+
+TEST(StringToDoubleFloatWhitespace) {
+  int flags;
+  int processed;
+  bool all_used;
+
+  flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN;
+
+  const char kWhitespaceAscii[] = {
+    0x0A, 0x0D, 0x09, 0x0B, 0x0C, 0x20,
+    '-',
+    0x0A, 0x0D, 0x09, 0x0B, 0x0C, 0x20,
+    '1', '.', '2',
+    0x0A, 0x0D, 0x09, 0x0B, 0x0C, 0x20,
+    0x00
+  };
+  CHECK_EQ(-1.2, StrToD(kWhitespaceAscii, flags, Double::NaN(),
+                        &processed, &all_used));
+  CHECK(all_used);
+  CHECK_EQ(-1.2f, StrToF(kWhitespaceAscii, flags, Double::NaN(),
+                         &processed, &all_used));
+  CHECK(all_used);
+
+  const uc16 kOghamSpaceMark = 0x1680;
+  const uc16 kMongolianVowelSeparator = 0x180E;
+  const uc16 kEnQuad = 0x2000;
+  const uc16 kEmQuad = 0x2001;
+  const uc16 kEnSpace = 0x2002;
+  const uc16 kEmSpace = 0x2003;
+  const uc16 kThreePerEmSpace = 0x2004;
+  const uc16 kFourPerEmSpace = 0x2005;
+  const uc16 kSixPerEmSpace = 0x2006;
+  const uc16 kFigureSpace = 0x2007;
+  const uc16 kPunctuationSpace = 0x2008;
+  const uc16 kThinSpace = 0x2009;
+  const uc16 kHairSpace = 0x200A;
+  const uc16 kNarrowNoBreakSpace = 0x202F;
+  const uc16 kMediumMathematicalSpace = 0x205F;
+  const uc16 kIdeographicSpace = 0x3000;
+
+  const uc16 kWhitespace16[] = {
+    0x0A, 0x0D, 0x09, 0x0B, 0x0C, 0x20, 0xA0, 0xFEFF,
+    kOghamSpaceMark, kMongolianVowelSeparator, kEnQuad, kEmQuad,
+    kEnSpace, kEmSpace, kThreePerEmSpace, kFourPerEmSpace, kSixPerEmSpace,
+    kFigureSpace, kPunctuationSpace, kThinSpace, kHairSpace,
+    kNarrowNoBreakSpace, kMediumMathematicalSpace, kIdeographicSpace,
+    '-',
+    0x0A, 0x0D, 0x09, 0x0B, 0x0C, 0x20, 0xA0, 0xFEFF,
+    kOghamSpaceMark, kMongolianVowelSeparator, kEnQuad, kEmQuad,
+    kEnSpace, kEmSpace, kThreePerEmSpace, kFourPerEmSpace, kSixPerEmSpace,
+    kFigureSpace, kPunctuationSpace, kThinSpace, kHairSpace,
+    kNarrowNoBreakSpace, kMediumMathematicalSpace, kIdeographicSpace,
+    '1', '.', '2',
+    0x0A, 0x0D, 0x09, 0x0B, 0x0C, 0x20, 0xA0, 0xFEFF,
+    kOghamSpaceMark, kMongolianVowelSeparator, kEnQuad, kEmQuad,
+    kEnSpace, kEmSpace, kThreePerEmSpace, kFourPerEmSpace, kSixPerEmSpace,
+    kFigureSpace, kPunctuationSpace, kThinSpace, kHairSpace,
+    kNarrowNoBreakSpace, kMediumMathematicalSpace, kIdeographicSpace,
+  };
+  const int kWhitespace16Length = ARRAY_SIZE(kWhitespace16);
+  CHECK_EQ(-1.2, StrToD16(kWhitespace16, kWhitespace16Length, flags,
+                          Double::NaN(),
+                          &processed, &all_used));
+  CHECK(all_used);
+  CHECK_EQ(-1.2f, StrToF16(kWhitespace16, kWhitespace16Length, flags,
+                           Single::NaN(),
+                           &processed, &all_used));
+  CHECK(all_used);
 }
