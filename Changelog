@@ -1,3 +1,10 @@
+2013-11-09:
+  Tagged v1.1.2.
+  Add support for ARM 64 and OsX ppc.
+  Rewrite tests so they pass under Visual Studio.
+  Add CMake build system support.
+  Fix warnings.
+
 2012-06-10:
   Tagged v1.1.1.
   Null terminate exponent buffer (only an issue when asserts are enabled).
