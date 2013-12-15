@@ -552,7 +552,7 @@ static double RadixStringToIeee(Iterator* current,
       exponent = overflow_bits_count;
 
       bool zero_tail = true;
-      while (true) {
+      for (;;) {
         ++(*current);
         if (*current == end || !isDigit(**current, radix)) break;
         zero_tail = zero_tail && **current == '0';
