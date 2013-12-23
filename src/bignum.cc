@@ -40,6 +40,7 @@ Bignum::Bignum()
 
 template<typename S>
 static int BitSize(S value) {
+  (void) value;  // Mark variable as used.
   return 8 * sizeof(value);
 }
 
