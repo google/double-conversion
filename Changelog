@@ -1,3 +1,6 @@
+2013-12-23:
+  Fix compilation for ARMv8 64bit (used wrong define).
+
 2013-11-09:
   Tagged v2.0.0.
   String-to-Double|Float: ALLOW_LEADING_SPACES and similar flags now include
