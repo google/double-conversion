@@ -1,3 +1,6 @@
+2013-12-23:
+  Improved SConstruct file. Thanks to Milan Bouchet-Valat and Elan Ruusamäe.
+
 2013-11-09:
   Tagged v2.0.0.
   String-to-Double|Float: ALLOW_LEADING_SPACES and similar flags now include
