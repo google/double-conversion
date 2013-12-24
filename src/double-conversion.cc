@@ -348,7 +348,6 @@ static BignumDtoaMode DtoaToBignumDtoaMode(
     case DoubleToStringConverter::PRECISION: return BIGNUM_DTOA_PRECISION;
     default:
       UNREACHABLE();
-      return BIGNUM_DTOA_SHORTEST;  // To silence compiler.
   }
 }
 
@@ -403,8 +402,8 @@ void DoubleToStringConverter::DoubleToAscii(double v,
                              vector, length, point);
       break;
     default:
-      UNREACHABLE();
       fast_worked = false;
+      UNREACHABLE();
   }
   if (fast_worked) return;
 
@@ -489,6 +488,17 @@ static double SignedZero(bool sign) {
 }
 
 
+// Returns true if 'c' is a decimal digit that is valid for the given radix.
+//
+// The function is small and could be inlined, but VS2012 emitted a warning
+// because it constant-propagated the radix and concluded that the last
+// condition was always true. By moving it into a separate function the
+// compiler wouldn't warn anymore.
+static bool IsDecimalDigitForRadix(char c, int radix) {
+  return '0' <= c && c <= '9' && (c - '0') < radix;
+}
+
+
 // Parsing integers with radix 2, 4, 8, 16, 32. Assumes current != end.
 template <int radix_log_2, class Iterator>
 static double RadixStringToIeee(Iterator* current,
@@ -521,7 +531,7 @@ static double RadixStringToIeee(Iterator* current,
 
   do {
     int digit;
-    if (**current >= '0' && **current <= '9' && **current < '0' + radix) {
+    if (IsDecimalDigitForRadix(**current, radix)) {
       digit = static_cast<char>(**current) - '0';
     } else if (radix > 10 && **current >= 'a' && **current < 'a' + radix - 10) {
       digit = static_cast<char>(**current) - 'a' + 10;
@@ -630,7 +640,7 @@ double StringToDoubleConverter::StringToIeee(
 
   if (allow_leading_spaces || allow_trailing_spaces) {
     if (!AdvanceToNonspace(&current, end)) {
-      *processed_characters_count = current - input;
+      *processed_characters_count = static_cast<int>(current - input);
       return empty_string_value_;
     }
     if (!allow_leading_spaces && (input != current)) {
