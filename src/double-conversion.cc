@@ -494,8 +494,19 @@ static double SignedZero(bool sign) {
 // because it constant-propagated the radix and concluded that the last
 // condition was always true. By moving it into a separate function the
 // compiler wouldn't warn anymore.
-static bool IsDecimalDigitForRadix(char c, int radix) {
+static bool IsDecimalDigitForRadix(int c, int radix) {
   return '0' <= c && c <= '9' && (c - '0') < radix;
+}
+
+// Returns true if 'c' is a character digit that is valid for the given radix.
+// The 'a_character' should be 'a' or 'A'.
+//
+// The function is small and could be inlined, but VS2012 emitted a warning
+// because it constant-propagated the radix and concluded that the first
+// condition was always false. By moving it into a separate function the
+// compiler wouldn't warn anymore.
+static bool IsCharacterDigitForRadix(int c, int radix, char a_character) {
+  return radix > 10 && c >= a_character && c < a_character + radix - 10;
 }
 
 
@@ -533,9 +544,9 @@ static double RadixStringToIeee(Iterator* current,
     int digit;
     if (IsDecimalDigitForRadix(**current, radix)) {
       digit = static_cast<char>(**current) - '0';
-    } else if (radix > 10 && **current >= 'a' && **current < 'a' + radix - 10) {
+    } else if (IsCharacterDigitForRadix(**current, radix, 'a')) {
       digit = static_cast<char>(**current) - 'a' + 10;
-    } else if (radix > 10 && **current >= 'A' && **current < 'A' + radix - 10) {
+    } else if (IsCharacterDigitForRadix(**current, radix, 'A')) {
       digit = static_cast<char>(**current) - 'A' + 10;
     } else {
       if (allow_trailing_junk || !AdvanceToNonspace(current, end)) {
