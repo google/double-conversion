@@ -721,7 +721,7 @@ double StringToDoubleConverter::StringToIeee(
                                            &tail_pointer);
       if (tail_pointer != NULL) {
         if (allow_trailing_spaces) AdvanceToNonspace(&tail_pointer, end);
-        *processed_characters_count = static_cast<int>(current - input);
+        *processed_characters_count = static_cast<int>(tail_pointer - input);
       }
       return result;
     }
