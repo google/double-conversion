@@ -1,4 +1,8 @@
 2014-01-12:
+  Tagged v1.1.4.
+  Backported SConstruct improvements.
+
+2014-01-12:
   Tagged v1.1.3.
   Backported warning fixes from 2.0 branch.
 
