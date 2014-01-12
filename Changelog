@@ -1,4 +1,8 @@
 2014-01-12:
+  Tagged v1.1.5.
+  Enabled shared libraries in v1.1 branch.
+
+2014-01-12:
   Tagged v1.1.4.
   Backported SConstruct improvements.
 
