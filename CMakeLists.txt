@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 2.8)
 project(double-conversion)
 
 # pick a version #
-set(double-conversion_VERSION
-  1.1.1)
+set(double-conversion_VERSION 2.0.1)
+set(double-conversion_SOVERSION_MAJOR 1)
+set(double-conversion_SOVERSION_MINOR 0)
+set(double-conversion_SOVERSION_PATCH 0)
+set(double-conversion_SOVERSION
+  ${double-conversion_SOVERSION_MAJOR}.${double-conversion_SOVERSION_MINOR}.${double-conversion_SOVERSION_PATCH})
 
 # set paths for install -- empty initially
 # Offer the user the choice of overriding the installation directories

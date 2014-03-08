@@ -1,3 +1,8 @@
+2014-03-08:
+  Update version number for cmake.
+  Support shared libraries with cmake.
+  Add build instructions to the README.
+
 2014-01-12:
   Tagged v2.0.1.
   Fix compilation for ARMv8 64bit (used wrong define).
