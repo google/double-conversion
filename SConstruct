@@ -20,7 +20,7 @@ env['SHLIBVERSION'] = '1.0.0'
 
 CCFLAGS = []
 if int(debug):
-  CCFLAGS.append(ARGUMENTS.get('CXXFLAGS', '-g -Wall -Werror'))
+  CCFLAGS.append(ARGUMENTS.get('CXXFLAGS', '-g -Wall -Wshadow -Werror'))
 if int(optimize):
   CCFLAGS.append(ARGUMENTS.get('CXXFLAGS', '-O3'))
 

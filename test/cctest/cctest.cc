@@ -34,16 +34,18 @@
 CcTest* CcTest::last_ = NULL;
 
 
-CcTest::CcTest(TestFunction* callback, const char* file, const char* name,
-               const char* dependency, bool enabled)
-    : callback_(callback), name_(name), dependency_(dependency), prev_(last_) {
+CcTest::CcTest(TestFunction* callback, const char* test_file,
+               const char* test_name, const char* test_dependency,
+               bool test_is_enabled)
+    : callback_(callback), name_(test_name), dependency_(test_dependency),
+      prev_(last_) {
   // Find the base name of this test (const_cast required on Windows).
-  char *basename = strrchr(const_cast<char *>(file), '/');
+  char *basename = strrchr(const_cast<char *>(test_file), '/');
   if (!basename) {
-    basename = strrchr(const_cast<char *>(file), '\\');
+    basename = strrchr(const_cast<char *>(test_file), '\\');
   }
   if (!basename) {
-    basename = strdup(file);
+    basename = strdup(test_file);
   } else {
     basename = strdup(basename + 1);
   }
@@ -52,7 +54,7 @@ CcTest::CcTest(TestFunction* callback, const char* file, const char* name,
   if (extension) *extension = 0;
   // Install this test in the list of tests
   file_ = basename;
-  enabled_ = enabled;
+  enabled_ = test_is_enabled;
   prev_ = last_;
   last_ = this;
 }
