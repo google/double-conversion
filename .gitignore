@@ -1,5 +1,4 @@
 .sconsign.dblite
-run_tests
 *.o
 *.obj
 msvc/Release/
@@ -7,3 +6,4 @@ msvc/Debug/
 *.suo
 *.opensdf
 *.sdf
+*.user
