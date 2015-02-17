@@ -70,6 +70,9 @@
 #if defined(_WIN32)
 // Windows uses a 64bit wide floating point stack.
 #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
+#elif defined(__m68k__)
+// The MC68881 also uses an 80bit wide floating point stack.
+#undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
 #else
 #undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
 #endif  // _WIN32
