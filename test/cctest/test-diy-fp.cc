@@ -3,8 +3,8 @@
 #include <stdlib.h>
 
 #include "cctest.h"
-#include "diy-fp.h"
-#include "utils.h"
+#include "double-conversion/diy-fp.h"
+#include "double-conversion/utils.h"
 
 
 using namespace double_conversion;

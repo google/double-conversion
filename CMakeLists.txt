@@ -31,12 +31,12 @@ endforeach()
 
 #
 # set up include dirs
-include_directories("${PROJECT_SOURCE_DIR}/src"
+include_directories("${PROJECT_SOURCE_DIR}"
   "${PROJECT_BINARY_DIR}"
   )
 
 # Add src subdirectory
-add_subdirectory(src)
+add_subdirectory(double-conversion)
 
 #
 # set up testing if requested
