@@ -993,6 +993,7 @@ TEST(DivideModuloIntBignum) {
   other.AssignUInt16(2);
   other.ShiftLeft(500);
   CHECK_EQ(5, bignum.DivideModuloIntBignum(other));
+  CHECK(bignum.ToHexString(buffer, kBufferSize));
   CHECK_EQ("0", buffer);
 
   bignum.AssignUInt16(11);
