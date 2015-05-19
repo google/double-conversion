@@ -1,7 +1,7 @@
 # vim:ft=python
 import os
 
-double_conversion_sources = ['src/' + x for x in SConscript('src/SConscript')]
+double_conversion_sources = ['double-conversion/' + x for x in SConscript('double-conversion/SConscript')]
 double_conversion_test_sources = ['test/cctest/' + x for x in SConscript('test/cctest/SConscript')]
 
 DESTDIR = ARGUMENTS.get('DESTDIR', '')
@@ -9,7 +9,7 @@ prefix = ARGUMENTS.get('prefix', '/usr/local')
 lib = ARGUMENTS.get('libsuffix', 'lib')
 libdir = os.path.join(DESTDIR + prefix, lib)
 
-env = Environment(CPPPATH='#/src', LIBS=['m', 'stdc++'],
+env = Environment(CPPPATH='#', LIBS=['m', 'stdc++'],
     CXXFLAGS=ARGUMENTS.get('CXXFLAGS', ''))
 debug = ARGUMENTS.get('debug', 0)
 optimize = ARGUMENTS.get('optimize', 0)
