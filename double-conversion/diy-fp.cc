@@ -25,21 +25,33 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef DOUBLE_CONVERSION_STRTOD_H_
-#define DOUBLE_CONVERSION_STRTOD_H_
 
-#include "utils.h"
+#include "double-conversion/diy-fp.h"
+#include "double-conversion/utils.h"
 
 namespace double_conversion {
 
-// The buffer must only contain digits in the range [0-9]. It must not
-// contain a dot or a sign. It must not start with '0', and must not be empty.
-double Strtod(Vector<const char> buffer, int exponent);
-
-// The buffer must only contain digits in the range [0-9]. It must not
-// contain a dot or a sign. It must not start with '0', and must not be empty.
-float Strtof(Vector<const char> buffer, int exponent);
+void DiyFp::Multiply(const DiyFp& other) {
+  // Simply "emulates" a 128 bit multiplication.
+  // However: the resulting number only contains 64 bits. The least
+  // significant 64 bits are only used for rounding the most significant 64
+  // bits.
+  const uint64_t kM32 = 0xFFFFFFFFU;
+  uint64_t a = f_ >> 32;
+  uint64_t b = f_ & kM32;
+  uint64_t c = other.f_ >> 32;
+  uint64_t d = other.f_ & kM32;
+  uint64_t ac = a * c;
+  uint64_t bc = b * c;
+  uint64_t ad = a * d;
+  uint64_t bd = b * d;
+  uint64_t tmp = (bd >> 32) + (ad & kM32) + (bc & kM32);
+  // By adding 1U << 31 to tmp we round the final result.
+  // Halfway cases will be round up.
+  tmp += 1U << 31;
+  uint64_t result_f = ac + (ad >> 32) + (bc >> 32) + (tmp >> 32);
+  e_ += other.e_ + 64;
+  f_ = result_f;
+}
 
 }  // namespace double_conversion
-
-#endif  // DOUBLE_CONVERSION_STRTOD_H_

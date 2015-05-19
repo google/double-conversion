@@ -29,10 +29,10 @@
 
 
 #include "cctest.h"
-#include "fixed-dtoa.h"
+#include "double-conversion/fixed-dtoa.h"
 #include "gay-fixed.h"
-#include "ieee.h"
-#include "utils.h"
+#include "double-conversion/ieee.h"
+#include "double-conversion/utils.h"
 
 using namespace double_conversion;
 

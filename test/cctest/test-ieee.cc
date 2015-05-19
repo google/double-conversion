@@ -3,10 +3,9 @@
 #include <stdlib.h>
 
 #include "cctest.h"
-#include "diy-fp.h"
-#include "ieee.h"
-#include "utils.h"
-#include "../../src/ieee.h"
+#include "double-conversion/diy-fp.h"
+#include "double-conversion/utils.h"
+#include "double-conversion/ieee.h"
 
 
 using namespace double_conversion;
