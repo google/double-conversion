@@ -29,12 +29,6 @@ foreach(p LIB BIN INCLUDE CMAKE)
   endif()
 endforeach()
 
-#
-# set up include dirs
-include_directories("${PROJECT_SOURCE_DIR}"
-  "${PROJECT_BINARY_DIR}"
-  )
-
 # Add src subdirectory
 add_subdirectory(double-conversion)
 
