@@ -29,7 +29,7 @@
 #include <limits.h>
 #include <math.h>
 
-#include "double-conversion/utils.h"
+#include "utils.h"
 
 #include "cached-powers.h"
 
