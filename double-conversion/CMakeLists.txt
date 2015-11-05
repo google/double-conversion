@@ -23,6 +23,8 @@ strtod.cc
 ${headers}
 )
 
+target_include_directories(double-conversion PUBLIC ..)
+
 #
 # associates the list of headers with the library
 # for the purposes of installation/import into other projects
