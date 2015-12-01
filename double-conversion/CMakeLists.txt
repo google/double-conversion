@@ -23,7 +23,7 @@ strtod.cc
 ${headers}
 )
 
-target_include_directories(double-conversion PUBLIC ..)
+target_include_directories(double-conversion PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>)
 
 #
 # associates the list of headers with the library
