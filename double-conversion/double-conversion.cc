@@ -118,7 +118,7 @@ void DoubleToStringConverter::CreateDecimalRepresentation(
     StringBuilder* result_builder) const {
   // Create a representation that is padded with zeros if needed.
   if (decimal_point <= 0) {
-      // "0.00000decimal_rep" or "0.000decimal_rep00"
+      // "0.00000decimal_rep" or "0.000decimal_rep00".
     result_builder->AddCharacter('0');
     if (digits_after_point > 0) {
       result_builder->AddCharacter('.');
