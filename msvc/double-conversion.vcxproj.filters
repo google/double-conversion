@@ -15,60 +15,60 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\bignum.cc">
+    <ClCompile Include="..\double-conversion\bignum.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bignum-dtoa.cc">
+    <ClCompile Include="..\double-conversion\bignum-dtoa.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\cached-powers.cc">
+    <ClCompile Include="..\double-conversion\cached-powers.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\diy-fp.cc">
+    <ClCompile Include="..\double-conversion\diy-fp.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\double-conversion.cc">
+    <ClCompile Include="..\double-conversion\double-conversion.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\fast-dtoa.cc">
+    <ClCompile Include="..\double-conversion\fast-dtoa.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\fixed-dtoa.cc">
+    <ClCompile Include="..\double-conversion\fixed-dtoa.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\strtod.cc">
+    <ClCompile Include="..\double-conversion\strtod.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\bignum.h">
+    <ClInclude Include="..\double-conversion\bignum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bignum-dtoa.h">
+    <ClInclude Include="..\double-conversion\bignum-dtoa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\cached-powers.h">
+    <ClInclude Include="..\double-conversion\cached-powers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\diy-fp.h">
+    <ClInclude Include="..\double-conversion\diy-fp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\double-conversion.h">
+    <ClInclude Include="..\double-conversion\double-conversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\fast-dtoa.h">
+    <ClInclude Include="..\double-conversion\fast-dtoa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\fixed-dtoa.h">
+    <ClInclude Include="..\double-conversion\fixed-dtoa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ieee.h">
+    <ClInclude Include="..\double-conversion\ieee.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\strtod.h">
+    <ClInclude Include="..\double-conversion\strtod.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils.h">
+    <ClInclude Include="..\double-conversion\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
