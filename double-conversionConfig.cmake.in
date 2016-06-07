@@ -8,9 +8,9 @@ get_filename_component(double-conversion_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" 
 if(EXISTS "${double-conversion_CMAKE_DIR}/CMakeCache.txt")
   include("${double-conversion_CMAKE_DIR}/double-conversionBuildTreeSettings.cmake")
 else()
-  set(double-conversion_INCLUDE_DIRS "@INCLUDE_INSTALL_DIR@/double-conversion")
+  set(double-conversion_INCLUDE_DIRS "@CMAKE_INSTALL_FULL_INCLUDEDIR@/double-conversion")
 endif()
 
-include("@LIB_INSTALL_DIR@/cmake/double-conversion/double-conversionLibraryDepends.cmake")
+include("@CMAKE_INSTALL_FULL_LIBDIR@/cmake/double-conversion/double-conversionLibraryDepends.cmake")
 
 set(double-conversion_LIBRARIES double-conversion)
