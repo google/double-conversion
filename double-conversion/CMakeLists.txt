@@ -28,7 +28,7 @@ target_include_directories(double-conversion PUBLIC $<BUILD_INTERFACE:${CMAKE_CU
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-fPIC CXX_HAS_FPIC)
 
-if(CXX_HAS_FPIC AND CMAKE_SYSTEM_PROCESSOER STREQUAL "x86_64")
+if(CXX_HAS_FPIC AND CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
   set_target_properties(double-conversion PROPERTIES COMPILE_FLAGS "-fPIC")
 endif()
 
