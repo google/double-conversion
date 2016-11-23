@@ -124,10 +124,10 @@ class CcTest {
   static int test_count();
   static CcTest* last() { return last_; }
   CcTest* prev() { return prev_; }
-  const char* file() { return file_; }
-  const char* name() { return name_; }
-  const char* dependency() { return dependency_; }
-  bool enabled() { return enabled_; }
+  const char* file() const { return file_; }
+  const char* name() const { return name_; }
+  const char* dependency() const { return dependency_; }
+  bool enabled() const { return enabled_; }
  private:
   TestFunction* callback_;
   const char* file_;

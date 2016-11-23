@@ -98,7 +98,7 @@ class UInt128 {
     return high_bits_ == 0 && low_bits_ == 0;
   }
 
-  int BitAt(int position) {
+  int BitAt(int position) const {
     if (position >= 64) {
       return static_cast<int>(high_bits_ >> (position - 64)) & 1;
     } else {
