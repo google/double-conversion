@@ -74,9 +74,11 @@ static inline void CheckEqualsHelper(const char* file, int line,
                                      const char* expected,
                                      const char* value_source,
                                      const char* value) {
-  if ((expected == NULL && value != NULL) ||
-      (expected != NULL && value == NULL) ||
-      (expected != NULL && value != NULL && strcmp(expected, value) != 0)) {
+  if (expected == NULL || value == NULL) {
+      abort();
+    }
+
+  if (strcmp(expected, value) != 0) {
     printf("%s:%d:\n CHECK_EQ(%s, %s) failed\n"
            "#  Expected: %s\n"
            "#  Found:    %s\n",
