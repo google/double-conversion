@@ -75,8 +75,11 @@ static inline void CheckEqualsHelper(const char* file, int line,
                                      const char* value_source,
                                      const char* value) {
   if ((expected == NULL && value != NULL) ||
-      (expected != NULL && value == NULL) ||
-      (expected != NULL && value != NULL && strcmp(expected, value) != 0)) {
+      (expected != NULL && value == NULL)) {
+    abort();
+  }
+
+  if ((expected != NULL && value != NULL && strcmp(expected, value) != 0)) {
     printf("%s:%d:\n CHECK_EQ(%s, %s) failed\n"
            "#  Expected: %s\n"
            "#  Found:    %s\n",
@@ -124,10 +127,10 @@ class CcTest {
   static int test_count();
   static CcTest* last() { return last_; }
   CcTest* prev() { return prev_; }
-  const char* file() { return file_; }
-  const char* name() { return name_; }
-  const char* dependency() { return dependency_; }
-  bool enabled() { return enabled_; }
+  const char* file() const { return file_; }
+  const char* name() const { return name_; }
+  const char* dependency() const { return dependency_; }
+  bool enabled() const { return enabled_; }
  private:
   TestFunction* callback_;
   const char* file_;
