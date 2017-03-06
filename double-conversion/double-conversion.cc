@@ -125,8 +125,6 @@ void DoubleToStringConverter::CreateDecimalRepresentation(
       result_builder->AddPadding('0', -decimal_point);
       ASSERT(length <= digits_after_point - (-decimal_point));
       result_builder->AddSubstring(decimal_digits, length);
-      int remaining_digits = digits_after_point - (-decimal_point) - length;
-      result_builder->AddPadding('0', remaining_digits);
     }
   } else if (decimal_point >= length) {
     // "decimal_rep0000.00000" or "decimal_rep.0000".
