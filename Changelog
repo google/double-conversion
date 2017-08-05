@@ -1,3 +1,24 @@
+2017-08-05:
+  Tagged v3.0.0.
+  Due to the directory rename switching to a new version number.
+  The API for the library itself hasn't changed.
+
+2017-03-04:
+  Avoid negative shift. Fixes #41.
+
+2016-11-17:
+  Support RISC-V.
+
+
+2016-09-10:
+  Add fPIC flag on x86_64 if the compiler supports it. Fixes #34.
+
+2015 and 2016:
+  Lots of improvements to the build system.
+
+2015:
+  Warning fixes.
+
 2015-05-19:
   Rename 'src' directory to 'double-conversion'.
 
