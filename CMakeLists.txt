@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(double-conversion)
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
+project(double-conversion VERSION 2.0.1)
 
 set(headers
     double-conversion/bignum.h
@@ -25,10 +22,12 @@ add_library(double-conversion
             double-conversion/fixed-dtoa.cc
             double-conversion/strtod.cc
             ${headers})
+target_include_directories(
+    double-conversion PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
 # pick a version #
-set(double-conversion_VERSION 2.0.1)
-set_property(TARGET double-conversion PROPERTY VERSION ${double-conversion_VERSION})
 set(double-conversion_SOVERSION_MAJOR 1)
 set(double-conversion_SOVERSION_MINOR 0)
 set(double-conversion_SOVERSION_PATCH 0)
@@ -43,32 +42,34 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
+include(GNUInstallDirs)
 install(TARGETS double-conversion EXPORT double-conversionTargets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include)
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${headers}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/double-conversion)
 
 include(CMakePackageConfigHelpers)
+configure_package_config_file(
+    cmake/double-conversionConfig.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/double-conversion/double-conversionConfig.cmake"
+    INSTALL_DESTINATION "${LIB_INSTALL_DIR}/double-conversion/cmake")
 write_basic_package_version_file(
     "${PROJECT_BINARY_DIR}/double-conversion/double-conversionConfigVersion.cmake"
-    VERSION ${double-conversion_VERSION}
-    COMPATIBILITY AnyNewerVersion)
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
 
 export(EXPORT double-conversionTargets
        FILE "${CMAKE_CURRENT_BINARY_DIR}/double-conversion/double-conversionTargets.cmake"
        NAMESPACE double-conversion::)
-
-configure_file(cmake/double-conversionConfig.cmake
-               "${CMAKE_CURRENT_BINARY_DIR}/double-conversion/double-conversionConfig.cmake"
-               COPYONLY)
 
 set(ConfigPackageLocation lib/cmake/double-conversion)
 install(EXPORT double-conversionTargets
         FILE double-conversionTargets.cmake
         NAMESPACE double-conversion::
         DESTINATION ${ConfigPackageLocation})
-install(FILES cmake/double-conversionConfig.cmake
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/double-conversion/double-conversionConfig.cmake"
               "${CMAKE_CURRENT_BINARY_DIR}/double-conversion/double-conversionConfigVersion.cmake"
         DESTINATION ${ConfigPackageLocation}
         COMPONENT Devel)
