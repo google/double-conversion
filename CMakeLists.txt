@@ -24,8 +24,7 @@ add_library(double-conversion
             ${headers})
 target_include_directories(
     double-conversion PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # pick a version #
 set_property(TARGET double-conversion PROPERTY SOVERSION ${PROJECT_VERSION})
