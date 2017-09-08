@@ -389,7 +389,8 @@ class StringToDoubleConverter {
     ALLOW_TRAILING_JUNK = 4,
     ALLOW_LEADING_SPACES = 8,
     ALLOW_TRAILING_SPACES = 16,
-    ALLOW_SPACES_AFTER_SIGN = 32
+    ALLOW_SPACES_AFTER_SIGN = 32,
+    ALLOW_CASE_INSENSIBILITY = 64,
   };
 
   // Flags should be a bit-or combination of the possible Flags-enum.
@@ -421,6 +422,8 @@ class StringToDoubleConverter {
   //  - ALLOW_SPACES_AFTER_SIGN: ignore whitespace after the sign.
   //       Ex: StringToDouble("-   123.2") -> -123.2.
   //           StringToDouble("+   123.2") -> 123.2
+  //  - ALLOW_CASE_INSENSIBILITY: ignore case of characters for special values:
+  //      infinity and nan.
   //
   // empty_string_value is returned when an empty string is given as input.
   // If ALLOW_LEADING_SPACES or ALLOW_TRAILING_SPACES are set, then a string

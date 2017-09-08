@@ -4710,3 +4710,46 @@ TEST(StringToDoubleFloatWhitespace) {
                            &processed, &all_used));
   CHECK(all_used);
 }
+
+
+TEST(StringToDoubleCaseInsensitiveSpecialValues) {
+  int processed = 0;
+
+  int flags = StringToDoubleConverter::ALLOW_CASE_INSENSIBILITY |
+    StringToDoubleConverter::ALLOW_LEADING_SPACES |
+    StringToDoubleConverter::ALLOW_TRAILING_JUNK |
+    StringToDoubleConverter::ALLOW_TRAILING_SPACES;
+
+  // Use 1.0 as junk_string_value.
+  StringToDoubleConverter converter(flags, 0.0, 1.0, "infinity", "nan");
+
+  CHECK_EQ(Double::NaN(), converter.StringToDouble("+nan", 4, &processed));
+  CHECK_EQ(4, processed);
+
+  CHECK_EQ(Double::NaN(), converter.StringToDouble("-nAN", 4, &processed));
+  CHECK_EQ(4, processed);
+
+  CHECK_EQ(Double::NaN(), converter.StringToDouble("nAN", 3, &processed));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(Double::NaN(), converter.StringToDouble("nANabc", 6, &processed));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(+Double::Infinity(),
+           converter.StringToDouble("+Infinity", 9, &processed));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(-Double::Infinity(),
+           converter.StringToDouble("-INFinity", 9, &processed));
+  CHECK_EQ(9, processed);
+
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble("infINITY", 8, &processed));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(1.0, converter.StringToDouble("INF", 3, &processed));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(1.0, converter.StringToDouble("+inf", 4, &processed));
+  CHECK_EQ(0, processed);
+}
