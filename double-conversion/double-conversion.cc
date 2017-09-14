@@ -417,13 +417,13 @@ void DoubleToStringConverter::DoubleToAscii(double v,
 
 namespace {
 
-static inline char ToLower(char ch) {
+inline char ToLower(char ch) {
   static const std::ctype<char>& cType =
       std::use_facet<std::ctype<char> >(std::locale::classic());
   return cType.tolower(ch);
 }
 
-static inline char Pass(char ch) {
+inline char Pass(char ch) {
   return ch;
 }
 
@@ -458,12 +458,12 @@ static bool ConsumeSubString(Iterator* current,
 }
 
 // Consumes first character of the str is equal to ch
-static inline bool ConsumeFirstCharacter(char ch,
+inline bool ConsumeFirstCharacter(char ch,
                                          const char* str,
                                          bool case_insensibility) {
   return case_insensibility ? ToLower(ch) == str[0] : ch == str[0];
 }
-}
+}  // namespace
 
 // Maximum number of significant digits in decimal representation.
 // The longest possible double in decimal representation is
