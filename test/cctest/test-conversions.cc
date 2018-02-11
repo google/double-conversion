@@ -4664,6 +4664,12 @@ TEST(StringToDoubleFloatWhitespace) {
                          &processed, &all_used));
   CHECK(all_used);
 
+  StringToDoubleConverter converter(flags, Double::NaN(), Double::NaN(),
+                                    NULL, NULL);
+  const char* trimmed =
+      converter.TrimLeft(kWhitespaceAscii, strlen(kWhitespaceAscii));
+  CHECK_EQ('-', *trimmed);
+
   const uc16 kOghamSpaceMark = 0x1680;
   const uc16 kMongolianVowelSeparator = 0x180E;
   const uc16 kEnQuad = 0x2000;
@@ -4709,6 +4715,10 @@ TEST(StringToDoubleFloatWhitespace) {
                            Single::NaN(),
                            &processed, &all_used));
   CHECK(all_used);
+
+  const uc16* trimmed2 =
+      converter.TrimLeft(kWhitespace16, kWhitespace16Length);
+  CHECK_EQ('-', *trimmed2);
 }
 
 

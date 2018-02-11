@@ -525,6 +525,16 @@ class StringToDoubleConverter {
                       int length,
                       int* processed_characters_count) const;
 
+  // Returns a pointer to the first non-whitespace character of the given buffer.
+  // Uses the same method as the StringToX conversions.
+  // This makes it possible to check for multiple NaN or infinity strings.
+  //
+  // This method does *not* use the ALLOW_LEADING_SPACES flag.
+  const char* TrimLeft(const char* buffer, int length) const;
+
+  // Same as TrimLeft above but for 16 bit characters.
+  const uc16* TrimLeft(const uc16* buffer, int length) const;
+  
  private:
   const int flags_;
   const double empty_string_value_;
@@ -537,6 +547,9 @@ class StringToDoubleConverter {
                       int length,
                       bool read_as_double,
                       int* processed_characters_count) const;
+
+  template <class Iterator>
+  Iterator GenericTrimLeft(Iterator buffer, int length) const;
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
 };

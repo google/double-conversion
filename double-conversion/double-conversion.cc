@@ -982,6 +982,20 @@ double StringToDoubleConverter::StringToIeee(
 }
 
 
+template <class Iterator>
+Iterator StringToDoubleConverter::GenericTrimLeft(
+    Iterator input,
+    int length) const {
+  Iterator current = input;
+  Iterator end = input + length;
+
+  while (current != end) {
+    if (!isWhitespace(*current)) return current;
+    ++current;
+  }
+  return end;
+}
+
 double StringToDoubleConverter::StringToDouble(
     const char* buffer,
     int length,
@@ -1013,6 +1027,18 @@ float StringToDoubleConverter::StringToFloat(
     int* processed_characters_count) const {
   return static_cast<float>(StringToIeee(buffer, length, false,
                                          processed_characters_count));
+}
+
+const char* StringToDoubleConverter::TrimLeft(
+    const char* buffer,
+    int length) const {
+  return GenericTrimLeft(buffer, length);
+}
+
+const uc16* StringToDoubleConverter::TrimLeft(
+    const uc16* buffer,
+    int length) const {
+  return GenericTrimLeft(buffer, length);
 }
 
 }  // namespace double_conversion
