@@ -303,8 +303,8 @@ class DoubleToStringConverter {
   // The result should be interpreted as buffer * 10^(point-length).
   //
   // The digits are written to the buffer in the platform's charset, which is
-  // often UTF-8 (ASCII-range for digits), but may be anoter charset, such as
-  // EBCDIC.
+  // often UTF-8 (with ASCII-range digits) but may be another charset, such
+  // as EBCDIC.
   //
   // The output depends on the given mode:
   //  - SHORTEST: produce the least amount of digits for which the internal
