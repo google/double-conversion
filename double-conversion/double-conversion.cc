@@ -887,9 +887,11 @@ double StringToDoubleConverter::StringToIeee(
   if (*current == 'e' || *current == 'E') {
     if (octal && !allow_trailing_junk) return junk_string_value_;
     if (octal) goto parsing_done;
+    Iterator junk_begin = current;
     ++current;
     if (current == end) {
       if (allow_trailing_junk) {
+        current = junk_begin;
         goto parsing_done;
       } else {
         return junk_string_value_;
@@ -901,6 +903,7 @@ double StringToDoubleConverter::StringToIeee(
       ++current;
       if (current == end) {
         if (allow_trailing_junk) {
+          current = junk_begin;
           goto parsing_done;
         } else {
           return junk_string_value_;
@@ -910,6 +913,7 @@ double StringToDoubleConverter::StringToIeee(
 
     if (current == end || *current < '0' || *current > '9') {
       if (allow_trailing_junk) {
+        current = junk_begin;
         goto parsing_done;
       } else {
         return junk_string_value_;
