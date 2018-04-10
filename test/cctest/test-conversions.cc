@@ -1804,6 +1804,18 @@ TEST(StringToDoubleVarious) {
   CHECK_EQ(0, processed);
 
 
+  flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+
+  CHECK_EQ(123.0, StrToD("123e", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(processed, 3);
+
+  CHECK_EQ(123.0, StrToD("123e-", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(processed, 3);
+
+  CHECK_EQ(123.0, StrToD("123e-a", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(processed, 3);
+
+
   flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
       StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN |
       StringToDoubleConverter::ALLOW_TRAILING_SPACES |
@@ -3184,10 +3196,10 @@ TEST(StringToDoubleCommentExamples) {
   CHECK(all_used);
 
   CHECK_EQ(123.0, StrToD("123e", flags, 0.0, &processed, &all_used));
-  CHECK(all_used);
+  CHECK_EQ(processed, 3);
 
   CHECK_EQ(123.0, StrToD("123e-", flags, 0.0, &processed, &all_used));
-  CHECK(all_used);
+  CHECK_EQ(processed, 3);
 
   {
     StringToDoubleConverter converter(flags, 0.0, 1.0, "infinity", "NaN");
