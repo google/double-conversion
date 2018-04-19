@@ -483,7 +483,27 @@ float Strtof(Vector<const char> buffer, int exponent) {
   double double_guess;
   bool is_correct = ComputeGuess(trimmed, exponent, &double_guess);
 
-  float float_guess = static_cast<float>(double_guess);
+  // ASAN has a sanitize check that disallows casting doubles to floats if
+  // they are too big.
+  // https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html#available-checks
+  // The behavior should be covered by IEEE 754, but some projects use this
+  // flag, so work around it.
+  float max_finite = 3.4028234663852885981170418348451692544e+38;
+  // The half-way point between the max-finite and infinity value.
+  // Since infinity has an even significand everything equal or greater than
+  // this value should become infinity.
+  double half_max_finite_infinity =
+      3.40282356779733661637539395458142568448e+38;
+  float float_guess;
+  if (double_guess >= max_finite) {
+    if (double_guess >= half_max_finite_infinity) {
+      float_guess = Single::Infinity();
+    } else {
+      float_guess = max_finite;
+    }
+  } else {
+    float_guess = static_cast<float>(double_guess);
+  }
   if (float_guess == double_guess) {
     // This shortcut triggers for integer values.
     return float_guess;
