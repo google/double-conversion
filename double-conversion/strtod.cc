@@ -472,17 +472,8 @@ double Strtod(Vector<const char> buffer, int exponent) {
   }
 }
 
-float Strtof(Vector<const char> buffer, int exponent) {
-  char copy_buffer[kMaxSignificantDecimalDigits];
-  Vector<const char> trimmed;
-  int updated_exponent;
-  TrimAndCut(buffer, exponent, copy_buffer, kMaxSignificantDecimalDigits,
-             &trimmed, &updated_exponent);
-  exponent = updated_exponent;
-
-  double double_guess;
-  bool is_correct = ComputeGuess(trimmed, exponent, &double_guess);
-
+static float SanitizedDoubletof(double d) {
+  ASSERT(d >= 0.0);
   // ASAN has a sanitize check that disallows casting doubles to floats if
   // they are too big.
   // https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html#available-checks
@@ -494,16 +485,29 @@ float Strtof(Vector<const char> buffer, int exponent) {
   // this value should become infinity.
   double half_max_finite_infinity =
       3.40282356779733661637539395458142568448e+38;
-  float float_guess;
-  if (double_guess >= max_finite) {
-    if (double_guess >= half_max_finite_infinity) {
-      float_guess = Single::Infinity();
+  if (d >= max_finite) {
+    if (d >= half_max_finite_infinity) {
+      return Single::Infinity();
     } else {
-      float_guess = max_finite;
+      return max_finite;
     }
   } else {
-    float_guess = static_cast<float>(double_guess);
+    return static_cast<float>(d);
   }
+}
+
+float Strtof(Vector<const char> buffer, int exponent) {
+  char copy_buffer[kMaxSignificantDecimalDigits];
+  Vector<const char> trimmed;
+  int updated_exponent;
+  TrimAndCut(buffer, exponent, copy_buffer, kMaxSignificantDecimalDigits,
+             &trimmed, &updated_exponent);
+  exponent = updated_exponent;
+
+  double double_guess;
+  bool is_correct = ComputeGuess(trimmed, exponent, &double_guess);
+
+  float float_guess = SanitizedDoubletof(double_guess);
   if (float_guess == double_guess) {
     // This shortcut triggers for integer values.
     return float_guess;
@@ -526,15 +530,15 @@ float Strtof(Vector<const char> buffer, int exponent) {
   double double_next = Double(double_guess).NextDouble();
   double double_previous = Double(double_guess).PreviousDouble();
 
-  float f1 = static_cast<float>(double_previous);
+  float f1 = SanitizedDoubletof(double_previous);
   float f2 = float_guess;
-  float f3 = static_cast<float>(double_next);
+  float f3 = SanitizedDoubletof(double_next);
   float f4;
   if (is_correct) {
     f4 = f3;
   } else {
     double double_next2 = Double(double_next).NextDouble();
-    f4 = static_cast<float>(double_next2);
+    f4 = SanitizedDoubletof(double_next2);
   }
   (void) f2;  // Mark variable as used.
   ASSERT(f1 <= f2 && f2 <= f3 && f3 <= f4);
@@ -549,7 +553,7 @@ float Strtof(Vector<const char> buffer, int exponent) {
          (f1 == f2 && f2 != f3 && f3 == f4) ||
          (f1 == f2 && f2 == f3 && f3 != f4));
 
-  // guess and next are the two possible canditates (in the same way that
+  // guess and next are the two possible candidates (in the same way that
   // double_guess was the lower candidate for a double-precision guess).
   float guess = f1;
   float next = f4;
