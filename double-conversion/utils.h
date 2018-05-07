@@ -79,7 +79,8 @@ inline void abort_noreturn() { abort(); }
     defined(__AARCH64EL__) || defined(__aarch64__) || \
     defined(__riscv)
 #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
-#elif defined(__mc68000__)
+#elif defined(__mc68000__) || \
+    defined(__pnacl__) || defined(__native_client__)
 #undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
 #elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
 #if defined(_WIN32)
