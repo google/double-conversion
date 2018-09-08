@@ -67,6 +67,22 @@ inline void abort_noreturn() { abort(); }
 // the output of the division with the expected result. (Inlining must be
 // disabled.)
 // On Linux,x86 89255e-22 != Div_double(89255.0/1e22)
+//
+// For example:
+/*
+// -- in div.c
+double Div_double(double x, double y) { return x / y; }
+
+// -- in main.c
+double Div_double(double x, double y);  // Forward declaration.
+
+int main(int argc, char** argv) {
+  return Div_double(89255.0, 1e22) == 89255e-22;
+}
+*/
+// Run as follows ./main || echo "correct"
+//
+// If it prints "correct" then the architecture should be here, in the "correct" section.
 #if defined(_M_X64) || defined(__x86_64__) || \
     defined(__ARMEL__) || defined(__avr32__) || defined(_M_ARM) || defined(_M_ARM64) || \
     defined(__hppa__) || defined(__ia64__) || \
