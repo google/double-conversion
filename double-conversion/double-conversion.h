@@ -396,6 +396,7 @@ class StringToDoubleConverter {
     ALLOW_TRAILING_SPACES = 16,
     ALLOW_SPACES_AFTER_SIGN = 32,
     ALLOW_CASE_INSENSIBILITY = 64,
+    ALLOW_HEX_FLOATS = 128,
   };
 
   // Flags should be a bit-or combination of the possible Flags-enum.
@@ -429,6 +430,11 @@ class StringToDoubleConverter {
   //           StringToDouble("+   123.2") -> 123.2
   //  - ALLOW_CASE_INSENSIBILITY: ignore case of characters for special values:
   //      infinity and nan.
+  //  - ALLOW_HEX_FLOATS: allows hexadecimal float literals.
+  //      This *must* start with "0x" and separate the exponent with "p".
+  //      Examples: 0x1.2p3 == 9.0
+  //                0x10.1p0 == 16.0625
+  //      ALLOW_HEX and ALLOW_HEX_FLOATS are indendent.
   //
   // empty_string_value is returned when an empty string is given as input.
   // If ALLOW_LEADING_SPACES or ALLOW_TRAILING_SPACES are set, then a string

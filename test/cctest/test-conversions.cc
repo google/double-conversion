@@ -2563,6 +2563,91 @@ TEST(StringToDoubleHexString) {
   CHECK_EQ(295147905179352960000.0, StrToD("0x100000000000018000", flags, 0.0,
                                            &processed, &all_used));
   CHECK(all_used);
+
+  flags = StringToDoubleConverter::ALLOW_HEX_FLOATS;
+
+  CHECK_EQ(3.0, StrToD("0x3p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0, StrToD("0x.0p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(3.0, StrToD("0x3.0p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(3.0, StrToD("0x3.p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-5.634002666912405e+27, StrToD("-0x123456789012345678901234p0",
+                                          flags, 0.0,
+                                          &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(72057594037927940.0, StrToD("0x100000000000001p0", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(72057594037927940.0, StrToD("0x100000000000000p0", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352830000.0, StrToD("0x100000000000000001p0", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352830000.0, StrToD("0x100000000000000000p0", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352900000.0, StrToD("0x100000000000008001p0", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352830000.0, StrToD("0x100000000000008000p0", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352960000.0, StrToD("0x100000000000018001p0", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352960000.0, StrToD("0x100000000000018000p0", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(4.722366482869645e+21, StrToD("0x100000000000000001p4", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(4.722366482869645e+21, StrToD("0x100000000000000000p+4", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(4.722366482869646e+21, StrToD("0x100000000000008001p04", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(18446744073709552000.0, StrToD("0x100000000000008000p-4", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(18446744073709560000.0, StrToD("0x100000000000018001p-04", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(4.722366482869647e+21, StrToD("0x100000000000018000p4", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::Infinity(), StrToD("0x1p2000", flags, 0.0,
+                                      &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0, StrToD("0x1p-2000", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0, StrToD("-0x1p-2000", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
 }
 
 
@@ -3789,13 +3874,30 @@ TEST(StringToFloatHexString) {
   CHECK_EQ(5.0f, StrToF(" + 0x5 ", flags, 0.0f, &processed, &all_used));
   CHECK(all_used);
 
-  CHECK_EQ(Single::NaN(), StrToF("- -0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(Single::NaN(), StrToF("- -0x5", flags, 0.0f, 
+                                 &processed, &all_used));
   CHECK_EQ(0, processed);
 
-  CHECK_EQ(Single::NaN(), StrToF("- +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(Single::NaN(), StrToF("- +0x5", flags, 0.0f,
+                                 &processed, &all_used));
   CHECK_EQ(0, processed);
 
-  CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x.0p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3.0p0", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3.p0", flags, 0.0f,
+                                 &processed, &all_used));
   CHECK_EQ(0, processed);
 
   flags = StringToDoubleConverter::ALLOW_HEX;
@@ -3890,6 +3992,20 @@ TEST(StringToFloatHexString) {
   CHECK_EQ(0, processed);
 
   CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x.0p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3.0p0", flags, 0.0f,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3.p0", flags, 0.0f,
+                                 &processed, &all_used));
   CHECK_EQ(0, processed);
 
   flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
@@ -4013,6 +4129,19 @@ TEST(StringToFloatHexString) {
 
   CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0f,  &processed, &all_used));
   CHECK_EQ(0, processed);
+
+  CHECK_EQ(3.0f, StrToF("0x3p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x.0p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(3.0f, StrToF("0x3.0p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(3.0f, StrToF("0x3.p0", flags, 0.0f, &processed, &all_used));
+  CHECK_EQ(3, processed);
+
 
   flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
       StringToDoubleConverter::ALLOW_LEADING_SPACES |

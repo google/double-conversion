@@ -537,7 +537,7 @@ static bool IsDecimalDigitForRadix(int c, int radix) {
 #pragma optimize("",on)
 #else
 static bool inline IsDecimalDigitForRadix(int c, int radix) {
-	return '0' <= c && c <= '9' && (c - '0') < radix;
+  return '0' <= c && c <= '9' && (c - '0') < radix;
 }
 #endif
 // Returns true if 'c' is a character digit that is valid for the given radix.
@@ -551,17 +551,57 @@ static bool IsCharacterDigitForRadix(int c, int radix, char a_character) {
   return radix > 10 && c >= a_character && c < a_character + radix - 10;
 }
 
+// Checks whether the string in the range start-end is a hex-float string.
+// This function assumes that the leading '0x'/'0X' is already consumed.
+//
+// Hex float strings are of one of the following forms:
+//   - hex_digits+ 'p' ('+'|'-')? exponent_digits+
+//   - hex_digits* '.' hex_digits+ 'p' ('+'|'-')? exponent_digits+
+//   - hex_digits+ '.' 'p' ('+'|'-')? exponent_digits+
+template<class Iterator>
+static bool IsHexFloatString(Iterator start,
+                             Iterator end,
+                             bool allow_trailing_junk) {
+  ASSERT(start != end);
+
+  Iterator current = start;
+
+  while (current != end && isDigit(*current, 16)) ++current;
+  if (current == end) return false;
+  if (*current == '.') {
+    ++current;
+    while (current != end && isDigit(*current, 16)) ++current;
+    if (current - start == 1) return false;  // Only the '.', but no digits.
+  }
+  if (current == end) return false;
+  if (*current != 'p' && *current != 'P') return false;
+  ++current;
+  if (current == end) return false;
+  if (*current == '+' || *current == '-') ++current;
+  if (current == end) return false;
+  if (!isDigit(*current, 10)) return false;
+  ++current;
+  while (current != end && isDigit(*current, 10)) ++current;
+  return allow_trailing_junk || !AdvanceToNonspace(&current, end);
+}
+
 
 // Parsing integers with radix 2, 4, 8, 16, 32. Assumes current != end.
+//
+// If parse_as_hex_float is true, then the string must be a valid
+// hex-float.
 template <int radix_log_2, class Iterator>
 static double RadixStringToIeee(Iterator* current,
                                 Iterator end,
                                 bool sign,
+                                bool parse_as_hex_float,
                                 bool allow_trailing_junk,
                                 double junk_string_value,
                                 bool read_as_double,
                                 bool* result_is_junk) {
   ASSERT(*current != end);
+  ASSERT(!parse_as_hex_float ||
+      IsHexFloatString(*current, end, allow_trailing_junk));
 
   const int kDoubleSize = Double::kSignificandSize;
   const int kSingleSize = Single::kSignificandSize;
@@ -581,15 +621,27 @@ static double RadixStringToIeee(Iterator* current,
   int64_t number = 0;
   int exponent = 0;
   const int radix = (1 << radix_log_2);
+  // Whether we have encountered a '.' and are parsing the decimal digits.
+  // Only relevant if parse_as_hex_float is true.
+  bool post_decimal = false;
 
   do {
     int digit;
     if (IsDecimalDigitForRadix(**current, radix)) {
       digit = static_cast<char>(**current) - '0';
+      if (post_decimal) exponent -= radix_log_2;
     } else if (IsCharacterDigitForRadix(**current, radix, 'a')) {
       digit = static_cast<char>(**current) - 'a' + 10;
+      if (post_decimal) exponent -= radix_log_2;
     } else if (IsCharacterDigitForRadix(**current, radix, 'A')) {
       digit = static_cast<char>(**current) - 'A' + 10;
+      if (post_decimal) exponent -= radix_log_2;
+    } else if (parse_as_hex_float && **current == '.') {
+      post_decimal = true;
+      ++(*current);
+      continue;
+    } else if (parse_as_hex_float && (**current == 'p' || **current == 'P')) {
+      break;
     } else {
       if (allow_trailing_junk || !AdvanceToNonspace(current, end)) {
         break;
@@ -612,17 +664,25 @@ static double RadixStringToIeee(Iterator* current,
       int dropped_bits_mask = ((1 << overflow_bits_count) - 1);
       int dropped_bits = static_cast<int>(number) & dropped_bits_mask;
       number >>= overflow_bits_count;
-      exponent = overflow_bits_count;
+      exponent += overflow_bits_count;
 
       bool zero_tail = true;
       for (;;) {
         ++(*current);
+        if (parse_as_hex_float && **current == '.') {
+          // Just run over the '.'. We are just trying to see whether there is
+          // a non-zero digit somewhere.
+          ++(*current);
+          post_decimal = true;
+        }
         if (*current == end || !isDigit(**current, radix)) break;
         zero_tail = zero_tail && **current == '0';
-        exponent += radix_log_2;
+        if (!post_decimal) exponent += radix_log_2;
       }
 
-      if (!allow_trailing_junk && AdvanceToNonspace(current, end)) {
+      if (!parse_as_hex_float &&
+          !allow_trailing_junk &&
+          AdvanceToNonspace(current, end)) {
         return junk_string_value;
       }
 
@@ -652,7 +712,26 @@ static double RadixStringToIeee(Iterator* current,
 
   *result_is_junk = false;
 
-  if (exponent == 0) {
+  if (parse_as_hex_float) {
+    ASSERT(**current == 'p' || **current == 'P');
+    ++(*current);
+    bool is_negative = false;
+    if (**current == '+') {
+      ++(*current);
+    } else if (**current == '-') {
+      is_negative = true;
+      ++(*current);
+    }
+    int written_exponent = 0;
+    while (*current != end && IsDecimalDigitForRadix(**current, 10)) {
+      written_exponent = 10 * written_exponent + **current - '0';
+      ++(*current);
+    }
+    if (is_negative) written_exponent = -written_exponent;
+    exponent += written_exponent;
+  }
+
+  if (exponent == 0 || number == 0) {
     if (sign) {
       if (number == 0) return -0.0;
       number = -number;
@@ -779,16 +858,23 @@ double StringToDoubleConverter::StringToIeee(
     leading_zero = true;
 
     // It could be hexadecimal value.
-    if ((flags_ & ALLOW_HEX) && (*current == 'x' || *current == 'X')) {
+    if (((flags_ & ALLOW_HEX) || (flags_ & ALLOW_HEX_FLOATS)) &&
+        (*current == 'x' || *current == 'X')) {
       ++current;
-      if (current == end || !isDigit(*current, 16)) {
-        return junk_string_value_;  // "0x".
+
+      bool parse_as_hex_float = (flags_ & ALLOW_HEX_FLOATS) &&
+                          IsHexFloatString(current, end, allow_trailing_junk);
+
+      if (current == end) return junk_string_value_;  // "0x"
+      if (!parse_as_hex_float && !isDigit(*current, 16)) {
+        return junk_string_value_;
       }
 
       bool result_is_junk;
       double result = RadixStringToIeee<4>(&current,
                                            end,
                                            sign,
+                                           parse_as_hex_float,
                                            allow_trailing_junk,
                                            junk_string_value_,
                                            read_as_double,
@@ -959,6 +1045,7 @@ double StringToDoubleConverter::StringToIeee(
     result = RadixStringToIeee<3>(&start,
                                   buffer + buffer_pos,
                                   sign,
+                                  false, // Don't parse as hex_float.
                                   allow_trailing_junk,
                                   junk_string_value_,
                                   read_as_double,
