@@ -2332,6 +2332,43 @@ TEST(StringToDoubleHexString) {
   CHECK_EQ(Double::NaN(), StrToD("x3", flags, 0.0,
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
+
+  CHECK_EQ(-5.634002666912405e+27, StrToD("-0x123456789012345678901234",
+                                          flags, 0.0,
+                                          &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(72057594037927940.0, StrToD("0x100000000000001", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(72057594037927940.0, StrToD("0x100000000000000", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352830000.0, StrToD("0x100000000000000001", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352830000.0, StrToD("0x100000000000000000", flags, 0.0,
+                                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352900000.0, StrToD("0x100000000000008001", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352830000.0, StrToD("0x100000000000008000", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352960000.0, StrToD("0x100000000000018001", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(295147905179352960000.0, StrToD("0x100000000000018000", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
 }
 
 
