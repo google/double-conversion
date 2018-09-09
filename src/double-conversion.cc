@@ -590,7 +590,8 @@ static double RadixStringToIeee(const char* current,
   }
 
   ASSERT(number != 0);
-  return Double(DiyFp(number, exponent)).value();
+  double result = Double(DiyFp(number, exponent)).value();
+  return sign ? -result : result;
 }
 
 
