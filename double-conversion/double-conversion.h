@@ -399,6 +399,8 @@ class StringToDoubleConverter {
     ALLOW_HEX_FLOATS = 128,
   };
 
+  static const uc16 kNoSeparator = '\0';
+
   // Flags should be a bit-or combination of the possible Flags-enum.
   //  - NO_FLAGS: no special flags.
   //  - ALLOW_HEX: recognizes the prefix "0x". Hex numbers may only be integers.
@@ -459,6 +461,12 @@ class StringToDoubleConverter {
   //  - they must not have the same first character.
   //  - they must not start with digits.
   //
+  // If the separator character is not kNoSeparator, then that specific
+  // character is ignored when in between two valid digits of the significant.
+  // It is not allowed to appear in the exponent.
+  // It is not allowed to lead or trail the number.
+  // It is not allowed to appear twice next to each other.
+  //
   // Examples:
   //  flags = ALLOW_HEX | ALLOW_TRAILING_JUNK,
   //  empty_string_value = 0.0,
@@ -498,16 +506,26 @@ class StringToDoubleConverter {
   //    StringToDouble("01239E45") -> 1239e45.
   //    StringToDouble("-infinity") -> NaN  // junk_string_value.
   //    StringToDouble("NaN") -> NaN  // junk_string_value.
+  //
+  //  flags = NO_FLAGS,
+  //  separator = ' ':
+  //    StringToDouble("1 2 3 4") -> 1234.0
+  //    StringToDouble("1  2") -> NaN // junk_string_value
+  //    StringToDouble("1 000 000.0") -> 1000000.0
+  //    StringToDouble("1.000 000") -> 1.0
+  //    StringToDouble("1.0e1 000") -> NaN // junk_string_value
   StringToDoubleConverter(int flags,
                           double empty_string_value,
                           double junk_string_value,
                           const char* infinity_symbol,
-                          const char* nan_symbol)
+                          const char* nan_symbol,
+                          uc16 separator = kNoSeparator)
       : flags_(flags),
         empty_string_value_(empty_string_value),
         junk_string_value_(junk_string_value),
         infinity_symbol_(infinity_symbol),
-        nan_symbol_(nan_symbol) {
+        nan_symbol_(nan_symbol),
+        separator_(separator) {
   }
 
   // Performs the conversion.
@@ -542,6 +560,7 @@ class StringToDoubleConverter {
   const double junk_string_value_;
   const char* const infinity_symbol_;
   const char* const nan_symbol_;
+  const uc16 separator_;
 
   template <class Iterator>
   double StringToIeee(Iterator start_pointer,
