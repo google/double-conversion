@@ -1,3 +1,6 @@
+2018-09-09:
+  Fix bug where large hex literals would lose their minus sign.
+
 2014-03-08:
   Update version number for cmake.
   Support shared libraries with cmake.
