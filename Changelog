@@ -1,3 +1,6 @@
+2018-09-09:
+  Fix bug where large hex literals would lose their minus sign.
+
 2013-12-23:
   Fix compilation for ARMv8 64bit (used wrong define).
 
