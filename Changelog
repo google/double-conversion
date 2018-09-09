@@ -1,3 +1,6 @@
+2018-09-09:
+  Fix bug where large hex literals would lose their minus sign.
+
 2017-08-05:
   Tagged v3.0.0.
   Due to the directory rename switching to a new version number.
