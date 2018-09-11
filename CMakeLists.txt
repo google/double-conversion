@@ -27,7 +27,7 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # pick a version #
-set_property(TARGET double-conversion PROPERTY SOVERSION ${PROJECT_VERSION})
+set_target_properties(double-conversion PROPERTIES VERSION 1.0.0 SOVERSION 1)
 
 # set up testing if requested
 option(BUILD_TESTING "Build test programs" OFF)
