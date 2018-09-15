@@ -4,10 +4,10 @@ project(double-conversion)
 include(GNUInstallDirs)
 
 # pick a version #
-set(double-conversion_VERSION 2.0.1)
-set(double-conversion_SOVERSION_MAJOR 1)
+set(double-conversion_VERSION 3.0.3)
+set(double-conversion_SOVERSION_MAJOR 2)
 set(double-conversion_SOVERSION_MINOR 0)
-set(double-conversion_SOVERSION_PATCH 0)
+set(double-conversion_SOVERSION_PATCH 1)
 set(double-conversion_SOVERSION
   ${double-conversion_SOVERSION_MAJOR}.${double-conversion_SOVERSION_MINOR}.${double-conversion_SOVERSION_PATCH})
 
