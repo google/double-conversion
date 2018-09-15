@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 project(double-conversion)
 
 # pick a version #
-set(double-conversion_VERSION 1.1.5)
+set(double-conversion_VERSION 1.1.9)
 set(double-conversion_SOVERSION_MAJOR 0)
-set(double-conversion_SOVERSION_MINOR 0)
+set(double-conversion_SOVERSION_MINOR 1)
 set(double-conversion_SOVERSION_PATCH 0)
 set(double-conversion_SOVERSION
   ${double-conversion_SOVERSION_MAJOR}.${double-conversion_SOVERSION_MINOR}.${double-conversion_SOVERSION_PATCH})
