@@ -1,3 +1,7 @@
+2018-09-15:
+  Increase version numbers. This also changes the shared library version
+  number.
+
 2018-09-09:
   Fix bug where large hex literals would lose their minus sign.
 
