@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(double-conversion VERSION 3.0.0)
+project(double-conversion VERSION 3.1.1)
 
 set(headers
     double-conversion/bignum.h
@@ -27,7 +27,7 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # pick a version #
-set_property(TARGET double-conversion PROPERTY SOVERSION ${PROJECT_VERSION})
+set_target_properties(double-conversion PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 3)
 
 # set up testing if requested
 option(BUILD_TESTING "Build test programs" OFF)
