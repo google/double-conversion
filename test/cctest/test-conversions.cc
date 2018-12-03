@@ -36,6 +36,10 @@ TEST(DoubleToShortest) {
   CHECK_EQ("1e+21", builder.Finalize());
 
   builder.Reset();
+  CHECK(dc.ToShortest(1e-23, &builder));
+  CHECK_EQ("1e-23", builder.Finalize());
+
+  builder.Reset();
   CHECK(dc.ToShortest(1e20, &builder));
   CHECK_EQ("100000000000000000000", builder.Finalize());
 
