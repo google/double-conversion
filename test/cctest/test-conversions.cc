@@ -3607,7 +3607,7 @@ TEST(StringToDoubleSeparator) {
   CHECK(all_used);
 
   CHECK_EQ(3.0,
-           StrToD16("0x0@23.p0", flags, 0.0, &processed, &all_used,
+           StrToD16("0x0@3.p0", flags, 0.0, &processed, &all_used,
                     char_separator, separator));
   CHECK(all_used);
 }

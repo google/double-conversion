@@ -1,3 +1,7 @@
+2019-03-06:
+Fix typo in test.
+Update version number.
+
 2019-03-03:
 Fix separator characters when they they don't fit into 8 bits.
 Update version number.
