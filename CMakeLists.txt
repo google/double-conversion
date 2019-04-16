@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(double-conversion VERSION 3.1.4)
 
+include(GNUInstallDirs)
+
 set(headers
     double-conversion/bignum.h
     double-conversion/cached-powers.h
@@ -44,7 +46,7 @@ endif()
 #   * <prefix>/lib/cmake/<PROJECT-NAME>
 #   * <prefix>/lib/
 #   * <prefix>/include/
-set(config_install_dir "lib/cmake/${PROJECT_NAME}")
+set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 set(include_install_dir "include")
 
 set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -81,9 +83,9 @@ configure_package_config_file(
 install(
     TARGETS double-conversion
     EXPORT "${targets_export_name}"
-    LIBRARY DESTINATION "lib"
-    ARCHIVE DESTINATION "lib"
-    RUNTIME DESTINATION "bin"
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION "${include_install_dir}"
 )
 
