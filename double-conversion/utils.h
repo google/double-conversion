@@ -56,12 +56,13 @@ inline void abort_noreturn() { abort(); }
 #endif
 #endif
 
+#ifndef DOUBLE_CONVERSION_UNUSED
 #ifdef __GNUC__
-#define DOUBLECONVERSION_UNUSED __attribute__((unused))
+#define DOUBLE_CONVERSION_UNUSED __attribute__((unused))
 #else
-#define DOUBLECONVERSION_UNUSED
+#define DOUBLE_CONVERSION_UNUSED
 #endif
-
+#endif
 
 // Double operations detection based on target architecture.
 // Linux uses a 80bit wide floating point stack on x86. This induces double
@@ -347,7 +348,8 @@ inline Dest BitCast(const Source& source) {
   static_assert(sizeof(Dest) == sizeof(Source),
                 "source and destination size mismatch");
 #else
-  DOUBLECONVERSION_UNUSED typedef char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
+  DOUBLE_CONVERSION_UNUSED
+  typedef char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
 #endif
 
   Dest dest;
