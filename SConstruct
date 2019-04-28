@@ -22,7 +22,7 @@ CCFLAGS = []
 if int(debug):
   CCFLAGS.append(ARGUMENTS.get('CXXFLAGS', '-g -Wall -Wshadow -Werror -UNDEBUG'))
 if int(optimize):
-  CCFLAGS.append(ARGUMENTS.get('CXXFLAGS', '-g -O3 -DNDEBUG=1'))
+  CCFLAGS.append(ARGUMENTS.get('CXXFLAGS', '-O3 -DNDEBUG=1'))
 
 env.Append(CCFLAGS = " ".join(CCFLAGS))
 
