@@ -7,3 +7,7 @@ msvc/Debug/
 *.opensdf
 *.sdf
 *.user
+*.a
+*.so
+*.so.*
+run_tests

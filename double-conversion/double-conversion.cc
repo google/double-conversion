@@ -250,6 +250,12 @@ bool DoubleToStringConverter::ToExponential(
   const int kDecimalRepCapacity = kMaxExponentialDigits + 2;
   ASSERT(kDecimalRepCapacity > kBase10MaximalLength);
   char decimal_rep[kDecimalRepCapacity];
+#ifndef NDEBUG
+  // Problem: there is an assert in StringBuilder::AddSubstring() that
+  // will pass this buffer to strlen(), and this buffer is not generally
+  // null-terminated.
+  memset(decimal_rep, 0, sizeof(decimal_rep));
+#endif
   int decimal_rep_length;
 
   if (requested_digits == -1) {
