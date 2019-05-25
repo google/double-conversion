@@ -2682,6 +2682,71 @@ TEST(StringToDoubleHexString) {
 
   CHECK_EQ(-0.0, StrToD("-0x1p-2000", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(), StrToD(" ", flags, Double::NaN(),
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD(" 0x ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD(" 0x 3", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x3g", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("x3", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x3 foo", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD(" 0x3 foo", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("+ 0x3 foo", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("+", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("-", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("- -0x5", flags, 0.0,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("- +0x5", flags, 0.0,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("+ +0x5", flags, 0.0,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0xp1", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x.p1", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::Infinity(), StrToD("0x1.p10000000000000000", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0, StrToD("0x1.p-10000000000000000", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK(all_used);
 }
 
 
@@ -4669,6 +4734,156 @@ TEST(StringToFloatHexString) {
   CHECK_EQ(Single::NaN(), StrToF("x3", flags, 0.0f,
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_HEX_FLOATS;
+
+  CHECK_EQ(3.0f, StrToF("0x3p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x.0p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(3.0f, StrToF("0x3.0p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(3.0f, StrToF("0x3.p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-5634002804104940178441764864.0f, StrToF("-0x123456789012345678901234p0",
+                                             flags, 0.0,
+                                             &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(134217728.0f, StrToF("0x8000001p0", flags, 0.0,
+                                        &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(134217728.0f, StrToF("0x8000000p0", flags, 0.0,
+                                        &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(549755813888.0f, StrToF("0x8000000001p0", flags, 0.0,
+                                     &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(549755813888.0f, StrToF("0x8000000000p0", flags, 0.0,
+                                     &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(549755879424.0f, StrToF("0x8000008001p0", flags, 0.0,
+                                            &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(549755813888.0f, StrToF("0x8000008000p0", flags, 0.0,
+                                            &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(549755944960.0f, StrToF("0x8000018001p0", flags, 0.0,
+                                            &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(549755944960.0f, StrToF("0x8000018000p0", flags, 0.0,
+                                            &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(8796093022208.0f, StrToF("0x8000000001p4", flags, 0.0,
+                                          &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(8796093022208.0f, StrToF("0x8000000000p+4", flags, 0.0,
+                                          &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(8796094070784.0f, StrToF("0x8000008001p04", flags, 0.0,
+                                          &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(34359738368.0f, StrToF("0x8000008000p-4", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(34359746560.0f, StrToF("0x8000018001p-04", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(8796095119360.0f, StrToF("0x8000018000p4", flags, 0.0,
+                                          &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::Infinity(), StrToF("0x1p2000", flags, 0.0,
+                                      &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x1p-2000", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0f, StrToF("-0x1p-2000", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x 3", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3g", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("x3", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x3 foo", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF(" 0x3 foo", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ 0x3 foo", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("-", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- -0x5", flags, 0.0,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("- +0x5", flags, 0.0,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("+ +0x5", flags, 0.0,  &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0xp1", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::NaN(), StrToF("0x.p1", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Single::Infinity(), StrToF("0x1.p10000000000000000", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0x1.p-10000000000000000", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK(all_used);
 }
 
 

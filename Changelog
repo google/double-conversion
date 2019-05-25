@@ -1,3 +1,8 @@
+2019-05-25:
+  Fix `0x` for string->double conversion when Hex Floats are allowed.
+  Avoid integer overflow when exponents for hex floats were too big.
+  Update version number.
+
 2019-04-22:
   Fixed warning in gcc4.9. Thanks to Scott McCaskill
     (https://github.com/usefulcat) for the patch.

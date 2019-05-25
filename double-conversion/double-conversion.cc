@@ -604,8 +604,8 @@ static bool IsHexFloatString(Iterator start,
       saw_digit = true;
       if (Advance(&current, separator, 16, end)) return false;
     }
-    if (!saw_digit) return false;  // Only the '.', but no digits.
   }
+  if (!saw_digit) return false;
   if (*current != 'p' && *current != 'P') return false;
   if (Advance(&current, separator, 16, end)) return false;
   if (*current == '+' || *current == '-') {
@@ -763,7 +763,11 @@ static double RadixStringToIeee(Iterator* current,
     }
     int written_exponent = 0;
     while (IsDecimalDigitForRadix(**current, 10)) {
-      written_exponent = 10 * written_exponent + **current - '0';
+      // No need to read exponents if they are too big. That could potentially overflow
+      // the `written_exponent` variable.
+      if (abs(written_exponent) <= 100 * Double::kMaxExponent) {
+        written_exponent = 10 * written_exponent + **current - '0';
+      }
       if (Advance(current, separator, radix, end)) break;
     }
     if (is_negative) written_exponent = -written_exponent;
@@ -899,10 +903,11 @@ double StringToDoubleConverter::StringToIeee(
         (*current == 'x' || *current == 'X')) {
       ++current;
 
+      if (current == end) return junk_string_value_;  // "0x"
+
       bool parse_as_hex_float = (flags_ & ALLOW_HEX_FLOATS) &&
                 IsHexFloatString(current, end, separator_, allow_trailing_junk);
 
-      if (current == end) return junk_string_value_;  // "0x"
       if (!parse_as_hex_float && !isDigit(*current, 16)) {
         return junk_string_value_;
       }
