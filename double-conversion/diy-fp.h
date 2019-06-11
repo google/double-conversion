@@ -49,8 +49,8 @@ class DiyFp {
   // must be bigger than the significand of other.
   // The result will not be normalized.
   void Subtract(const DiyFp& other) {
-    ASSERT(e_ == other.e_);
-    ASSERT(f_ >= other.f_);
+    DOUBLE_CONVERSION_ASSERT(e_ == other.e_);
+    DOUBLE_CONVERSION_ASSERT(f_ >= other.f_);
     f_ -= other.f_;
   }
 
@@ -75,13 +75,13 @@ class DiyFp {
   }
 
   void Normalize() {
-    ASSERT(f_ != 0);
+    DOUBLE_CONVERSION_ASSERT(f_ != 0);
     uint64_t significand = f_;
     int exponent = e_;
 
     // This method is mainly called for normalizing boundaries. In general
     // boundaries need to be shifted by 10 bits. We thus optimize for this case.
-    const uint64_t k10MSBits = UINT64_2PART_C(0xFFC00000, 00000000);
+    const uint64_t k10MSBits = DOUBLE_CONVERSION_UINT64_2PART_C(0xFFC00000, 00000000);
     while ((significand & k10MSBits) == 0) {
       significand <<= 10;
       exponent -= 10;
@@ -107,7 +107,7 @@ class DiyFp {
   void set_e(int new_value) { e_ = new_value; }
 
  private:
-  static const uint64_t kUint64MSB = UINT64_2PART_C(0x80000000, 00000000);
+  static const uint64_t kUint64MSB = DOUBLE_CONVERSION_UINT64_2PART_C(0x80000000, 00000000);
 
   uint64_t f_;
   int e_;

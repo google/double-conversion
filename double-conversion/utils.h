@@ -32,12 +32,12 @@
 #include <cstring>
 
 #include <cassert>
-#ifndef ASSERT
-#define ASSERT(condition)         \
+#ifndef DOUBLE_CONVERSION_ASSERT
+#define DOUBLE_CONVERSION_ASSERT(condition)         \
     assert(condition);
 #endif
-#ifndef UNIMPLEMENTED
-#define UNIMPLEMENTED() (abort())
+#ifndef DOUBLE_CONVERSION_UNIMPLEMENTED
+#define DOUBLE_CONVERSION_UNIMPLEMENTED() (abort())
 #endif
 #ifndef DOUBLE_CONVERSION_NO_RETURN
 #ifdef _MSC_VER
@@ -46,13 +46,13 @@
 #define DOUBLE_CONVERSION_NO_RETURN __attribute__((noreturn))
 #endif
 #endif
-#ifndef UNREACHABLE
+#ifndef DOUBLE_CONVERSION_UNREACHABLE
 #ifdef _MSC_VER
 void DOUBLE_CONVERSION_NO_RETURN abort_noreturn();
 inline void abort_noreturn() { abort(); }
-#define UNREACHABLE()   (abort_noreturn())
+#define DOUBLE_CONVERSION_UNREACHABLE()   (abort_noreturn())
 #else
-#define UNREACHABLE()   (abort())
+#define DOUBLE_CONVERSION_UNREACHABLE()   (abort())
 #endif
 #endif
 
@@ -140,24 +140,24 @@ typedef uint16_t uc16;
 
 // The following macro works on both 32 and 64-bit platforms.
 // Usage: instead of writing 0x1234567890123456
-//      write UINT64_2PART_C(0x12345678,90123456);
-#define UINT64_2PART_C(a, b) (((static_cast<uint64_t>(a) << 32) + 0x##b##u))
+//      write DOUBLE_CONVERSION_UINT64_2PART_C(0x12345678,90123456);
+#define DOUBLE_CONVERSION_UINT64_2PART_C(a, b) (((static_cast<uint64_t>(a) << 32) + 0x##b##u))
 
 
-// The expression ARRAY_SIZE(a) is a compile-time constant of type
+// The expression DOUBLE_CONVERSION_ARRAY_SIZE(a) is a compile-time constant of type
 // size_t which represents the number of elements of the given
-// array. You should only use ARRAY_SIZE on statically allocated
+// array. You should only use DOUBLE_CONVERSION_ARRAY_SIZE on statically allocated
 // arrays.
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(a)                                   \
+#ifndef DOUBLE_CONVERSION_ARRAY_SIZE
+#define DOUBLE_CONVERSION_ARRAY_SIZE(a)                                   \
   ((sizeof(a) / sizeof(*(a))) /                         \
   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 #endif
 
 // A macro to disallow the evil copy constructor and operator= functions
 // This should be used in the private: declarations for a class
-#ifndef DC_DISALLOW_COPY_AND_ASSIGN
-#define DC_DISALLOW_COPY_AND_ASSIGN(TypeName)      \
+#ifndef DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN
+#define DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(TypeName)      \
   TypeName(const TypeName&);                    \
   void operator=(const TypeName&)
 #endif
@@ -168,10 +168,10 @@ typedef uint16_t uc16;
 // This should be used in the private: declarations for a class
 // that wants to prevent anyone from instantiating it. This is
 // especially useful for classes containing only static methods.
-#ifndef DC_DISALLOW_IMPLICIT_CONSTRUCTORS
-#define DC_DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
+#ifndef DOUBLE_CONVERSION_DISALLOW_IMPLICIT_CONSTRUCTORS
+#define DOUBLE_CONVERSION_DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
   TypeName();                                    \
-  DC_DISALLOW_COPY_AND_ASSIGN(TypeName)
+  DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(TypeName)
 #endif
 
 namespace double_conversion {
@@ -180,7 +180,7 @@ static const int kCharSize = sizeof(char);
 
 inline int StrLength(const char* string) {
   size_t length = strlen(string);
-  ASSERT(length == static_cast<size_t>(static_cast<int>(length)));
+  DOUBLE_CONVERSION_ASSERT(length == static_cast<size_t>(static_cast<int>(length)));
   return static_cast<int>(length);
 }
 
@@ -190,15 +190,15 @@ class Vector {
  public:
   Vector() : start_(NULL), length_(0) {}
   Vector(T* data, int len) : start_(data), length_(len) {
-    ASSERT(len == 0 || (len > 0 && data != NULL));
+    DOUBLE_CONVERSION_ASSERT(len == 0 || (len > 0 && data != NULL));
   }
 
   // Returns a vector using the same backing storage as this one,
   // spanning from and including 'from', to but not including 'to'.
   Vector<T> SubVector(int from, int to) {
-    ASSERT(to <= length_);
-    ASSERT(from < to);
-    ASSERT(0 <= from);
+    DOUBLE_CONVERSION_ASSERT(to <= length_);
+    DOUBLE_CONVERSION_ASSERT(from < to);
+    DOUBLE_CONVERSION_ASSERT(0 <= from);
     return Vector<T>(start() + from, to - from);
   }
 
@@ -213,7 +213,7 @@ class Vector {
 
   // Access individual vector elements - checks bounds in debug mode.
   T& operator[](int index) const {
-    ASSERT(0 <= index && index < length_);
+    DOUBLE_CONVERSION_ASSERT(0 <= index && index < length_);
     return start_[index];
   }
 
@@ -241,7 +241,7 @@ class StringBuilder {
 
   // Get the current position in the builder.
   int position() const {
-    ASSERT(!is_finalized());
+    DOUBLE_CONVERSION_ASSERT(!is_finalized());
     return position_;
   }
 
@@ -252,8 +252,8 @@ class StringBuilder {
   // 0-characters; use the Finalize() method to terminate the string
   // instead.
   void AddCharacter(char c) {
-    ASSERT(c != '\0');
-    ASSERT(!is_finalized() && position_ < buffer_.length());
+    DOUBLE_CONVERSION_ASSERT(c != '\0');
+    DOUBLE_CONVERSION_ASSERT(!is_finalized() && position_ < buffer_.length());
     buffer_[position_++] = c;
   }
 
@@ -266,8 +266,8 @@ class StringBuilder {
   // Add the first 'n' characters of the given string 's' to the
   // builder. The input string must have enough characters.
   void AddSubstring(const char* s, int n) {
-    ASSERT(!is_finalized() && position_ + n < buffer_.length());
-    ASSERT(static_cast<size_t>(n) <= strlen(s));
+    DOUBLE_CONVERSION_ASSERT(!is_finalized() && position_ + n < buffer_.length());
+    DOUBLE_CONVERSION_ASSERT(static_cast<size_t>(n) <= strlen(s));
     memmove(&buffer_[position_], s, n * kCharSize);
     position_ += n;
   }
@@ -283,13 +283,13 @@ class StringBuilder {
 
   // Finalize the string by 0-terminating it and returning the buffer.
   char* Finalize() {
-    ASSERT(!is_finalized() && position_ < buffer_.length());
+    DOUBLE_CONVERSION_ASSERT(!is_finalized() && position_ < buffer_.length());
     buffer_[position_] = '\0';
     // Make sure nobody managed to add a 0-character to the
     // buffer while building the string.
-    ASSERT(strlen(buffer_.start()) == static_cast<size_t>(position_));
+    DOUBLE_CONVERSION_ASSERT(strlen(buffer_.start()) == static_cast<size_t>(position_));
     position_ = -1;
-    ASSERT(is_finalized());
+    DOUBLE_CONVERSION_ASSERT(is_finalized());
     return buffer_.start();
   }
 
@@ -299,7 +299,7 @@ class StringBuilder {
 
   bool is_finalized() const { return position_ < 0; }
 
-  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(StringBuilder);
+  DOUBLE_CONVERSION_DISALLOW_IMPLICIT_CONSTRUCTORS(StringBuilder);
 };
 
 // The type-based aliasing rule allows the compiler to assume that pointers of

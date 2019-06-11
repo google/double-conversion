@@ -124,7 +124,7 @@ class DoubleToStringConverter {
             max_trailing_padding_zeroes_in_precision_mode) {
     // When 'trailing zero after the point' is set, then 'trailing point'
     // must be set too.
-    ASSERT(((flags & EMIT_TRAILING_DECIMAL_POINT) != 0) ||
+    DOUBLE_CONVERSION_ASSERT(((flags & EMIT_TRAILING_DECIMAL_POINT) != 0) ||
         !((flags & EMIT_TRAILING_ZERO_AFTER_POINT) != 0));
   }
 
@@ -379,7 +379,7 @@ class DoubleToStringConverter {
   const int max_leading_padding_zeroes_in_precision_mode_;
   const int max_trailing_padding_zeroes_in_precision_mode_;
 
-  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(DoubleToStringConverter);
+  DOUBLE_CONVERSION_DISALLOW_IMPLICIT_CONSTRUCTORS(DoubleToStringConverter);
 };
 
 
@@ -568,7 +568,7 @@ class StringToDoubleConverter {
                       bool read_as_double,
                       int* processed_characters_count) const;
 
-  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
+  DOUBLE_CONVERSION_DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
 };
 
 }  // namespace double_conversion
