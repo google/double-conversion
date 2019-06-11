@@ -446,18 +446,31 @@ static bool ComputeGuess(Vector<const char> trimmed, int exponent,
   return false;
 }
 
-double Strtod(Vector<const char> buffer, int exponent) {
-  char copy_buffer[kMaxSignificantDecimalDigits];
-  Vector<const char> trimmed;
-  int updated_exponent;
-  TrimAndCut(buffer, exponent, copy_buffer, kMaxSignificantDecimalDigits,
-             &trimmed, &updated_exponent);
-  exponent = updated_exponent;
+static bool IsDigit(const char d) {
+  return ('0' <= d) && (d <= '9');
+}
 
+static bool IsNonZeroDigit(const char d) {
+  return ('1' <= d) && (d <= '9');
+}
+
+static bool AssertTrimmedDigits(const Vector<const char>& buffer) {
+  for(int i = 0; i < buffer.length(); ++i) {
+    if(!IsDigit(buffer[i])) {
+      return false;
+    }
+  }
+  return (buffer.length() == 0) || (IsNonZeroDigit(buffer[0]) && IsNonZeroDigit(buffer[buffer.length()-1]));
+}
+
+double StrtodTrimmed(Vector<const char> trimmed, int exponent) {
+  DOUBLE_CONVERSION_ASSERT(trimmed.length() <= kMaxSignificantDecimalDigits);
+  DOUBLE_CONVERSION_ASSERT(AssertTrimmedDigits(trimmed));
   double guess;
-  bool is_correct = ComputeGuess(trimmed, exponent, &guess);
-  if (is_correct) return guess;
-
+  const bool is_correct = ComputeGuess(trimmed, exponent, &guess);
+  if (is_correct) {
+    return guess;
+  }
   DiyFp upper_boundary = Double(guess).UpperBoundary();
   int comparison = CompareBufferWithDiyFp(trimmed, exponent, upper_boundary);
   if (comparison < 0) {
@@ -470,6 +483,15 @@ double Strtod(Vector<const char> buffer, int exponent) {
   } else {
     return Double(guess).NextDouble();
   }
+}
+
+double Strtod(Vector<const char> buffer, int exponent) {
+  char copy_buffer[kMaxSignificantDecimalDigits];
+  Vector<const char> trimmed;
+  int updated_exponent;
+  TrimAndCut(buffer, exponent, copy_buffer, kMaxSignificantDecimalDigits,
+             &trimmed, &updated_exponent);
+  return StrtodTrimmed(trimmed, updated_exponent);
 }
 
 static float SanitizedDoubletof(double d) {
