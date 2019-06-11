@@ -25,6 +25,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <algorithm>
 #include <climits>
 #include <locale>
 #include <cmath>
@@ -187,7 +188,7 @@ bool DoubleToStringConverter::ToShortestIeeeNumber(
       (exponent < decimal_in_shortest_high_)) {
     CreateDecimalRepresentation(decimal_rep, decimal_rep_length,
                                 decimal_point,
-                                Max(0, decimal_rep_length - decimal_point),
+                                (std::max)(0, decimal_rep_length - decimal_point),
                                 result_builder);
   } else {
     CreateExponentialRepresentation(decimal_rep, decimal_rep_length, exponent,
@@ -338,7 +339,7 @@ bool DoubleToStringConverter::ToPrecision(double value,
                                     result_builder);
   } else {
     CreateDecimalRepresentation(decimal_rep, decimal_rep_length, decimal_point,
-                                Max(0, precision - decimal_point),
+                                (std::max)(0, precision - decimal_point),
                                 result_builder);
   }
   return true;

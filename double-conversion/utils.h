@@ -178,20 +178,6 @@ namespace double_conversion {
 
 static const int kCharSize = sizeof(char);
 
-// Returns the maximum of the two parameters.
-template <typename T>
-static T Max(T a, T b) {
-  return a < b ? b : a;
-}
-
-
-// Returns the minimum of the two parameters.
-template <typename T>
-static T Min(T a, T b) {
-  return a < b ? a : b;
-}
-
-
 inline int StrLength(const char* string) {
   size_t length = strlen(string);
   DOUBLE_CONVERSION_ASSERT(length == static_cast<size_t>(static_cast<int>(length)));
