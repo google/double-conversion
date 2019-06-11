@@ -1,3 +1,6 @@
+2019-06-11:
+  Changed all macros to use DOUBLE_CONVERSION_ as prefix.
+
 2019-05-25:
   Fix `0x` for string->double conversion when Hex Floats are allowed.
   Avoid integer overflow when exponents for hex floats were too big.
