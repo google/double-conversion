@@ -396,6 +396,7 @@ class StringToDoubleConverter {
     ALLOW_TRAILING_SPACES = 16,
     ALLOW_SPACES_AFTER_SIGN = 32,
     ALLOW_CASE_INSENSITIVITY = 64,
+    ALLOW_CASE_INSENSIBILITY = 64,  // Deprecated
     ALLOW_HEX_FLOATS = 128,
   };
 
