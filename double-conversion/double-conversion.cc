@@ -79,7 +79,7 @@ void DoubleToStringConverter::CreateExponentialRepresentation(
     int length,
     int exponent,
     StringBuilder* result_builder) const {
-  ASSERT(length != 0);
+  DOUBLE_CONVERSION_ASSERT(length != 0);
   result_builder->AddCharacter(decimal_digits[0]);
   if (length != 1) {
     result_builder->AddCharacter('.');
@@ -98,7 +98,7 @@ void DoubleToStringConverter::CreateExponentialRepresentation(
     result_builder->AddCharacter('0');
     return;
   }
-  ASSERT(exponent < 1e4);
+  DOUBLE_CONVERSION_ASSERT(exponent < 1e4);
   const int kMaxExponentLength = 5;
   char buffer[kMaxExponentLength + 1];
   buffer[kMaxExponentLength] = '\0';
@@ -125,7 +125,7 @@ void DoubleToStringConverter::CreateDecimalRepresentation(
     if (digits_after_point > 0) {
       result_builder->AddCharacter('.');
       result_builder->AddPadding('0', -decimal_point);
-      ASSERT(length <= digits_after_point - (-decimal_point));
+      DOUBLE_CONVERSION_ASSERT(length <= digits_after_point - (-decimal_point));
       result_builder->AddSubstring(decimal_digits, length);
       int remaining_digits = digits_after_point - (-decimal_point) - length;
       result_builder->AddPadding('0', remaining_digits);
@@ -140,10 +140,10 @@ void DoubleToStringConverter::CreateDecimalRepresentation(
     }
   } else {
     // "decima.l_rep000".
-    ASSERT(digits_after_point > 0);
+    DOUBLE_CONVERSION_ASSERT(digits_after_point > 0);
     result_builder->AddSubstring(decimal_digits, decimal_point);
     result_builder->AddCharacter('.');
-    ASSERT(length - decimal_point <= digits_after_point);
+    DOUBLE_CONVERSION_ASSERT(length - decimal_point <= digits_after_point);
     result_builder->AddSubstring(&decimal_digits[decimal_point],
                                  length - decimal_point);
     int remaining_digits = digits_after_point - (length - decimal_point);
@@ -164,7 +164,7 @@ bool DoubleToStringConverter::ToShortestIeeeNumber(
     double value,
     StringBuilder* result_builder,
     DoubleToStringConverter::DtoaMode mode) const {
-  ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE);
+  DOUBLE_CONVERSION_ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE);
   if (Double(value).IsSpecial()) {
     return HandleSpecialValues(value, result_builder);
   }
@@ -201,7 +201,7 @@ bool DoubleToStringConverter::ToShortestIeeeNumber(
 bool DoubleToStringConverter::ToFixed(double value,
                                       int requested_digits,
                                       StringBuilder* result_builder) const {
-  ASSERT(kMaxFixedDigitsBeforePoint == 60);
+  DOUBLE_CONVERSION_ASSERT(kMaxFixedDigitsBeforePoint == 60);
   const double kFirstNonFixed = 1e60;
 
   if (Double(value).IsSpecial()) {
@@ -249,7 +249,7 @@ bool DoubleToStringConverter::ToExponential(
   bool sign;
   // Add space for digit before the decimal point and the '\0' character.
   const int kDecimalRepCapacity = kMaxExponentialDigits + 2;
-  ASSERT(kDecimalRepCapacity > kBase10MaximalLength);
+  DOUBLE_CONVERSION_ASSERT(kDecimalRepCapacity > kBase10MaximalLength);
   char decimal_rep[kDecimalRepCapacity];
 #ifndef NDEBUG
   // Problem: there is an assert in StringBuilder::AddSubstring() that
@@ -267,7 +267,7 @@ bool DoubleToStringConverter::ToExponential(
     DoubleToAscii(value, PRECISION, requested_digits + 1,
                   decimal_rep, kDecimalRepCapacity,
                   &sign, &decimal_rep_length, &decimal_point);
-    ASSERT(decimal_rep_length <= requested_digits + 1);
+    DOUBLE_CONVERSION_ASSERT(decimal_rep_length <= requested_digits + 1);
 
     for (int i = decimal_rep_length; i < requested_digits + 1; ++i) {
       decimal_rep[i] = '0';
@@ -311,7 +311,7 @@ bool DoubleToStringConverter::ToPrecision(double value,
   DoubleToAscii(value, PRECISION, precision,
                 decimal_rep, kDecimalRepCapacity,
                 &sign, &decimal_rep_length, &decimal_point);
-  ASSERT(decimal_rep_length <= precision);
+  DOUBLE_CONVERSION_ASSERT(decimal_rep_length <= precision);
 
   bool unique_zero = ((flags_ & UNIQUE_ZERO) != 0);
   if (sign && (value != 0.0 || !unique_zero)) {
@@ -355,7 +355,7 @@ static BignumDtoaMode DtoaToBignumDtoaMode(
     case DoubleToStringConverter::FIXED:     return BIGNUM_DTOA_FIXED;
     case DoubleToStringConverter::PRECISION: return BIGNUM_DTOA_PRECISION;
     default:
-      UNREACHABLE();
+      DOUBLE_CONVERSION_UNREACHABLE();
   }
 }
 
@@ -369,8 +369,8 @@ void DoubleToStringConverter::DoubleToAscii(double v,
                                             int* length,
                                             int* point) {
   Vector<char> vector(buffer, buffer_length);
-  ASSERT(!Double(v).IsSpecial());
-  ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
+  DOUBLE_CONVERSION_ASSERT(!Double(v).IsSpecial());
+  DOUBLE_CONVERSION_ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
 
   if (Double(v).Sign() < 0) {
     *sign = true;
@@ -411,7 +411,7 @@ void DoubleToStringConverter::DoubleToAscii(double v,
       break;
     default:
       fast_worked = false;
-      UNREACHABLE();
+      DOUBLE_CONVERSION_UNREACHABLE();
   }
   if (fast_worked) return;
 
@@ -439,7 +439,7 @@ static inline bool ConsumeSubStringImpl(Iterator* current,
                                         Iterator end,
                                         const char* substring,
                                         Converter converter) {
-  ASSERT(converter(**current) == *substring);
+  DOUBLE_CONVERSION_ASSERT(converter(**current) == *substring);
   for (substring++; *substring != '\0'; substring++) {
     ++*current;
     if (*current == end || converter(**current) != *substring) {
@@ -483,14 +483,14 @@ const int kMaxSignificantDigits = 772;
 
 
 static const char kWhitespaceTable7[] = { 32, 13, 10, 9, 11, 12 };
-static const int kWhitespaceTable7Length = ARRAY_SIZE(kWhitespaceTable7);
+static const int kWhitespaceTable7Length = DOUBLE_CONVERSION_ARRAY_SIZE(kWhitespaceTable7);
 
 
 static const uc16 kWhitespaceTable16[] = {
   160, 8232, 8233, 5760, 6158, 8192, 8193, 8194, 8195,
   8196, 8197, 8198, 8199, 8200, 8201, 8202, 8239, 8287, 12288, 65279
 };
-static const int kWhitespaceTable16Length = ARRAY_SIZE(kWhitespaceTable16);
+static const int kWhitespaceTable16Length = DOUBLE_CONVERSION_ARRAY_SIZE(kWhitespaceTable16);
 
 
 static bool isWhitespace(int x) {
@@ -590,7 +590,7 @@ static bool IsHexFloatString(Iterator start,
                              Iterator end,
                              uc16 separator,
                              bool allow_trailing_junk) {
-  ASSERT(start != end);
+  DOUBLE_CONVERSION_ASSERT(start != end);
 
   Iterator current = start;
 
@@ -635,8 +635,8 @@ static double RadixStringToIeee(Iterator* current,
                                 double junk_string_value,
                                 bool read_as_double,
                                 bool* result_is_junk) {
-  ASSERT(*current != end);
-  ASSERT(!parse_as_hex_float ||
+  DOUBLE_CONVERSION_ASSERT(*current != end);
+  DOUBLE_CONVERSION_ASSERT(!parse_as_hex_float ||
       IsHexFloatString(*current, end, separator, allow_trailing_junk));
 
   const int kDoubleSize = Double::kSignificandSize;
@@ -674,7 +674,7 @@ static double RadixStringToIeee(Iterator* current,
     } else if (parse_as_hex_float && **current == '.') {
       post_decimal = true;
       Advance(current, separator, radix, end);
-      ASSERT(*current != end);
+      DOUBLE_CONVERSION_ASSERT(*current != end);
       continue;
     } else if (parse_as_hex_float && (**current == 'p' || **current == 'P')) {
       break;
@@ -709,7 +709,7 @@ static double RadixStringToIeee(Iterator* current,
           // Just run over the '.'. We are just trying to see whether there is
           // a non-zero digit somewhere.
           Advance(current, separator, radix, end);
-          ASSERT(*current != end);
+          DOUBLE_CONVERSION_ASSERT(*current != end);
           post_decimal = true;
         }
         if (!isDigit(**current, radix)) break;
@@ -744,23 +744,23 @@ static double RadixStringToIeee(Iterator* current,
     if (Advance(current, separator, radix, end)) break;
   }
 
-  ASSERT(number < ((int64_t)1 << kSignificandSize));
-  ASSERT(static_cast<int64_t>(static_cast<double>(number)) == number);
+  DOUBLE_CONVERSION_ASSERT(number < ((int64_t)1 << kSignificandSize));
+  DOUBLE_CONVERSION_ASSERT(static_cast<int64_t>(static_cast<double>(number)) == number);
 
   *result_is_junk = false;
 
   if (parse_as_hex_float) {
-    ASSERT(**current == 'p' || **current == 'P');
+    DOUBLE_CONVERSION_ASSERT(**current == 'p' || **current == 'P');
     Advance(current, separator, radix, end);
-    ASSERT(*current != end);
+    DOUBLE_CONVERSION_ASSERT(*current != end);
     bool is_negative = false;
     if (**current == '+') {
       Advance(current, separator, radix, end);
-      ASSERT(*current != end);
+      DOUBLE_CONVERSION_ASSERT(*current != end);
     } else if (**current == '-') {
       is_negative = true;
       Advance(current, separator, radix, end);
-      ASSERT(*current != end);
+      DOUBLE_CONVERSION_ASSERT(*current != end);
     }
     int written_exponent = 0;
     while (IsDecimalDigitForRadix(**current, 10)) {
@@ -783,7 +783,7 @@ static double RadixStringToIeee(Iterator* current,
     return static_cast<double>(number);
   }
 
-  ASSERT(number != 0);
+  DOUBLE_CONVERSION_ASSERT(number != 0);
   double result = Double(DiyFp(number, exponent)).value();
   return sign ? -result : result;
 }
@@ -865,7 +865,7 @@ double StringToDoubleConverter::StringToIeee(
         return junk_string_value_;
       }
 
-      ASSERT(buffer_pos == 0);
+      DOUBLE_CONVERSION_ASSERT(buffer_pos == 0);
       *processed_characters_count = static_cast<int>(current - input);
       return sign ? -Double::Infinity() : Double::Infinity();
     }
@@ -884,7 +884,7 @@ double StringToDoubleConverter::StringToIeee(
         return junk_string_value_;
       }
 
-      ASSERT(buffer_pos == 0);
+      DOUBLE_CONVERSION_ASSERT(buffer_pos == 0);
       *processed_characters_count = static_cast<int>(current - input);
       return sign ? -Double::NaN() : Double::NaN();
     }
@@ -944,7 +944,7 @@ double StringToDoubleConverter::StringToIeee(
   // Copy significant digits of the integer part (if any) to the buffer.
   while (*current >= '0' && *current <= '9') {
     if (significant_digits < kMaxSignificantDigits) {
-      ASSERT(buffer_pos < kBufferSize);
+      DOUBLE_CONVERSION_ASSERT(buffer_pos < kBufferSize);
       buffer[buffer_pos++] = static_cast<char>(*current);
       significant_digits++;
       // Will later check if it's an octal in the buffer.
@@ -989,7 +989,7 @@ double StringToDoubleConverter::StringToIeee(
     // We don't emit a '.', but adjust the exponent instead.
     while (*current >= '0' && *current <= '9') {
       if (significant_digits < kMaxSignificantDigits) {
-        ASSERT(buffer_pos < kBufferSize);
+        DOUBLE_CONVERSION_ASSERT(buffer_pos < kBufferSize);
         buffer[buffer_pos++] = static_cast<char>(*current);
         significant_digits++;
         exponent--;
@@ -1047,7 +1047,7 @@ double StringToDoubleConverter::StringToIeee(
     }
 
     const int max_exponent = INT_MAX / 2;
-    ASSERT(-max_exponent / 2 <= exponent && exponent <= max_exponent / 2);
+    DOUBLE_CONVERSION_ASSERT(-max_exponent / 2 <= exponent && exponent <= max_exponent / 2);
     int num = 0;
     do {
       // Check overflow.
@@ -1090,7 +1090,7 @@ double StringToDoubleConverter::StringToIeee(
                                   junk_string_value_,
                                   read_as_double,
                                   &result_is_junk);
-    ASSERT(!result_is_junk);
+    DOUBLE_CONVERSION_ASSERT(!result_is_junk);
     *processed_characters_count = static_cast<int>(current - input);
     return result;
   }
@@ -1100,7 +1100,7 @@ double StringToDoubleConverter::StringToIeee(
     exponent--;
   }
 
-  ASSERT(buffer_pos < kBufferSize);
+  DOUBLE_CONVERSION_ASSERT(buffer_pos < kBufferSize);
   buffer[buffer_pos] = '\0';
 
   double converted;
