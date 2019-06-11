@@ -456,8 +456,8 @@ template <class Iterator>
 static bool ConsumeSubString(Iterator* current,
                              Iterator end,
                              const char* substring,
-                             bool allow_case_insensibility) {
-  if (allow_case_insensibility) {
+                             bool allow_case_insensitivity) {
+  if (allow_case_insensitivity) {
     return ConsumeSubStringImpl(current, end, substring, ToLower);
   } else {
     return ConsumeSubStringImpl(current, end, substring, Pass);
@@ -467,8 +467,8 @@ static bool ConsumeSubString(Iterator* current,
 // Consumes first character of the str is equal to ch
 inline bool ConsumeFirstCharacter(char ch,
                                          const char* str,
-                                         bool case_insensibility) {
-  return case_insensibility ? ToLower(ch) == str[0] : ch == str[0];
+                                         bool case_insensitivity) {
+  return case_insensitivity ? ToLower(ch) == str[0] : ch == str[0];
 }
 }  // namespace
 
@@ -803,7 +803,7 @@ double StringToDoubleConverter::StringToIeee(
   const bool allow_leading_spaces = (flags_ & ALLOW_LEADING_SPACES) != 0;
   const bool allow_trailing_spaces = (flags_ & ALLOW_TRAILING_SPACES) != 0;
   const bool allow_spaces_after_sign = (flags_ & ALLOW_SPACES_AFTER_SIGN) != 0;
-  const bool allow_case_insensibility = (flags_ & ALLOW_CASE_INSENSIBILITY) != 0;
+  const bool allow_case_insensitivity = (flags_ & ALLOW_CASE_INSENSITIVITY) != 0;
 
   // To make sure that iterator dereferencing is valid the following
   // convention is used:
@@ -853,8 +853,8 @@ double StringToDoubleConverter::StringToIeee(
   }
 
   if (infinity_symbol_ != NULL) {
-    if (ConsumeFirstCharacter(*current, infinity_symbol_, allow_case_insensibility)) {
-      if (!ConsumeSubString(&current, end, infinity_symbol_, allow_case_insensibility)) {
+    if (ConsumeFirstCharacter(*current, infinity_symbol_, allow_case_insensitivity)) {
+      if (!ConsumeSubString(&current, end, infinity_symbol_, allow_case_insensitivity)) {
         return junk_string_value_;
       }
 
@@ -872,8 +872,8 @@ double StringToDoubleConverter::StringToIeee(
   }
 
   if (nan_symbol_ != NULL) {
-    if (ConsumeFirstCharacter(*current, nan_symbol_, allow_case_insensibility)) {
-      if (!ConsumeSubString(&current, end, nan_symbol_, allow_case_insensibility)) {
+    if (ConsumeFirstCharacter(*current, nan_symbol_, allow_case_insensitivity)) {
+      if (!ConsumeSubString(&current, end, nan_symbol_, allow_case_insensitivity)) {
         return junk_string_value_;
       }
 
