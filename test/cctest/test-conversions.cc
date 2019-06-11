@@ -5546,7 +5546,7 @@ TEST(StringToDoubleFloatWhitespace) {
 TEST(StringToDoubleCaseInsensitiveSpecialValues) {
   int processed = 0;
 
-  int flags = StringToDoubleConverter::ALLOW_CASE_INSENSIBILITY |
+  int flags = StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY |
     StringToDoubleConverter::ALLOW_LEADING_SPACES |
     StringToDoubleConverter::ALLOW_TRAILING_JUNK |
     StringToDoubleConverter::ALLOW_TRAILING_SPACES;

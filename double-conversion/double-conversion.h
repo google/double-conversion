@@ -395,7 +395,7 @@ class StringToDoubleConverter {
     ALLOW_LEADING_SPACES = 8,
     ALLOW_TRAILING_SPACES = 16,
     ALLOW_SPACES_AFTER_SIGN = 32,
-    ALLOW_CASE_INSENSIBILITY = 64,
+    ALLOW_CASE_INSENSITIVITY = 64,
     ALLOW_HEX_FLOATS = 128,
   };
 
@@ -430,7 +430,7 @@ class StringToDoubleConverter {
   //  - ALLOW_SPACES_AFTER_SIGN: ignore whitespace after the sign.
   //       Ex: StringToDouble("-   123.2") -> -123.2.
   //           StringToDouble("+   123.2") -> 123.2
-  //  - ALLOW_CASE_INSENSIBILITY: ignore case of characters for special values:
+  //  - ALLOW_CASE_INSENSITIVITY: ignore case of characters for special values:
   //      infinity and nan.
   //  - ALLOW_HEX_FLOATS: allows hexadecimal float literals.
   //      This *must* start with "0x" and separate the exponent with "p".
