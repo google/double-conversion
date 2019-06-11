@@ -112,7 +112,7 @@ class Bignum {
 
   void EnsureCapacity(int size) {
     if (size > kBigitCapacity) {
-      UNREACHABLE();
+      DOUBLE_CONVERSION_UNREACHABLE();
     }
   }
   void Align(const Bignum& other);
@@ -136,7 +136,7 @@ class Bignum {
   // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
   int exponent_;
 
-  DC_DISALLOW_COPY_AND_ASSIGN(Bignum);
+  DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(Bignum);
 };
 
 }  // namespace double_conversion
