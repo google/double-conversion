@@ -1,5 +1,7 @@
 2019-06-11:
   Changed all macros to use DOUBLE_CONVERSION_ as prefix.
+  Renamed ALLOW_CASE_INSENSIBILITY to ALLOW_CASE_INSENSITIVITY,
+    the old name is still available but officially deprecated.
 
 2019-05-25:
   Fix `0x` for string->double conversion when Hex Floats are allowed.
