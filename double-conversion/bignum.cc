@@ -34,7 +34,7 @@
 namespace double_conversion {
 
 Bignum::Bignum()
-    : bigits_buffer_(), bigits_(bigits_buffer_, kBigitCapacity), used_digits_(0), exponent_(0) {
+    : bigits_(bigits_buffer_, kBigitCapacity), used_digits_(0), exponent_(0) {
   std::memset(bigits_buffer_, 0, sizeof(Chunk) * kBigitCapacity);
 }
 
