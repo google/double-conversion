@@ -612,7 +612,7 @@ bool Bignum::ToHexString(char* buffer, int buffer_size) const {
 }
 
 
-Bignum::Chunk Bignum::BigitAt(int index) const {
+Bignum::Chunk Bignum::BigitOrZero(int index) const {
   if (index >= BigitLength()) return 0;
   if (index < exponent_) return 0;
   return bigits_[index - exponent_];
@@ -627,8 +627,8 @@ int Bignum::Compare(const Bignum& a, const Bignum& b) {
   if (bigit_length_a < bigit_length_b) return -1;
   if (bigit_length_a > bigit_length_b) return +1;
   for (int i = bigit_length_a - 1; i >= (std::min)(a.exponent_, b.exponent_); --i) {
-    Chunk bigit_a = a.BigitAt(i);
-    Chunk bigit_b = b.BigitAt(i);
+    Chunk bigit_a = a.BigitOrZero(i);
+    Chunk bigit_b = b.BigitOrZero(i);
     if (bigit_a < bigit_b) return -1;
     if (bigit_a > bigit_b) return +1;
     // Otherwise they are equal up to this digit. Try the next digit.
@@ -657,9 +657,9 @@ int Bignum::PlusCompare(const Bignum& a, const Bignum& b, const Bignum& c) {
   // Starting at min_exponent all digits are == 0. So no need to compare them.
   int min_exponent = (std::min)((std::min)(a.exponent_, b.exponent_), c.exponent_);
   for (int i = c.BigitLength() - 1; i >= min_exponent; --i) {
-    Chunk chunk_a = a.BigitAt(i);
-    Chunk chunk_b = b.BigitAt(i);
-    Chunk chunk_c = c.BigitAt(i);
+    Chunk chunk_a = a.BigitOrZero(i);
+    Chunk chunk_b = b.BigitOrZero(i);
+    Chunk chunk_c = c.BigitOrZero(i);
     Chunk sum = chunk_a + chunk_b;
     if (sum > chunk_c + borrow) {
       return +1;

@@ -125,7 +125,7 @@ class Bignum {
   void BigitsShiftLeft(int shift_amount);
   // BigitLength includes the "hidden" digits encoded in the exponent.
   int BigitLength() const { return used_digits_ + exponent_; }
-  Chunk BigitAt(int index) const;
+  Chunk BigitOrZero(int index) const;
   void SubtractTimes(const Bignum& other, int factor);
 
   // A vector backed by bigits_buffer_. This way accesses to the array are
