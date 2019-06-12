@@ -130,9 +130,6 @@ class Bignum {
   Chunk BigitOrZero(int index) const;
   void SubtractTimes(const Bignum& other, int factor);
 
-  // A vector backed by bigits_buffer_. This way accesses to the array are
-  // checked for out-of-bounds errors.
-  const Vector<Chunk> bigits_;
   int used_digits_;
   // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
   int exponent_;
