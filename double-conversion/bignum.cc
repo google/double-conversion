@@ -49,8 +49,9 @@ static int BitSize(S value) {
 void Bignum::AssignUInt16(uint16_t value) {
   DOUBLE_CONVERSION_ASSERT(kBigitSize >= BitSize(value));
   Zero();
-  if (value == 0) return;
-
+  if (value == 0) {
+    return;
+  }
   EnsureCapacity(1);
   bigits_[0] = value;
   used_digits_ = 1;
@@ -61,8 +62,9 @@ void Bignum::AssignUInt64(uint64_t value) {
   const int kUInt64Size = 64;
 
   Zero();
-  if (value == 0) return;
-
+  if (value == 0) {
+    return;
+  }
   int needed_bigits = kUInt64Size / kBigitSize + 1;
   EnsureCapacity(needed_bigits);
   for (int i = 0; i < needed_bigits; ++i) {
