@@ -26,6 +26,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
+#include <cstring>
 
 #include "bignum.h"
 #include "utils.h"
@@ -34,9 +35,7 @@ namespace double_conversion {
 
 Bignum::Bignum()
     : bigits_buffer_(), bigits_(bigits_buffer_, kBigitCapacity), used_digits_(0), exponent_(0) {
-  for (int i = 0; i < kBigitCapacity; ++i) {
-    bigits_[i] = 0;
-  }
+  std::memset(bigits_buffer_, 0, sizeof(Chunk) * kBigitCapacity);
 }
 
 
@@ -690,9 +689,7 @@ bool Bignum::IsClamped() const {
 
 
 void Bignum::Zero() {
-  for (int i = 0; i < used_digits_; ++i) {
-    bigits_[i] = 0;
-  }
+  std::memset(bigits_buffer_, 0, sizeof(Chunk) * used_digits_);
   used_digits_ = 0;
   exponent_ = 0;
 }

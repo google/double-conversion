@@ -131,7 +131,7 @@ class Bignum {
   Chunk bigits_buffer_[kBigitCapacity];
   // A vector backed by bigits_buffer_. This way accesses to the array are
   // checked for out-of-bounds errors.
-  Vector<Chunk> bigits_;
+  const Vector<Chunk> bigits_;
   int used_digits_;
   // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
   int exponent_;
