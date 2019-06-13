@@ -72,12 +72,12 @@ void Bignum::AssignUInt16(const uint16_t value) {
 
 void Bignum::AssignUInt64(uint64_t value) {
   static const int kUInt64Size = 64;
+  static const int needed_bigits = kUInt64Size / kBigitSize + 1;
 
   Zero();
   if (value == 0) {
     return;
   }
-  const int needed_bigits = kUInt64Size / kBigitSize + 1;
   EnsureCapacity(needed_bigits);
   for (int i = 0; i < needed_bigits; ++i) {
     RawBigit(i) = value & kBigitMask;
@@ -218,7 +218,7 @@ void Bignum::AddBignum(const Bignum& other) {
     carry = sum >> kBigitSize;
     ++bigit_pos;
   }
-  used_digits_ = (std::max)(bigit_pos, used_digits_);
+  used_digits_ = (std::max)(bigit_pos, int(used_digits_));
   DOUBLE_CONVERSION_ASSERT(IsClamped());
 }
 

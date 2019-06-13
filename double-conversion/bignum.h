@@ -130,9 +130,9 @@ class Bignum {
   Chunk BigitOrZero(const int index) const;
   void SubtractTimes(const Bignum& other, const int factor);
 
-  int used_digits_;
+  int16_t used_digits_;
   // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
-  int exponent_;
+  int16_t exponent_;
   Chunk bigits_buffer_[kBigitCapacity];
 
   DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(Bignum);
