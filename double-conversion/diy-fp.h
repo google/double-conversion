@@ -42,7 +42,7 @@ class DiyFp {
   static const int kSignificandSize = 64;
 
   DiyFp() : f_(0), e_(0) {}
-  DiyFp(uint64_t significand, int exponent) : f_(significand), e_(exponent) {}
+  DiyFp(const uint64_t significand, const int exponent) : f_(significand), e_(exponent) {}
 
   // this = this - other.
   // The exponents of both numbers must be the same and the significand of this

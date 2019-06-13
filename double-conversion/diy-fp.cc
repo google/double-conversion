@@ -37,21 +37,19 @@ void DiyFp::Multiply(const DiyFp& other) {
   // significant 64 bits are only used for rounding the most significant 64
   // bits.
   const uint64_t kM32 = 0xFFFFFFFFU;
-  uint64_t a = f_ >> 32;
-  uint64_t b = f_ & kM32;
-  uint64_t c = other.f_ >> 32;
-  uint64_t d = other.f_ & kM32;
-  uint64_t ac = a * c;
-  uint64_t bc = b * c;
-  uint64_t ad = a * d;
-  uint64_t bd = b * d;
-  uint64_t tmp = (bd >> 32) + (ad & kM32) + (bc & kM32);
+  const uint64_t a = f_ >> 32;
+  const uint64_t b = f_ & kM32;
+  const uint64_t c = other.f_ >> 32;
+  const uint64_t d = other.f_ & kM32;
+  const uint64_t ac = a * c;
+  const uint64_t bc = b * c;
+  const uint64_t ad = a * d;
+  const uint64_t bd = b * d;
   // By adding 1U << 31 to tmp we round the final result.
-  // Halfway cases will be round up.
-  tmp += 1U << 31;
-  uint64_t result_f = ac + (ad >> 32) + (bc >> 32) + (tmp >> 32);
+  // Halfway cases will be rounded up.
+  const uint64_t tmp = (bd >> 32) + (ad & kM32) + (bc & kM32) + (1U << 31);
   e_ += other.e_ + 64;
-  f_ = result_f;
+  f_ = ac + (ad >> 32) + (bc >> 32) + (tmp >> 32);
 }
 
 }  // namespace double_conversion
