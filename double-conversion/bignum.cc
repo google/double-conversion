@@ -34,7 +34,7 @@
 namespace double_conversion {
 
 Bignum::Bignum()
-    : used_bigits_(0), exponent_(0) {
+    : used_bigits_(0) {
   std::memset(bigits_buffer_, 0, sizeof(Chunk) * kBigitCapacity);
 }
 
@@ -205,9 +205,9 @@ void Bignum::AddBignum(const Bignum& other) {
   //  cccccccccccc 0000
   // In both cases we might need a carry bigit.
 
-  EnsureCapacity(1 + (std::max)(BigitLength(), other.BigitLength()) - exponent_);
+  EnsureCapacity(1 + (std::max)(BigitLength(), other.BigitLength()) - exponent_.get());
   Chunk carry = 0;
-  int bigit_pos = other.exponent_ - exponent_;
+  int bigit_pos = other.exponent_.get() - exponent_.get();
   DOUBLE_CONVERSION_ASSERT(bigit_pos >= 0);
   for (int i = 0; i < other.used_bigits_; ++i) {
     const Chunk sum = RawBigit(bigit_pos) + other.RawBigit(i) + carry;
@@ -235,7 +235,7 @@ void Bignum::SubtractBignum(const Bignum& other) {
 
   Align(other);
 
-  const int offset = other.exponent_ - exponent_;
+  const int offset = other.exponent_.get() - exponent_.get();
   Chunk borrow = 0;
   int i;
   for (i = 0; i < other.used_bigits_; ++i) {
@@ -258,7 +258,7 @@ void Bignum::ShiftLeft(const int shift_amount) {
   if (used_bigits_ == 0) {
     return;
   }
-  exponent_ += shift_amount / kBigitSize;
+  exponent_.AddInt(shift_amount / kBigitSize);
   const int local_shift = shift_amount % kBigitSize;
   EnsureCapacity(used_bigits_ + 1);
   BigitsShiftLeft(local_shift);
@@ -434,7 +434,7 @@ void Bignum::Square() {
 
   // Don't forget to update the used_digits and the exponent.
   used_bigits_ = product_length;
-  exponent_ *= 2;
+  exponent_.MultiplyByTwo();
   Clamp();
 }
 
@@ -623,7 +623,7 @@ bool Bignum::ToHexString(char* buffer, const int buffer_size) const {
   }
   int string_index = needed_chars - 1;
   buffer[string_index--] = '\0';
-  for (int i = 0; i < exponent_; ++i) {
+  for (int i = 0; i < exponent_.get(); ++i) {
     for (int j = 0; j < kHexCharsPerBigit; ++j) {
       buffer[string_index--] = '0';
     }
@@ -649,10 +649,10 @@ Bignum::Chunk Bignum::BigitOrZero(const int index) const {
   if (index >= BigitLength()) {
     return 0;
   }
-  if (index < exponent_) {
+  if (index < exponent_.get()) {
     return 0;
   }
-  return RawBigit(index - exponent_);
+  return RawBigit(index - exponent_.get());
 }
 
 
@@ -667,7 +667,7 @@ int Bignum::Compare(const Bignum& a, const Bignum& b) {
   if (bigit_length_a > bigit_length_b) {
     return +1;
   }
-  for (int i = bigit_length_a - 1; i >= (std::min)(a.exponent_, b.exponent_); --i) {
+  for (int i = bigit_length_a - 1; i >= (std::min)(a.exponent_.get(), b.exponent_.get()); --i) {
     const Chunk bigit_a = a.BigitOrZero(i);
     const Chunk bigit_b = b.BigitOrZero(i);
     if (bigit_a < bigit_b) {
@@ -698,13 +698,13 @@ int Bignum::PlusCompare(const Bignum& a, const Bignum& b, const Bignum& c) {
   // The exponent encodes 0-bigits. So if there are more 0-digits in 'a' than
   // 'b' has digits, then the bigit-length of 'a'+'b' must be equal to the one
   // of 'a'.
-  if (a.exponent_ >= b.BigitLength() && a.BigitLength() < c.BigitLength()) {
+  if (a.exponent_.get() >= b.BigitLength() && a.BigitLength() < c.BigitLength()) {
     return -1;
   }
 
   Chunk borrow = 0;
   // Starting at min_exponent all digits are == 0. So no need to compare them.
-  const int min_exponent = (std::min)((std::min)(a.exponent_, b.exponent_), c.exponent_);
+  const int min_exponent = (std::min)((std::min)(a.exponent_.get(), b.exponent_.get()), c.exponent_.get());
   for (int i = c.BigitLength() - 1; i >= min_exponent; --i) {
     const Chunk chunk_a = a.BigitOrZero(i);
     const Chunk chunk_b = b.BigitOrZero(i);
@@ -733,7 +733,7 @@ void Bignum::Clamp() {
   }
   if (used_bigits_ == 0) {
     // Zero.
-    exponent_ = 0;
+    exponent_.Zero();
   }
 }
 
@@ -746,19 +746,19 @@ bool Bignum::IsClamped() const {
 void Bignum::Zero() {
   std::memset(bigits_buffer_, 0, sizeof(Chunk) * used_bigits_);
   used_bigits_ = 0;
-  exponent_ = 0;
+  exponent_.Zero();
 }
 
 
 void Bignum::Align(const Bignum& other) {
-  if (exponent_ > other.exponent_) {
+  if (exponent_.get() > other.exponent_.get()) {
     // If "X" represents a "hidden" digit (by the exponent) then we are in the
     // following case (a == this, b == other):
     // a:  aaaaaaXXXX   or a:   aaaaaXXX
     // b:     bbbbbbX      b: bbbbbbbbXX
     // We replace some of the hidden digits (X) of a with 0 digits.
     // a:  aaaaaa000X   or a:   aaaaa0XX
-    const int zero_digits = exponent_ - other.exponent_;
+    const int zero_digits = exponent_.get() - other.exponent_.get();
     EnsureCapacity(used_bigits_ + zero_digits);
     for (int i = used_bigits_ - 1; i >= 0; --i) {
       RawBigit(i + zero_digits) = RawBigit(i);
@@ -767,9 +767,9 @@ void Bignum::Align(const Bignum& other) {
       RawBigit(i) = 0;
     }
     used_bigits_ += zero_digits;
-    exponent_ -= zero_digits;
+    exponent_.SubtractInt(zero_digits);
     DOUBLE_CONVERSION_ASSERT(used_bigits_ >= 0);
-    DOUBLE_CONVERSION_ASSERT(exponent_ >= 0);
+    DOUBLE_CONVERSION_ASSERT(exponent_.get() >= 0);
   }
 }
 
@@ -791,7 +791,7 @@ void Bignum::BigitsShiftLeft(const int shift_amount) {
 
 
 void Bignum::SubtractTimes(const Bignum& other, const int factor) {
-  DOUBLE_CONVERSION_ASSERT(exponent_ <= other.exponent_);
+  DOUBLE_CONVERSION_ASSERT(exponent_.get() <= other.exponent_.get());
   if (factor < 3) {
     for (int i = 0; i < factor; ++i) {
       SubtractBignum(other);
@@ -799,7 +799,7 @@ void Bignum::SubtractTimes(const Bignum& other, const int factor) {
     return;
   }
   Chunk borrow = 0;
-  const int exponent_diff = other.exponent_ - exponent_;
+  const int exponent_diff = other.exponent_.get() - exponent_.get();
   for (int i = 0; i < other.used_bigits_; ++i) {
     const DoubleChunk product = static_cast<DoubleChunk>(factor) * other.RawBigit(i);
     const DoubleChunk remove = borrow + product;

@@ -124,15 +124,48 @@ class Bignum {
   // shift_amount must be < kBigitSize.
   void BigitsShiftLeft(const int shift_amount);
   // BigitLength includes the "hidden" bigits encoded in the exponent.
-  int BigitLength() const { return used_bigits_ + exponent_; }
+  int BigitLength() const { return used_bigits_ + exponent_.get(); }
   Chunk& RawBigit(const int index);
   const Chunk& RawBigit(const int index) const;
   Chunk BigitOrZero(const int index) const;
   void SubtractTimes(const Bignum& other, const int factor);
 
+  class ExponentWrapper {
+  public:
+    ExponentWrapper()
+      : value_( 0 )
+    {}
+
+    int get() const {
+      return value_;
+    }
+
+    void Zero() {
+      value_ = 0;
+    }
+
+    void AddInt(const int v) {
+      DOUBLE_CONVERSION_ASSERT(int(value_ + v) == int16_t(value_ + v));
+      value_ += v;
+    }
+
+    void SubtractInt(const int v) {
+      DOUBLE_CONVERSION_ASSERT(int(value_ - v) == int16_t(value_ - v));
+      value_ -= v;
+    }
+
+    void MultiplyByTwo() {
+      DOUBLE_CONVERSION_ASSERT(int(value_) * 2 == int16_t(value_ * 2));
+      value_ *= 2;
+    }
+
+  private:
+    int16_t value_;
+  };
+
   int16_t used_bigits_;
   // The Bignum's value equals value(bigits_buffer_) * 2^(exponent_ * kBigitSize).
-  int16_t exponent_;
+  ExponentWrapper exponent_;
   Chunk bigits_buffer_[kBigitCapacity];
 
   DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(Bignum);
