@@ -40,25 +40,25 @@ class Bignum {
   static const int kMaxSignificantBits = 3584;
 
   Bignum();
-  void AssignUInt16(uint16_t value);
+  void AssignUInt16(const uint16_t value);
   void AssignUInt64(uint64_t value);
   void AssignBignum(const Bignum& other);
 
-  void AssignDecimalString(Vector<const char> value);
-  void AssignHexString(Vector<const char> value);
+  void AssignDecimalString(const Vector<const char> value);
+  void AssignHexString(const Vector<const char> value);
 
-  void AssignPowerUInt16(uint16_t base, int exponent);
+  void AssignPowerUInt16(uint16_t base, const int exponent);
 
-  void AddUInt64(uint64_t operand);
+  void AddUInt64(const uint64_t operand);
   void AddBignum(const Bignum& other);
   // Precondition: this >= other.
   void SubtractBignum(const Bignum& other);
 
   void Square();
-  void ShiftLeft(int shift_amount);
-  void MultiplyByUInt32(uint32_t factor);
-  void MultiplyByUInt64(uint64_t factor);
-  void MultiplyByPowerOfTen(int exponent);
+  void ShiftLeft(const int shift_amount);
+  void MultiplyByUInt32(const uint32_t factor);
+  void MultiplyByUInt64(const uint64_t factor);
+  void MultiplyByPowerOfTen(const int exponent);
   void Times10() { return MultiplyByUInt32(10); }
   // Pseudocode:
   //  int result = this / other;
@@ -66,7 +66,7 @@ class Bignum {
   // In the worst case this function is in O(this/other).
   uint16_t DivideModuloIntBignum(const Bignum& other);
 
-  bool ToHexString(char* buffer, int buffer_size) const;
+  bool ToHexString(char* buffer, const int buffer_size) const;
 
   // Returns
   //  -1 if a < b,
@@ -110,7 +110,7 @@ class Bignum {
   // grow. There are no checks if the stack-allocated space is sufficient.
   static const int kBigitCapacity = kMaxSignificantBits / kBigitSize;
 
-  void EnsureCapacity(int size) {
+  void EnsureCapacity(const int size) {
     if (size > kBigitCapacity) {
       DOUBLE_CONVERSION_UNREACHABLE();
     }
@@ -122,13 +122,13 @@ class Bignum {
   // Requires this to have enough capacity (no tests done).
   // Updates used_digits_ if necessary.
   // shift_amount must be < kBigitSize.
-  void BigitsShiftLeft(int shift_amount);
+  void BigitsShiftLeft(const int shift_amount);
   // BigitLength includes the "hidden" digits encoded in the exponent.
   int BigitLength() const { return used_digits_ + exponent_; }
-  Chunk& RawBigit(int index);
-  const Chunk& RawBigit(int index) const;
-  Chunk BigitOrZero(int index) const;
-  void SubtractTimes(const Bignum& other, int factor);
+  Chunk& RawBigit(const int index);
+  const Chunk& RawBigit(const int index) const;
+  Chunk BigitOrZero(const int index) const;
+  void SubtractTimes(const Bignum& other, const int factor);
 
   int used_digits_;
   // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
