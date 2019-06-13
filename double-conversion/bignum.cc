@@ -35,7 +35,6 @@ namespace double_conversion {
 
 Bignum::Bignum()
     : used_bigits_(0) {
-  std::memset(bigits_buffer_, 0, sizeof(Chunk) * kBigitCapacity);
 }
 
 
@@ -61,28 +60,20 @@ static int BitSize(const S value) {
 void Bignum::AssignUInt16(const uint16_t value) {
   DOUBLE_CONVERSION_ASSERT(kBigitSize >= BitSize(value));
   Zero();
-  if (value == 0) {
-    return;
+  if(value > 0 ) {
+    RawBigit(0) = value;
+    used_bigits_ = 1;
   }
-  RawBigit(0) = value;
-  used_bigits_ = 1;
 }
 
 
 void Bignum::AssignUInt64(uint64_t value) {
-  static const int kUInt64Size = 64;
-  static const int needed_bigits = kUInt64Size / kBigitSize + 1;
-
   Zero();
-  if (value == 0) {
-    return;
-  }
-  for (int i = 0; i < needed_bigits; ++i) {
+  for(int i = 0; value > 0; ++i) {
     RawBigit(i) = value & kBigitMask;
-    value = value >> kBigitSize;
+    value >>= kBigitSize;
+    ++used_bigits_;
   }
-  used_bigits_ = needed_bigits;
-  Clamp();
 }
 
 
@@ -90,10 +81,6 @@ void Bignum::AssignBignum(const Bignum& other) {
   exponent_ = other.exponent_;
   for (int i = 0; i < other.used_bigits_; ++i) {
     RawBigit(i) = other.RawBigit(i);
-  }
-  // Clear the excess digits (if there were any).
-  for (int i = other.used_bigits_; i < used_bigits_; ++i) {
-    RawBigit(i) = 0;
   }
   used_bigits_ = other.used_bigits_;
 }
@@ -104,7 +91,7 @@ static uint64_t ReadUInt64(const Vector<const char> buffer,
                            const int digits_to_read) {
   uint64_t result = 0;
   for (int i = from; i < from + digits_to_read; ++i) {
-    int digit = buffer[i] - '0';
+    const int digit = buffer[i] - '0';
     DOUBLE_CONVERSION_ASSERT(0 <= digit && digit <= 9);
     result = result * 10 + digit;
   }
@@ -148,7 +135,6 @@ static int HexCharValue(const int c) {
 void Bignum::AssignHexString(const Vector<const char> value) {
   Zero();
   const int length = value.length();
-
   const int needed_bigits = length * 4 / kBigitSize + 1;
   EnsureCapacity(needed_bigits);
   int string_index = length - 1;
@@ -209,15 +195,19 @@ void Bignum::AddBignum(const Bignum& other) {
   Chunk carry = 0;
   int bigit_pos = other.exponent_.get() - exponent_.get();
   DOUBLE_CONVERSION_ASSERT(bigit_pos >= 0);
+  for (int i = used_bigits_; i < bigit_pos; ++i ) {
+    RawBigit(i) = 0;
+  }
   for (int i = 0; i < other.used_bigits_; ++i) {
-    const Chunk sum = RawBigit(bigit_pos) + other.RawBigit(i) + carry;
+    const Chunk my = (bigit_pos < used_bigits_) ? RawBigit(bigit_pos) : 0;
+    const Chunk sum = my + other.RawBigit(i) + carry;
     RawBigit(bigit_pos) = sum & kBigitMask;
     carry = sum >> kBigitSize;
     ++bigit_pos;
   }
-
   while (carry != 0) {
-    const Chunk sum = RawBigit(bigit_pos) + carry;
+    const Chunk my = (bigit_pos < used_bigits_) ? RawBigit(bigit_pos) : 0;
+    const Chunk sum = my + carry;
     RawBigit(bigit_pos) = sum & kBigitMask;
     carry = sum >> kBigitSize;
     ++bigit_pos;
@@ -300,6 +290,9 @@ void Bignum::MultiplyByUInt64(const uint64_t factor) {
   }
   if (factor == 0) {
     Zero();
+    return;
+  }
+  if (used_bigits_ == 0) {
     return;
   }
   DOUBLE_CONVERSION_ASSERT(kBigitSize < 32);
@@ -744,7 +737,6 @@ bool Bignum::IsClamped() const {
 
 
 void Bignum::Zero() {
-  std::memset(bigits_buffer_, 0, sizeof(Chunk) * used_bigits_);
   used_bigits_ = 0;
   exponent_.Zero();
 }
@@ -752,22 +744,23 @@ void Bignum::Zero() {
 
 void Bignum::Align(const Bignum& other) {
   if (exponent_.get() > other.exponent_.get()) {
-    // If "X" represents a "hidden" digit (by the exponent) then we are in the
+    // If "X" represents a "hidden" bigit (by the exponent) then we are in the
     // following case (a == this, b == other):
     // a:  aaaaaaXXXX   or a:   aaaaaXXX
     // b:     bbbbbbX      b: bbbbbbbbXX
     // We replace some of the hidden digits (X) of a with 0 digits.
     // a:  aaaaaa000X   or a:   aaaaa0XX
-    const int zero_digits = exponent_.get() - other.exponent_.get();
-    EnsureCapacity(used_bigits_ + zero_digits);
+    const int zero_bigits = exponent_.get() - other.exponent_.get();
+    EnsureCapacity(used_bigits_ + zero_bigits);
     for (int i = used_bigits_ - 1; i >= 0; --i) {
-      RawBigit(i + zero_digits) = RawBigit(i);
+      RawBigit(i + zero_bigits) = RawBigit(i);
     }
-    for (int i = 0; i < zero_digits; ++i) {
+    for (int i = 0; i < zero_bigits; ++i) {
       RawBigit(i) = 0;
     }
-    used_bigits_ += zero_digits;
-    exponent_.SubtractInt(zero_digits);
+    used_bigits_ += zero_bigits;
+    exponent_.SubtractInt(zero_bigits);
+
     DOUBLE_CONVERSION_ASSERT(used_bigits_ >= 0);
     DOUBLE_CONVERSION_ASSERT(exponent_.get() >= 0);
   }
