@@ -44,7 +44,7 @@ class DiyFp {
   DiyFp() : f_(0), e_(0) {}
   DiyFp(const uint64_t significand, const int exponent) : f_(significand), e_(exponent) {}
 
-  // this = this - other.
+  // this -= other.
   // The exponents of both numbers must be the same and the significand of this
   // must be bigger than the significand of other.
   // The result will not be normalized.
@@ -63,9 +63,27 @@ class DiyFp {
     return result;
   }
 
-
-  // this = this * other.
-  void Multiply(const DiyFp& other);
+  // this *= other.
+  void Multiply(const DiyFp& other) {
+    // Simply "emulates" a 128 bit multiplication.
+    // However: the resulting number only contains 64 bits. The least
+    // significant 64 bits are only used for rounding the most significant 64
+    // bits.
+    const uint64_t kM32 = 0xFFFFFFFFU;
+    const uint64_t a = f_ >> 32;
+    const uint64_t b = f_ & kM32;
+    const uint64_t c = other.f_ >> 32;
+    const uint64_t d = other.f_ & kM32;
+    const uint64_t ac = a * c;
+    const uint64_t bc = b * c;
+    const uint64_t ad = a * d;
+    const uint64_t bd = b * d;
+    // By adding 1U << 31 to tmp we round the final result.
+    // Halfway cases will be rounded up.
+    const uint64_t tmp = (bd >> 32) + (ad & kM32) + (bc & kM32) + (1U << 31);
+    e_ += other.e_ + 64;
+    f_ = ac + (ad >> 32) + (bc >> 32) + (tmp >> 32);
+  }
 
   // returns a * b;
   static DiyFp Times(const DiyFp& a, const DiyFp& b) {

@@ -3,6 +3,7 @@ double_conversion_sources = [
     'bignum.cc',
     'bignum-dtoa.cc',
     'cached-powers.cc',
+    'diy-fp.cc',
     'double-to-string.cc',
     'fast-dtoa.cc',
     'fixed-dtoa.cc',
