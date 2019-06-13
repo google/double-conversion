@@ -64,7 +64,6 @@ void Bignum::AssignUInt16(const uint16_t value) {
   if (value == 0) {
     return;
   }
-  EnsureCapacity(1);
   RawBigit(0) = value;
   used_digits_ = 1;
 }
@@ -78,7 +77,6 @@ void Bignum::AssignUInt64(uint64_t value) {
   if (value == 0) {
     return;
   }
-  EnsureCapacity(needed_bigits);
   for (int i = 0; i < needed_bigits; ++i) {
     RawBigit(i) = value & kBigitMask;
     value = value >> kBigitSize;
