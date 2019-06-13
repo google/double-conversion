@@ -352,7 +352,7 @@ void Bignum::MultiplyByPowerOfTen(const int exponent) {
 
 void Bignum::Square() {
   DOUBLE_CONVERSION_ASSERT(IsClamped());
-  int product_length = 2 * used_digits_;
+  const int product_length = 2 * used_digits_;
   EnsureCapacity(product_length);
 
   // Comba multiplication: compute each column separately.
