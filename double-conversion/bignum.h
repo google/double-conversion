@@ -110,7 +110,7 @@ class Bignum {
   // grow. There are no checks if the stack-allocated space is sufficient.
   static const int kBigitCapacity = kMaxSignificantBits / kBigitSize;
 
-  void EnsureCapacity(const int size) {
+  static void EnsureCapacity(const int size) {
     if (size > kBigitCapacity) {
       DOUBLE_CONVERSION_UNREACHABLE();
     }
@@ -120,18 +120,18 @@ class Bignum {
   bool IsClamped() const;
   void Zero();
   // Requires this to have enough capacity (no tests done).
-  // Updates used_digits_ if necessary.
+  // Updates used_bigits_ if necessary.
   // shift_amount must be < kBigitSize.
   void BigitsShiftLeft(const int shift_amount);
-  // BigitLength includes the "hidden" digits encoded in the exponent.
-  int BigitLength() const { return used_digits_ + exponent_; }
+  // BigitLength includes the "hidden" bigits encoded in the exponent.
+  int BigitLength() const { return used_bigits_ + exponent_; }
   Chunk& RawBigit(const int index);
   const Chunk& RawBigit(const int index) const;
   Chunk BigitOrZero(const int index) const;
   void SubtractTimes(const Bignum& other, const int factor);
 
-  int16_t used_digits_;
-  // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
+  int16_t used_bigits_;
+  // The Bignum's value equals value(bigits_buffer_) * 2^(exponent_ * kBigitSize).
   int16_t exponent_;
   Chunk bigits_buffer_[kBigitCapacity];
 

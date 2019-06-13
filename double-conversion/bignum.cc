@@ -34,7 +34,7 @@
 namespace double_conversion {
 
 Bignum::Bignum()
-    : used_digits_(0), exponent_(0) {
+    : used_bigits_(0), exponent_(0) {
   std::memset(bigits_buffer_, 0, sizeof(Chunk) * kBigitCapacity);
 }
 
@@ -65,7 +65,7 @@ void Bignum::AssignUInt16(const uint16_t value) {
     return;
   }
   RawBigit(0) = value;
-  used_digits_ = 1;
+  used_bigits_ = 1;
 }
 
 
@@ -81,21 +81,21 @@ void Bignum::AssignUInt64(uint64_t value) {
     RawBigit(i) = value & kBigitMask;
     value = value >> kBigitSize;
   }
-  used_digits_ = needed_bigits;
+  used_bigits_ = needed_bigits;
   Clamp();
 }
 
 
 void Bignum::AssignBignum(const Bignum& other) {
   exponent_ = other.exponent_;
-  for (int i = 0; i < other.used_digits_; ++i) {
+  for (int i = 0; i < other.used_bigits_; ++i) {
     RawBigit(i) = other.RawBigit(i);
   }
   // Clear the excess digits (if there were any).
-  for (int i = other.used_digits_; i < used_digits_; ++i) {
+  for (int i = other.used_bigits_; i < used_bigits_; ++i) {
     RawBigit(i) = 0;
   }
-  used_digits_ = other.used_digits_;
+  used_bigits_ = other.used_bigits_;
 }
 
 
@@ -160,7 +160,7 @@ void Bignum::AssignHexString(const Vector<const char> value) {
     }
     RawBigit(i) = current_bigit;
   }
-  used_digits_ = needed_bigits - 1;
+  used_bigits_ = needed_bigits - 1;
 
   Chunk most_significant_bigit = 0;  // Could be = 0;
   for (int j = 0; j <= string_index; ++j) {
@@ -168,8 +168,8 @@ void Bignum::AssignHexString(const Vector<const char> value) {
     most_significant_bigit += HexCharValue(value[j]);
   }
   if (most_significant_bigit != 0) {
-    RawBigit(used_digits_) = most_significant_bigit;
-    used_digits_++;
+    RawBigit(used_bigits_) = most_significant_bigit;
+    used_bigits_++;
   }
   Clamp();
 }
@@ -209,7 +209,7 @@ void Bignum::AddBignum(const Bignum& other) {
   Chunk carry = 0;
   int bigit_pos = other.exponent_ - exponent_;
   DOUBLE_CONVERSION_ASSERT(bigit_pos >= 0);
-  for (int i = 0; i < other.used_digits_; ++i) {
+  for (int i = 0; i < other.used_bigits_; ++i) {
     const Chunk sum = RawBigit(bigit_pos) + other.RawBigit(i) + carry;
     RawBigit(bigit_pos) = sum & kBigitMask;
     carry = sum >> kBigitSize;
@@ -222,7 +222,7 @@ void Bignum::AddBignum(const Bignum& other) {
     carry = sum >> kBigitSize;
     ++bigit_pos;
   }
-  used_digits_ = (std::max)(bigit_pos, int(used_digits_));
+  used_bigits_ = (std::max)(bigit_pos, int(used_bigits_));
   DOUBLE_CONVERSION_ASSERT(IsClamped());
 }
 
@@ -238,7 +238,7 @@ void Bignum::SubtractBignum(const Bignum& other) {
   const int offset = other.exponent_ - exponent_;
   Chunk borrow = 0;
   int i;
-  for (i = 0; i < other.used_digits_; ++i) {
+  for (i = 0; i < other.used_bigits_; ++i) {
     DOUBLE_CONVERSION_ASSERT((borrow == 0) || (borrow == 1));
     const Chunk difference = RawBigit(i + offset) - other.RawBigit(i) - borrow;
     RawBigit(i + offset) = difference & kBigitMask;
@@ -255,12 +255,12 @@ void Bignum::SubtractBignum(const Bignum& other) {
 
 
 void Bignum::ShiftLeft(const int shift_amount) {
-  if (used_digits_ == 0) {
+  if (used_bigits_ == 0) {
     return;
   }
   exponent_ += shift_amount / kBigitSize;
   const int local_shift = shift_amount % kBigitSize;
-  EnsureCapacity(used_digits_ + 1);
+  EnsureCapacity(used_bigits_ + 1);
   BigitsShiftLeft(local_shift);
 }
 
@@ -273,22 +273,22 @@ void Bignum::MultiplyByUInt32(const uint32_t factor) {
     Zero();
     return;
   }
-  if (used_digits_ == 0) {
+  if (used_bigits_ == 0) {
     return;
   }
   // The product of a bigit with the factor is of size kBigitSize + 32.
   // Assert that this number + 1 (for the carry) fits into double chunk.
   DOUBLE_CONVERSION_ASSERT(kDoubleChunkSize >= kBigitSize + 32 + 1);
   DoubleChunk carry = 0;
-  for (int i = 0; i < used_digits_; ++i) {
+  for (int i = 0; i < used_bigits_; ++i) {
     const DoubleChunk product = static_cast<DoubleChunk>(factor) * RawBigit(i) + carry;
     RawBigit(i) = static_cast<Chunk>(product & kBigitMask);
     carry = (product >> kBigitSize);
   }
   while (carry != 0) {
-    EnsureCapacity(used_digits_ + 1);
-    RawBigit(used_digits_) = carry & kBigitMask;
-    used_digits_++;
+    EnsureCapacity(used_bigits_ + 1);
+    RawBigit(used_bigits_) = carry & kBigitMask;
+    used_bigits_++;
     carry >>= kBigitSize;
   }
 }
@@ -306,7 +306,7 @@ void Bignum::MultiplyByUInt64(const uint64_t factor) {
   uint64_t carry = 0;
   const uint64_t low = factor & 0xFFFFFFFF;
   const uint64_t high = factor >> 32;
-  for (int i = 0; i < used_digits_; ++i) {
+  for (int i = 0; i < used_bigits_; ++i) {
     const uint64_t product_low = low * RawBigit(i);
     const uint64_t product_high = high * RawBigit(i);
     const uint64_t tmp = (carry & kBigitMask) + product_low;
@@ -315,9 +315,9 @@ void Bignum::MultiplyByUInt64(const uint64_t factor) {
         (product_high << (32 - kBigitSize));
   }
   while (carry != 0) {
-    EnsureCapacity(used_digits_ + 1);
-    RawBigit(used_digits_) = carry & kBigitMask;
-    used_digits_++;
+    EnsureCapacity(used_bigits_ + 1);
+    RawBigit(used_bigits_) = carry & kBigitMask;
+    used_bigits_++;
     carry >>= kBigitSize;
   }
 }
@@ -347,7 +347,7 @@ void Bignum::MultiplyByPowerOfTen(const int exponent) {
   if (exponent == 0) {
     return;
   }
-  if (used_digits_ == 0) {
+  if (used_bigits_ == 0) {
     return;
   }
   // We shift by exponent at the end just before returning.
@@ -369,7 +369,7 @@ void Bignum::MultiplyByPowerOfTen(const int exponent) {
 
 void Bignum::Square() {
   DOUBLE_CONVERSION_ASSERT(IsClamped());
-  const int product_length = 2 * used_digits_;
+  const int product_length = 2 * used_bigits_;
   EnsureCapacity(product_length);
 
   // Comba multiplication: compute each column separately.
@@ -384,17 +384,17 @@ void Bignum::Square() {
   //
   // Assert that the additional number of bits in a DoubleChunk are enough to
   // sum up used_digits of Bigit*Bigit.
-  if ((1 << (2 * (kChunkSize - kBigitSize))) <= used_digits_) {
+  if ((1 << (2 * (kChunkSize - kBigitSize))) <= used_bigits_) {
     DOUBLE_CONVERSION_UNIMPLEMENTED();
   }
   DoubleChunk accumulator = 0;
   // First shift the digits so we don't overwrite them.
-  const int copy_offset = used_digits_;
-  for (int i = 0; i < used_digits_; ++i) {
+  const int copy_offset = used_bigits_;
+  for (int i = 0; i < used_bigits_; ++i) {
     RawBigit(copy_offset + i) = RawBigit(i);
   }
   // We have two loops to avoid some 'if's in the loop.
-  for (int i = 0; i < used_digits_; ++i) {
+  for (int i = 0; i < used_bigits_; ++i) {
     // Process temporary digit i with power i.
     // The sum of the two indices must be equal to i.
     int bigit_index1 = i;
@@ -410,12 +410,12 @@ void Bignum::Square() {
     RawBigit(i) = static_cast<Chunk>(accumulator) & kBigitMask;
     accumulator >>= kBigitSize;
   }
-  for (int i = used_digits_; i < product_length; ++i) {
-    int bigit_index1 = used_digits_ - 1;
+  for (int i = used_bigits_; i < product_length; ++i) {
+    int bigit_index1 = used_bigits_ - 1;
     int bigit_index2 = i - bigit_index1;
     // Invariant: sum of both indices is again equal to i.
     // Inner loop runs 0 times on last iteration, emptying accumulator.
-    while (bigit_index2 < used_digits_) {
+    while (bigit_index2 < used_bigits_) {
       const Chunk chunk1 = RawBigit(copy_offset + bigit_index1);
       const Chunk chunk2 = RawBigit(copy_offset + bigit_index2);
       accumulator += static_cast<DoubleChunk>(chunk1) * chunk2;
@@ -424,7 +424,7 @@ void Bignum::Square() {
     }
     // The overwritten RawBigit(i) will never be read in further loop iterations,
     // because bigit_index1 and bigit_index2 are always greater
-    // than i - used_digits_.
+    // than i - used_bigits_.
     RawBigit(i) = static_cast<Chunk>(accumulator) & kBigitMask;
     accumulator >>= kBigitSize;
   }
@@ -433,7 +433,7 @@ void Bignum::Square() {
   DOUBLE_CONVERSION_ASSERT(accumulator == 0);
 
   // Don't forget to update the used_digits and the exponent.
-  used_digits_ = product_length;
+  used_bigits_ = product_length;
   exponent_ *= 2;
   Clamp();
 }
@@ -517,7 +517,7 @@ void Bignum::AssignPowerUInt16(uint16_t base, const int power_exponent) {
 uint16_t Bignum::DivideModuloIntBignum(const Bignum& other) {
   DOUBLE_CONVERSION_ASSERT(IsClamped());
   DOUBLE_CONVERSION_ASSERT(other.IsClamped());
-  DOUBLE_CONVERSION_ASSERT(other.used_digits_ > 0);
+  DOUBLE_CONVERSION_ASSERT(other.used_bigits_ > 0);
 
   // Easy case: if we have less digits than the divisor than the result is 0.
   // Note: this handles the case where this == 0, too.
@@ -535,26 +535,26 @@ uint16_t Bignum::DivideModuloIntBignum(const Bignum& other) {
     // This naive approach is extremely inefficient if `this` divided by other
     // is big. This function is implemented for doubleToString where
     // the result should be small (less than 10).
-    DOUBLE_CONVERSION_ASSERT(other.RawBigit(other.used_digits_ - 1) >= ((1 << kBigitSize) / 16));
-    DOUBLE_CONVERSION_ASSERT(RawBigit(used_digits_ - 1) < 0x10000);
+    DOUBLE_CONVERSION_ASSERT(other.RawBigit(other.used_bigits_ - 1) >= ((1 << kBigitSize) / 16));
+    DOUBLE_CONVERSION_ASSERT(RawBigit(used_bigits_ - 1) < 0x10000);
     // Remove the multiples of the first digit.
     // Example this = 23 and other equals 9. -> Remove 2 multiples.
-    result += static_cast<uint16_t>(RawBigit(used_digits_ - 1));
-    SubtractTimes(other, RawBigit(used_digits_ - 1));
+    result += static_cast<uint16_t>(RawBigit(used_bigits_ - 1));
+    SubtractTimes(other, RawBigit(used_bigits_ - 1));
   }
 
   DOUBLE_CONVERSION_ASSERT(BigitLength() == other.BigitLength());
 
   // Both bignums are at the same length now.
   // Since other has more than 0 digits we know that the access to
-  // RawBigit(used_digits_ - 1) is safe.
-  const Chunk this_bigit = RawBigit(used_digits_ - 1);
-  const Chunk other_bigit = other.RawBigit(other.used_digits_ - 1);
+  // RawBigit(used_bigits_ - 1) is safe.
+  const Chunk this_bigit = RawBigit(used_bigits_ - 1);
+  const Chunk other_bigit = other.RawBigit(other.used_bigits_ - 1);
 
-  if (other.used_digits_ == 1) {
+  if (other.used_bigits_ == 1) {
     // Shortcut for easy (and common) case.
     int quotient = this_bigit / other_bigit;
-    RawBigit(used_digits_ - 1) = this_bigit - other_bigit * quotient;
+    RawBigit(used_bigits_ - 1) = this_bigit - other_bigit * quotient;
     DOUBLE_CONVERSION_ASSERT(quotient < 0x10000);
     result += static_cast<uint16_t>(quotient);
     Clamp();
@@ -607,7 +607,7 @@ bool Bignum::ToHexString(char* buffer, const int buffer_size) const {
   DOUBLE_CONVERSION_ASSERT(kBigitSize % 4 == 0);
   static const int kHexCharsPerBigit = kBigitSize / 4;
 
-  if (used_digits_ == 0) {
+  if (used_bigits_ == 0) {
     if (buffer_size < 2) {
       return false;
     }
@@ -617,7 +617,7 @@ bool Bignum::ToHexString(char* buffer, const int buffer_size) const {
   }
   // We add 1 for the terminating '\0' character.
   const int needed_chars = (BigitLength() - 1) * kHexCharsPerBigit +
-    SizeInHexChars(RawBigit(used_digits_ - 1)) + 1;
+    SizeInHexChars(RawBigit(used_bigits_ - 1)) + 1;
   if (needed_chars > buffer_size) {
     return false;
   }
@@ -628,7 +628,7 @@ bool Bignum::ToHexString(char* buffer, const int buffer_size) const {
       buffer[string_index--] = '0';
     }
   }
-  for (int i = 0; i < used_digits_ - 1; ++i) {
+  for (int i = 0; i < used_bigits_ - 1; ++i) {
     Chunk current_bigit = RawBigit(i);
     for (int j = 0; j < kHexCharsPerBigit; ++j) {
       buffer[string_index--] = HexCharOfValue(current_bigit & 0xF);
@@ -636,7 +636,7 @@ bool Bignum::ToHexString(char* buffer, const int buffer_size) const {
     }
   }
   // And finally the last bigit.
-  Chunk most_significant_bigit = RawBigit(used_digits_ - 1);
+  Chunk most_significant_bigit = RawBigit(used_bigits_ - 1);
   while (most_significant_bigit != 0) {
     buffer[string_index--] = HexCharOfValue(most_significant_bigit & 0xF);
     most_significant_bigit >>= 4;
@@ -728,10 +728,10 @@ int Bignum::PlusCompare(const Bignum& a, const Bignum& b, const Bignum& c) {
 
 
 void Bignum::Clamp() {
-  while (used_digits_ > 0 && RawBigit(used_digits_ - 1) == 0) {
-    used_digits_--;
+  while (used_bigits_ > 0 && RawBigit(used_bigits_ - 1) == 0) {
+    used_bigits_--;
   }
-  if (used_digits_ == 0) {
+  if (used_bigits_ == 0) {
     // Zero.
     exponent_ = 0;
   }
@@ -739,13 +739,13 @@ void Bignum::Clamp() {
 
 
 bool Bignum::IsClamped() const {
-  return used_digits_ == 0 || RawBigit(used_digits_ - 1) != 0;
+  return used_bigits_ == 0 || RawBigit(used_bigits_ - 1) != 0;
 }
 
 
 void Bignum::Zero() {
-  std::memset(bigits_buffer_, 0, sizeof(Chunk) * used_digits_);
-  used_digits_ = 0;
+  std::memset(bigits_buffer_, 0, sizeof(Chunk) * used_bigits_);
+  used_bigits_ = 0;
   exponent_ = 0;
 }
 
@@ -759,16 +759,16 @@ void Bignum::Align(const Bignum& other) {
     // We replace some of the hidden digits (X) of a with 0 digits.
     // a:  aaaaaa000X   or a:   aaaaa0XX
     const int zero_digits = exponent_ - other.exponent_;
-    EnsureCapacity(used_digits_ + zero_digits);
-    for (int i = used_digits_ - 1; i >= 0; --i) {
+    EnsureCapacity(used_bigits_ + zero_digits);
+    for (int i = used_bigits_ - 1; i >= 0; --i) {
       RawBigit(i + zero_digits) = RawBigit(i);
     }
     for (int i = 0; i < zero_digits; ++i) {
       RawBigit(i) = 0;
     }
-    used_digits_ += zero_digits;
+    used_bigits_ += zero_digits;
     exponent_ -= zero_digits;
-    DOUBLE_CONVERSION_ASSERT(used_digits_ >= 0);
+    DOUBLE_CONVERSION_ASSERT(used_bigits_ >= 0);
     DOUBLE_CONVERSION_ASSERT(exponent_ >= 0);
   }
 }
@@ -778,14 +778,14 @@ void Bignum::BigitsShiftLeft(const int shift_amount) {
   DOUBLE_CONVERSION_ASSERT(shift_amount < kBigitSize);
   DOUBLE_CONVERSION_ASSERT(shift_amount >= 0);
   Chunk carry = 0;
-  for (int i = 0; i < used_digits_; ++i) {
+  for (int i = 0; i < used_bigits_; ++i) {
     const Chunk new_carry = RawBigit(i) >> (kBigitSize - shift_amount);
     RawBigit(i) = ((RawBigit(i) << shift_amount) + carry) & kBigitMask;
     carry = new_carry;
   }
   if (carry != 0) {
-    RawBigit(used_digits_) = carry;
-    used_digits_++;
+    RawBigit(used_bigits_) = carry;
+    used_bigits_++;
   }
 }
 
@@ -800,7 +800,7 @@ void Bignum::SubtractTimes(const Bignum& other, const int factor) {
   }
   Chunk borrow = 0;
   const int exponent_diff = other.exponent_ - exponent_;
-  for (int i = 0; i < other.used_digits_; ++i) {
+  for (int i = 0; i < other.used_bigits_; ++i) {
     const DoubleChunk product = static_cast<DoubleChunk>(factor) * other.RawBigit(i);
     const DoubleChunk remove = borrow + product;
     const Chunk difference = RawBigit(i + exponent_diff) - (remove & kBigitMask);
@@ -808,7 +808,7 @@ void Bignum::SubtractTimes(const Bignum& other, const int factor) {
     borrow = static_cast<Chunk>((difference >> (kChunkSize - 1)) +
                                 (remove >> kBigitSize));
   }
-  for (int i = other.used_digits_ + exponent_diff; i < used_digits_; ++i) {
+  for (int i = other.used_bigits_ + exponent_diff; i < used_bigits_; ++i) {
     if (borrow == 0) {
       return;
     }
