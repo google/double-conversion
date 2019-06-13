@@ -176,8 +176,6 @@ typedef uint16_t uc16;
 
 namespace double_conversion {
 
-static const int kCharSize = sizeof(char);
-
 inline int StrLength(const char* string) {
   size_t length = strlen(string);
   DOUBLE_CONVERSION_ASSERT(length == static_cast<size_t>(static_cast<int>(length)));
@@ -268,7 +266,7 @@ class StringBuilder {
   void AddSubstring(const char* s, int n) {
     DOUBLE_CONVERSION_ASSERT(!is_finalized() && position_ + n < buffer_.length());
     DOUBLE_CONVERSION_ASSERT(static_cast<size_t>(n) <= strlen(s));
-    memmove(&buffer_[position_], s, n * kCharSize);
+    memmove(&buffer_[position_], s, n);
     position_ += n;
   }
 
