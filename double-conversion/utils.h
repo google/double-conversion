@@ -325,7 +325,7 @@ class StringBuilder {
 // enough that it can no longer see that you have cast one pointer type to
 // another thus avoiding the warning.
 template <class Dest, class Source>
-inline Dest BitCast(const Source& source) {
+Dest BitCast(const Source& source) {
   // Compile time assertion: sizeof(Dest) == sizeof(Source)
   // A compile error here means your Dest and Source have different sizes.
 #if __cplusplus >= 201103L
@@ -342,7 +342,7 @@ inline Dest BitCast(const Source& source) {
 }
 
 template <class Dest, class Source>
-inline Dest BitCast(Source* source) {
+Dest BitCast(Source* source) {
   return BitCast<Dest>(reinterpret_cast<uintptr_t>(source));
 }
 
