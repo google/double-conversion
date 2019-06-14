@@ -43,7 +43,7 @@ class DiyFp {
   static const int kSignificandSize = 64;
 
   DiyFp() : f_(0), e_(0) {}
-  DiyFp(const uint64_t significand, const int exponent) : f_(significand), e_(exponent) {}
+  DiyFp(const uint64_t significand, const int32_t exponent) : f_(significand), e_(exponent) {}
 
   // this -= other.
   // The exponents of both numbers must be the same and the significand of this
@@ -96,7 +96,7 @@ class DiyFp {
   void Normalize() {
     DOUBLE_CONVERSION_ASSERT(f_ != 0);
     uint64_t significand = f_;
-    int exponent = e_;
+    int32_t exponent = e_;
 
     // This method is mainly called for normalizing boundaries. In general,
     // boundaries need to be shifted by 10 bits, and we optimize for this case.
@@ -120,16 +120,16 @@ class DiyFp {
   }
 
   uint64_t f() const { return f_; }
-  int e() const { return e_; }
+  int32_t e() const { return e_; }
 
   void set_f(uint64_t new_value) { f_ = new_value; }
-  void set_e(int new_value) { e_ = new_value; }
+  void set_e(int32_t new_value) { e_ = new_value; }
 
  private:
   static const uint64_t kUint64MSB = DOUBLE_CONVERSION_UINT64_2PART_C(0x80000000, 00000000);
 
   uint64_t f_;
-  int e_;
+  int32_t e_;
 };
 
 }  // namespace double_conversion
