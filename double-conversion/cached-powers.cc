@@ -35,6 +35,8 @@
 
 namespace double_conversion {
 
+namespace PowersOfTenCache {
+
 struct CachedPower {
   uint64_t significand;
   int16_t binary_exponent;
@@ -133,12 +135,8 @@ static const CachedPower kCachedPowers[] = {
 
 static const int kCachedPowersOffset = 348;  // -1 * the first decimal_exponent.
 static const double kD_1_LOG2_10 = 0.30102999566398114;  //  1 / lg(10)
-// Difference between the decimal exponents in the table above.
-const int PowersOfTenCache::kDecimalExponentDistance = 8;
-const int PowersOfTenCache::kMinDecimalExponent = -348;
-const int PowersOfTenCache::kMaxDecimalExponent = 340;
 
-void PowersOfTenCache::GetCachedPowerForBinaryExponentRange(
+void GetCachedPowerForBinaryExponentRange(
     int min_exponent,
     int max_exponent,
     DiyFp* power,
@@ -158,9 +156,9 @@ void PowersOfTenCache::GetCachedPowerForBinaryExponentRange(
 }
 
 
-void PowersOfTenCache::GetCachedPowerForDecimalExponent(int requested_exponent,
-                                                        DiyFp* power,
-                                                        int* found_exponent) {
+void GetCachedPowerForDecimalExponent(int requested_exponent,
+                                      DiyFp* power,
+                                      int* found_exponent) {
   DOUBLE_CONVERSION_ASSERT(kMinDecimalExponent <= requested_exponent);
   DOUBLE_CONVERSION_ASSERT(requested_exponent < kMaxDecimalExponent + kDecimalExponentDistance);
   int index =
@@ -171,5 +169,7 @@ void PowersOfTenCache::GetCachedPowerForDecimalExponent(int requested_exponent,
   DOUBLE_CONVERSION_ASSERT(*found_exponent <= requested_exponent);
   DOUBLE_CONVERSION_ASSERT(requested_exponent < *found_exponent + kDecimalExponentDistance);
 }
+
+}  // namespace PowersOfTenCache
 
 }  // namespace double_conversion
