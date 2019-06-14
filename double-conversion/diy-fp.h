@@ -36,7 +36,8 @@ namespace double_conversion {
 // with a uint64 significand and an int exponent. Normalized DiyFp numbers will
 // have the most significant bit of the significand set.
 // Multiplication and Subtraction do not normalize their results.
-// DiyFp are not designed to contain special doubles (NaN and Infinity).
+// DiyFp store only non-negative numbers and are not designed to contain special
+// doubles (NaN and Infinity).
 class DiyFp {
  public:
   static const int kSignificandSize = 64;
@@ -46,7 +47,7 @@ class DiyFp {
 
   // this -= other.
   // The exponents of both numbers must be the same and the significand of this
-  // must be bigger than the significand of other.
+  // must be greater or equal than the significand of other.
   // The result will not be normalized.
   void Subtract(const DiyFp& other) {
     DOUBLE_CONVERSION_ASSERT(e_ == other.e_);
@@ -55,8 +56,8 @@ class DiyFp {
   }
 
   // Returns a - b.
-  // The exponents of both numbers must be the same and this must be bigger
-  // than other. The result will not be normalized.
+  // The exponents of both numbers must be the same and a must be greater
+  // or equal than b. The result will not be normalized.
   static DiyFp Minus(const DiyFp& a, const DiyFp& b) {
     DiyFp result = a;
     result.Subtract(b);
@@ -97,8 +98,8 @@ class DiyFp {
     uint64_t significand = f_;
     int exponent = e_;
 
-    // This method is mainly called for normalizing boundaries. In general
-    // boundaries need to be shifted by 10 bits. We thus optimize for this case.
+    // This method is mainly called for normalizing boundaries. In general,
+    // boundaries need to be shifted by 10 bits, and we optimize for this case.
     const uint64_t k10MSBits = DOUBLE_CONVERSION_UINT64_2PART_C(0xFFC00000, 00000000);
     while ((significand & k10MSBits) == 0) {
       significand <<= 10;
