@@ -1,4 +1,5 @@
 .sconsign.dblite
+*~
 *.o
 *.obj
 msvc/Release/
@@ -10,6 +11,7 @@ msvc/Debug/
 *.a
 *.so
 *.so.*
+*.dylib
 /run_tests
 Makefile
 CMakeLists.txt.user
