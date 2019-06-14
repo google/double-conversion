@@ -39,7 +39,8 @@ class Bignum {
   // exponent.
   static const int kMaxSignificantBits = 3584;
 
-  Bignum();
+  Bignum() : used_bigits_(0) {}
+
   void AssignUInt16(const uint16_t value);
   void AssignUInt64(uint64_t value);
   void AssignBignum(const Bignum& other);
@@ -117,8 +118,13 @@ class Bignum {
   }
   void Align(const Bignum& other);
   void Clamp();
-  bool IsClamped() const;
-  void Zero();
+  bool IsClamped() const {
+    return used_bigits_ == 0 || RawBigit(used_bigits_ - 1) != 0;
+  }
+  void Zero() {
+    used_bigits_ = 0;
+    exponent_.Zero();
+  }
   // Requires this to have enough capacity (no tests done).
   // Updates used_bigits_ if necessary.
   // shift_amount must be < kBigitSize.

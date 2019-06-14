@@ -33,11 +33,6 @@
 
 namespace double_conversion {
 
-Bignum::Bignum()
-    : used_bigits_(0) {
-}
-
-
 Bignum::Chunk& Bignum::RawBigit(const int index) {
   DOUBLE_CONVERSION_ASSERT(static_cast<unsigned>(index) < kBigitCapacity);
   return bigits_buffer_[index];
@@ -728,17 +723,6 @@ void Bignum::Clamp() {
     // Zero.
     exponent_.Zero();
   }
-}
-
-
-bool Bignum::IsClamped() const {
-  return used_bigits_ == 0 || RawBigit(used_bigits_ - 1) != 0;
-}
-
-
-void Bignum::Zero() {
-  used_bigits_ = 0;
-  exponent_.Zero();
 }
 
 
