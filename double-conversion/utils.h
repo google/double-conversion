@@ -219,6 +219,11 @@ class Vector {
 
   T& last() { return start_[length_ - 1]; }
 
+  void pop_back() {
+    DOUBLE_CONVERSION_ASSERT( !is_empty() );
+    --length_;
+  }
+
  private:
   T* start_;
   int length_;

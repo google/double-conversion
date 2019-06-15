@@ -115,7 +115,7 @@ void Bignum::AssignDecimalString(const Vector<const char> value) {
 }
 
 
-static int HexCharValue(const int c) {
+static uint64_t HexCharValue(const int c) {
   if ('0' <= c && c <= '9') {
     return c - '0';
   }
@@ -127,30 +127,23 @@ static int HexCharValue(const int c) {
 }
 
 
-void Bignum::AssignHexString(const Vector<const char> value) {
+// Unlike AssignDecimalString(), this function is "only" used
+// for unit-tests and therefore not performance critical.
+void Bignum::AssignHexString(Vector<const char> value) {
   Zero();
-  const int length = value.length();
-  const int needed_bigits = length * 4 / kBigitSize + 1;
-  EnsureCapacity(needed_bigits);
-  int string_index = length - 1;
-  for (int i = 0; i < needed_bigits - 1; ++i) {
-    // These bigits are guaranteed to be "full".
-    Chunk current_bigit = 0;
-    for (int j = 0; j < kBigitSize / 4; j++) {
-      current_bigit += HexCharValue(value[string_index--]) << (j * 4);
+  EnsureCapacity( ( ( value.length() * 4 ) + kBigitSize - 1 ) / kBigitSize );  // Could be less if we ignored leading zeros while converting.
+  DOUBLE_CONVERSION_ASSERT( sizeof( uint64_t ) * 8 >= kBigitSize + 4 );  // TODO: static_assert
+  uint64_t tmp = 0;  // Accumulate converted hex digits until at least kBigitSize bits, works with non-factor-of-four kBigitSizes.
+  for( int cnt = 0; !value.is_empty(); value.pop_back() ) {
+    tmp |= ( HexCharValue( value.last() ) << cnt );
+    if( ( cnt += 4 ) >= kBigitSize ) {
+      RawBigit( used_bigits_++ ) = ( tmp & kBigitMask );
+      cnt -= kBigitSize;
+      tmp >>= kBigitSize;
     }
-    RawBigit(i) = current_bigit;
   }
-  used_bigits_ = needed_bigits - 1;
-
-  Chunk most_significant_bigit = 0;  // Could be = 0;
-  for (int j = 0; j <= string_index; ++j) {
-    most_significant_bigit <<= 4;
-    most_significant_bigit += HexCharValue(value[j]);
-  }
-  if (most_significant_bigit != 0) {
-    RawBigit(used_bigits_) = most_significant_bigit;
-    used_bigits_++;
+  if( tmp > 0 ) {
+    RawBigit( used_bigits_++ ) = tmp;
   }
   Clamp();
 }
