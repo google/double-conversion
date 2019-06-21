@@ -134,6 +134,8 @@ void Bignum::AssignHexString(Vector<const char> value) {
   // Required capacity could be reduced by ignoring leading zeros.
   EnsureCapacity(((value.length() * 4) + kBigitSize - 1) / kBigitSize);
   DOUBLE_CONVERSION_ASSERT(sizeof(uint64_t) * 8 >= kBigitSize + 4);  // TODO: static_assert
+  // Accumulates converted hex digits until at least kBigitSize bits.
+  // Works with non-factor-of-four kBigitSizes.
   uint64_t tmp = 0;  // Accumulates converted hex digits until at least
   // kBigitSize bits, works with non-factor-of-four kBigitSizes.
   for (int cnt = 0; !value.is_empty(); value.pop_back()) {
