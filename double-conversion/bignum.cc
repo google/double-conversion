@@ -145,7 +145,7 @@ void Bignum::AssignHexString(Vector<const char> value) {
       tmp >>= kBigitSize;
     }
   }
-  if(tmp > 0) {
+  if (tmp > 0) {
     RawBigit(used_bigits_++) = tmp;
   }
   Clamp();
