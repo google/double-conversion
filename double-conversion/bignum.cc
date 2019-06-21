@@ -131,19 +131,21 @@ static uint64_t HexCharValue(const int c) {
 // for unit-tests and therefore not performance critical.
 void Bignum::AssignHexString(Vector<const char> value) {
   Zero();
-  EnsureCapacity( ( ( value.length() * 4 ) + kBigitSize - 1 ) / kBigitSize );  // Could be less if we ignored leading zeros while converting.
-  DOUBLE_CONVERSION_ASSERT( sizeof( uint64_t ) * 8 >= kBigitSize + 4 );  // TODO: static_assert
-  uint64_t tmp = 0;  // Accumulate converted hex digits until at least kBigitSize bits, works with non-factor-of-four kBigitSizes.
-  for( int cnt = 0; !value.is_empty(); value.pop_back() ) {
-    tmp |= ( HexCharValue( value.last() ) << cnt );
-    if( ( cnt += 4 ) >= kBigitSize ) {
-      RawBigit( used_bigits_++ ) = ( tmp & kBigitMask );
+  // Required capacity could be reduced by ignoring leading zeros.
+  EnsureCapacity(((value.length() * 4) + kBigitSize - 1) / kBigitSize);
+  DOUBLE_CONVERSION_ASSERT(sizeof(uint64_t) * 8 >= kBigitSize + 4);  // TODO: static_assert
+  uint64_t tmp = 0;  // Accumulates converted hex digits until at least
+  // kBigitSize bits, works with non-factor-of-four kBigitSizes.
+  for (int cnt = 0; !value.is_empty(); value.pop_back()) {
+    tmp |= (HexCharValue(value.last()) << cnt);
+    if ((cnt += 4 ) >= kBigitSize) {
+      RawBigit(used_bigits_++) = (tmp & kBigitMask);
       cnt -= kBigitSize;
       tmp >>= kBigitSize;
     }
   }
-  if( tmp > 0 ) {
-    RawBigit( used_bigits_++ ) = tmp;
+  if(tmp > 0) {
+    RawBigit(used_bigits_++) = tmp;
   }
   Clamp();
 }
@@ -200,7 +202,7 @@ void Bignum::AddBignum(const Bignum& other) {
     carry = sum >> kBigitSize;
     ++bigit_pos;
   }
-  used_bigits_ = (std::max)(bigit_pos, int(used_bigits_));
+  used_bigits_ = (std::max)(bigit_pos, static_cast<int>(used_bigits_));
   DOUBLE_CONVERSION_ASSERT(IsClamped());
 }
 
