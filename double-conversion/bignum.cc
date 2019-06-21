@@ -55,7 +55,7 @@ static int BitSize(const S value) {
 void Bignum::AssignUInt16(const uint16_t value) {
   DOUBLE_CONVERSION_ASSERT(kBigitSize >= BitSize(value));
   Zero();
-  if(value > 0 ) {
+  if (value > 0) {
     RawBigit(0) = value;
     used_bigits_ = 1;
   }
