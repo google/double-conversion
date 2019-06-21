@@ -39,7 +39,7 @@ class Bignum {
   // exponent.
   static const int kMaxSignificantBits = 3584;
 
-  Bignum() : used_bigits_(0) {}
+  Bignum() : used_bigits_(0), exponent_(0) {}
 
   void AssignUInt16(const uint16_t value);
   void AssignUInt64(uint64_t value);
@@ -123,55 +123,25 @@ class Bignum {
   }
   void Zero() {
     used_bigits_ = 0;
-    exponent_.Zero();
+    exponent_ = 0;
   }
   // Requires this to have enough capacity (no tests done).
   // Updates used_bigits_ if necessary.
   // shift_amount must be < kBigitSize.
   void BigitsShiftLeft(const int shift_amount);
   // BigitLength includes the "hidden" bigits encoded in the exponent.
-  int BigitLength() const { return used_bigits_ + exponent_.get(); }
+  int BigitLength() const { return used_bigits_ + exponent_; }
   Chunk& RawBigit(const int index);
   const Chunk& RawBigit(const int index) const;
   Chunk BigitOrZero(const int index) const;
   void SubtractTimes(const Bignum& other, const int factor);
 
-  class ExponentWrapper {
-  public:
-    ExponentWrapper()
-      : value_( 0 )
-    {}
-
-    int get() const {
-      return value_;
-    }
-
-    void Zero() {
-      value_ = 0;
-    }
-
-    void AddInt(const int v) {
-      DOUBLE_CONVERSION_ASSERT(int(value_ + v) == int16_t(value_ + v));
-      value_ += v;
-    }
-
-    void SubtractInt(const int v) {
-      DOUBLE_CONVERSION_ASSERT(int(value_ - v) == int16_t(value_ - v));
-      value_ -= v;
-    }
-
-    void MultiplyByTwo() {
-      DOUBLE_CONVERSION_ASSERT(int(value_) * 2 == int16_t(value_ * 2));
-      value_ *= 2;
-    }
-
-  private:
-    int16_t value_;
-  };
-
+  // The Bignum's value is value(bigits_buffer_) * 2^(exponent_ * kBigitSize),
+  // where the value of the buffer consists of the lower kBigitSize bits of
+  // the first used_bigits_ Chunks in bigits_buffer_, first chunk has lowest
+  // significant bits.
   int16_t used_bigits_;
-  // The Bignum's value equals value(bigits_buffer_) * 2^(exponent_ * kBigitSize).
-  ExponentWrapper exponent_;
+  int16_t exponent_;
   Chunk bigits_buffer_[kBigitCapacity];
 
   DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(Bignum);
