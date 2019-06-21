@@ -137,7 +137,6 @@ void Bignum::AssignHexString(Vector<const char> value) {
   // Accumulates converted hex digits until at least kBigitSize bits.
   // Works with non-factor-of-four kBigitSizes.
   uint64_t tmp = 0;  // Accumulates converted hex digits until at least
-  // kBigitSize bits, works with non-factor-of-four kBigitSizes.
   for (int cnt = 0; !value.is_empty(); value.pop_back()) {
     tmp |= (HexCharValue(value.last()) << cnt);
     if ((cnt += 4 ) >= kBigitSize) {
