@@ -186,7 +186,7 @@ void Bignum::AddBignum(const Bignum& other) {
   Chunk carry = 0;
   int bigit_pos = other.exponent_.get() - exponent_.get();
   DOUBLE_CONVERSION_ASSERT(bigit_pos >= 0);
-  for (int i = used_bigits_; i < bigit_pos; ++i ) {
+  for (int i = used_bigits_; i < bigit_pos; ++i) {
     RawBigit(i) = 0;
   }
   for (int i = 0; i < other.used_bigits_; ++i) {
