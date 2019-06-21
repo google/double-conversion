@@ -139,7 +139,7 @@ void Bignum::AssignHexString(Vector<const char> value) {
   uint64_t tmp = 0;  // Accumulates converted hex digits until at least
   for (int cnt = 0; !value.is_empty(); value.pop_back()) {
     tmp |= (HexCharValue(value.last()) << cnt);
-    if ((cnt += 4 ) >= kBigitSize) {
+    if ((cnt += 4) >= kBigitSize) {
       RawBigit(used_bigits_++) = (tmp & kBigitMask);
       cnt -= kBigitSize;
       tmp >>= kBigitSize;
