@@ -352,8 +352,8 @@ TEST(DoubleToFixed) {
   CHECK(dc.ToFixed(-0.0, 1, &builder));
   CHECK_EQ("0.0", builder.Finalize());
 
-  ASSERT(DoubleToStringConverter::kMaxFixedDigitsBeforePoint == 60);
-  ASSERT(DoubleToStringConverter::kMaxFixedDigitsAfterPoint == 60);
+  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxFixedDigitsBeforePoint == 60);
+  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxFixedDigitsAfterPoint == 60);
   builder.Reset();
   CHECK(dc.ToFixed(
       0.0, DoubleToStringConverter::kMaxFixedDigitsAfterPoint, &builder));
@@ -638,7 +638,7 @@ TEST(DoubleToExponential) {
   CHECK(dc.ToExponential(-0.0, 2, &builder));
   CHECK_EQ("0.00e+0", builder.Finalize());
 
-  ASSERT(DoubleToStringConverter::kMaxExponentialDigits == 120);
+  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxExponentialDigits == 120);
   builder.Reset();
   CHECK(dc.ToExponential(
       0.0, DoubleToStringConverter::kMaxExponentialDigits, &builder));
@@ -765,7 +765,7 @@ TEST(DoubleToPrecision) {
                              0, 0,   // Padding zeroes for shortest mode.
                              6, 0);  // Padding zeroes for precision mode.
 
-  ASSERT(DoubleToStringConverter::kMinPrecisionDigits == 1);
+  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMinPrecisionDigits == 1);
   CHECK(dc.ToPrecision(0.0, 1, &builder));
   CHECK_EQ("0", builder.Finalize());
 
@@ -781,7 +781,7 @@ TEST(DoubleToPrecision) {
   CHECK(dc.ToPrecision(-0.0, 2, &builder));
   CHECK_EQ("0.0", builder.Finalize());
 
-  ASSERT(DoubleToStringConverter::kMaxPrecisionDigits == 120);
+  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxPrecisionDigits == 120);
   builder.Reset();
   CHECK(dc.ToPrecision(
       0.0, DoubleToStringConverter::kMaxPrecisionDigits, &builder));
@@ -1752,7 +1752,7 @@ static double StrToD16(const char* str, int flags,
       break;
     }
   }
-  ASSERT(length < 256);
+  DOUBLE_CONVERSION_ASSERT(length < 256);
   StringToDoubleConverter converter(flags, empty_string_value, Double::NaN(),
                                     NULL, NULL, separator);
   double result =
@@ -1773,7 +1773,7 @@ static double StrToD(const char* str, int flags, double empty_string_value,
       ((strlen(str) == static_cast<unsigned>(*processed_characters_count)));
 
   uc16 buffer16[256];
-  ASSERT(strlen(str) < ARRAY_SIZE(buffer16));
+  DOUBLE_CONVERSION_ASSERT(strlen(str) < DOUBLE_CONVERSION_ARRAY_SIZE(buffer16));
   int len = strlen(str);
   for (int i = 0; i < len; i++) {
     buffer16[i] = str[i];
@@ -3898,7 +3898,7 @@ static double StrToF(const char* str, int flags, double empty_string_value,
       ((strlen(str) == static_cast<unsigned>(*processed_characters_count)));
 
   uc16 buffer16[256];
-  ASSERT(strlen(str) < ARRAY_SIZE(buffer16));
+  DOUBLE_CONVERSION_ASSERT(strlen(str) < DOUBLE_CONVERSION_ARRAY_SIZE(buffer16));
   int len = strlen(str);
   for (int i = 0; i < len; i++) {
     buffer16[i] = str[i];
@@ -5531,7 +5531,7 @@ TEST(StringToDoubleFloatWhitespace) {
     kFigureSpace, kPunctuationSpace, kThinSpace, kHairSpace,
     kNarrowNoBreakSpace, kMediumMathematicalSpace, kIdeographicSpace,
   };
-  const int kWhitespace16Length = ARRAY_SIZE(kWhitespace16);
+  const int kWhitespace16Length = DOUBLE_CONVERSION_ARRAY_SIZE(kWhitespace16);
   CHECK_EQ(-1.2, StrToD16(kWhitespace16, kWhitespace16Length, flags,
                           Double::NaN(),
                           &processed, &all_used));
@@ -5546,7 +5546,7 @@ TEST(StringToDoubleFloatWhitespace) {
 TEST(StringToDoubleCaseInsensitiveSpecialValues) {
   int processed = 0;
 
-  int flags = StringToDoubleConverter::ALLOW_CASE_INSENSIBILITY |
+  int flags = StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY |
     StringToDoubleConverter::ALLOW_LEADING_SPACES |
     StringToDoubleConverter::ALLOW_TRAILING_JUNK |
     StringToDoubleConverter::ALLOW_TRAILING_SPACES;

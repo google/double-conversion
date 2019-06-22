@@ -112,7 +112,7 @@ class Bignum {
 
   void EnsureCapacity(int size) {
     if (size > kBigitCapacity) {
-      UNREACHABLE();
+      DOUBLE_CONVERSION_UNREACHABLE();
     }
   }
   void Align(const Bignum& other);
@@ -125,18 +125,17 @@ class Bignum {
   void BigitsShiftLeft(int shift_amount);
   // BigitLength includes the "hidden" digits encoded in the exponent.
   int BigitLength() const { return used_digits_ + exponent_; }
-  Chunk BigitAt(int index) const;
+  Chunk& RawBigit(int index);
+  const Chunk& RawBigit(int index) const;
+  Chunk BigitOrZero(int index) const;
   void SubtractTimes(const Bignum& other, int factor);
 
-  Chunk bigits_buffer_[kBigitCapacity];
-  // A vector backed by bigits_buffer_. This way accesses to the array are
-  // checked for out-of-bounds errors.
-  Vector<Chunk> bigits_;
   int used_digits_;
   // The Bignum's value equals value(bigits_) * 2^(exponent_ * kBigitSize).
   int exponent_;
+  Chunk bigits_buffer_[kBigitCapacity];
 
-  DC_DISALLOW_COPY_AND_ASSIGN(Bignum);
+  DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN(Bignum);
 };
 
 }  // namespace double_conversion
