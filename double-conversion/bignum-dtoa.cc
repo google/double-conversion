@@ -76,14 +76,14 @@ static void GenerateShortestDigits(Bignum* numerator, Bignum* denominator,
 // Generates 'requested_digits' after the decimal point.
 static void BignumToFixed(int requested_digits, int* decimal_point,
                           Bignum* numerator, Bignum* denominator,
-                          Vector<char>(buffer), int* length);
+                          Vector<char> buffer, int* length);
 // Generates 'count' digits of numerator/denominator.
 // Once 'count' digits have been produced rounds the result depending on the
 // remainder (remainders of exactly .5 round upwards). Might update the
 // decimal_point when rounding up (for example for 0.9999).
 static void GenerateCountedDigits(int count, int* decimal_point,
                                   Bignum* numerator, Bignum* denominator,
-                                  Vector<char>(buffer), int* length);
+                                  Vector<char> buffer, int* length);
 
 
 void BignumDtoa(double v, BignumDtoaMode mode, int requested_digits,
@@ -325,7 +325,7 @@ static void GenerateCountedDigits(int count, int* decimal_point,
 // Input verifies:  1 <= (numerator + delta) / denominator < 10.
 static void BignumToFixed(int requested_digits, int* decimal_point,
                           Bignum* numerator, Bignum* denominator,
-                          Vector<char>(buffer), int* length) {
+                          Vector<char> buffer, int* length) {
   // Note that we have to look at more than just the requested_digits, since
   // a number could be rounded up. Example: v=0.5 with requested_digits=0.
   // Even though the power of v equals 0 we can't just stop here.
