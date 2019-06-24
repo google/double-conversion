@@ -35,6 +35,15 @@
 #include "strtod.h"
 #include "utils.h"
 
+#ifdef _MSC_VER
+#  if _MSC_VER >= 1900
+// Fix MSVC >= 2015 (_MSC_VER == 1900) warning
+// C4244: 'argument': conversion from 'const uc16' to 'char', possible loss of data
+// against Advance and friends, when instantiated with **it as char, not uc16.
+ __pragma(warning(disable: 4244))
+#  endif
+#endif
+
 namespace double_conversion {
 
 namespace {
