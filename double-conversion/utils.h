@@ -176,8 +176,6 @@ typedef uint16_t uc16;
 
 namespace double_conversion {
 
-static const int kCharSize = sizeof(char);
-
 inline int StrLength(const char* string) {
   size_t length = strlen(string);
   DOUBLE_CONVERSION_ASSERT(length == static_cast<size_t>(static_cast<int>(length)));
@@ -220,6 +218,11 @@ class Vector {
   T& first() { return start_[0]; }
 
   T& last() { return start_[length_ - 1]; }
+
+  void pop_back() {
+    DOUBLE_CONVERSION_ASSERT(!is_empty());
+    --length_;
+  }
 
  private:
   T* start_;
@@ -268,7 +271,7 @@ class StringBuilder {
   void AddSubstring(const char* s, int n) {
     DOUBLE_CONVERSION_ASSERT(!is_finalized() && position_ + n < buffer_.length());
     DOUBLE_CONVERSION_ASSERT(static_cast<size_t>(n) <= strlen(s));
-    memmove(&buffer_[position_], s, n * kCharSize);
+    memmove(&buffer_[position_], s, n);
     position_ += n;
   }
 
@@ -327,7 +330,7 @@ class StringBuilder {
 // enough that it can no longer see that you have cast one pointer type to
 // another thus avoiding the warning.
 template <class Dest, class Source>
-inline Dest BitCast(const Source& source) {
+Dest BitCast(const Source& source) {
   // Compile time assertion: sizeof(Dest) == sizeof(Source)
   // A compile error here means your Dest and Source have different sizes.
 #if __cplusplus >= 201103L
@@ -344,7 +347,7 @@ inline Dest BitCast(const Source& source) {
 }
 
 template <class Dest, class Source>
-inline Dest BitCast(Source* source) {
+Dest BitCast(Source* source) {
   return BitCast<Dest>(reinterpret_cast<uintptr_t>(source));
 }
 

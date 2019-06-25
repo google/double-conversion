@@ -314,9 +314,13 @@ TEST(AddBignum) {
   CHECK_EQ("10000000000001000000000000", buffer);
 
   other.ShiftLeft(64);
-  // other == "10000000000000000000000000000"
+  CHECK(other.ToHexString(buffer, kBufferSize));
+  CHECK_EQ("10000000000000000000000000000", buffer);
 
   bignum.AssignUInt16(0x1);
+  CHECK(bignum.ToHexString(buffer, kBufferSize));
+  CHECK_EQ("1", buffer);
+
   bignum.AddBignum(other);
   CHECK(bignum.ToHexString(buffer, kBufferSize));
   CHECK_EQ("10000000000000000000000000001", buffer);
