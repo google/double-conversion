@@ -18,7 +18,6 @@ add_library(double-conversion
             double-conversion/bignum.cc
             double-conversion/bignum-dtoa.cc
             double-conversion/cached-powers.cc
-            double-conversion/diy-fp.cc
             double-conversion/double-to-string.cc
             double-conversion/fast-dtoa.cc
             double-conversion/fixed-dtoa.cc
