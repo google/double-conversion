@@ -71,6 +71,90 @@ TEST(DoubleToShortest) {
   CHECK(dc.ToShortest(-0.0, &builder));
   CHECK_EQ("0", builder.Finalize());
 
+  // Test min_exponent_width
+  flags = DoubleToStringConverter::UNIQUE_ZERO |
+      DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN;
+  DoubleToStringConverter dcExpWidth2(flags, NULL, NULL, 'e', -4, 6, 0, 0, 2);
+
+  builder.Reset();
+  CHECK(dcExpWidth2.ToShortest(11111111111.0, &builder));
+  CHECK_EQ("1.1111111111e+10", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth2.ToShortest(1111111111.0, &builder));
+  CHECK_EQ("1.111111111e+09", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth2.ToShortest(1111111.0, &builder));
+  CHECK_EQ("1.111111e+06", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth2.ToShortest(111111.0, &builder));
+  CHECK_EQ("111111", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth2.ToShortest(10000000000.0, &builder));
+  CHECK_EQ("1e+10", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth2.ToShortest(1000000000.0, &builder));
+  CHECK_EQ("1e+09", builder.Finalize());
+
+  DoubleToStringConverter dcExpWidth0(flags, NULL, NULL, 'e', -4, 6, 0, 0, 0);
+
+  builder.Reset();
+  CHECK(dcExpWidth0.ToShortest(11111111111.0, &builder));
+  CHECK_EQ("1.1111111111e+10", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth0.ToShortest(1111111111.0, &builder));
+  CHECK_EQ("1.111111111e+9", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth0.ToShortest(1111111.0, &builder));
+  CHECK_EQ("1.111111e+6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth0.ToShortest(111111.0, &builder));
+  CHECK_EQ("111111", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth0.ToShortest(10000000000.0, &builder));
+  CHECK_EQ("1e+10", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth0.ToShortest(1000000000.0, &builder));
+  CHECK_EQ("1e+9", builder.Finalize());
+
+  // Set min_exponent_width to 100 is equal to 5,
+  // as kMaxExponentLength is defined to 5 in double-to-string.cc
+  DoubleToStringConverter dcExpWidth100(flags, NULL, NULL, 'e', -4, 6, 0, 0, 100);
+
+  builder.Reset();
+  CHECK(dcExpWidth100.ToShortest(11111111111.0, &builder));
+  CHECK_EQ("1.1111111111e+00010", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth100.ToShortest(1111111111.0, &builder));
+  CHECK_EQ("1.111111111e+00009", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth100.ToShortest(1111111.0, &builder));
+  CHECK_EQ("1.111111e+00006", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth100.ToShortest(111111.0, &builder));
+  CHECK_EQ("111111", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth100.ToShortest(10000000000.0, &builder));
+  CHECK_EQ("1e+00010", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dcExpWidth100.ToShortest(1000000000.0, &builder));
+  CHECK_EQ("1e+00009", builder.Finalize());
+  // End of min_exponent_width testing
+
   flags = DoubleToStringConverter::NO_FLAGS;
   DoubleToStringConverter dc2(flags, NULL, NULL, 'e', -1, 1, 0, 0);
   builder.Reset();

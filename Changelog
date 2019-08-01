@@ -1,3 +1,6 @@
+2019-08-01:
+  Add min exponent width option in double-to-string conversion.
+
 2019-06-22:
   Remove redundant parenthesis.
 
