@@ -1,3 +1,6 @@
+2019-10-31:
+  Add support for nios2 architecture.
+
 2019-10-12:
   Really add support for microblaze. A previous commit was lacking
 	the necessary line.
