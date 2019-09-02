@@ -1,3 +1,6 @@
+2019-09-02:
+  Add support for e2k architectur. Thanks to Michael Shigorin.
+
 2019-08-01:
   Add min exponent width option in double-to-string conversion.
 
