@@ -1,3 +1,7 @@
+2019-10-12:
+  Really add support for microblaze. A previous commit was lacking
+	the necessary line.
+
 2019-09-02:
   Add support for e2k architectur. Thanks to Michael Shigorin.
 
