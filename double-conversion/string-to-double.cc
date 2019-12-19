@@ -42,6 +42,9 @@
 // against Advance and friends, when instantiated with **it as char, not uc16.
  __pragma(warning(disable: 4244))
 #  endif
+#  if _MSC_VER <= 1700 // VS2012, see IsDecimalDigitForRadix warning fix, below
+#    define VS2012_RADIXWARN
+#  endif
 #endif
 
 namespace double_conversion {
@@ -158,9 +161,9 @@ static double SignedZero(bool sign) {
 //
 // The function is small and could be inlined, but VS2012 emitted a warning
 // because it constant-propagated the radix and concluded that the last
-// condition was always true. By moving it into a separate function the
-// compiler wouldn't warn anymore.
-#ifdef _MSC_VER
+// condition was always true. Moving it into a separate function and
+// suppressing optimisation keeps the compiler from warning.
+#ifdef VS2012_RADIXWARN
 #pragma optimize("",off)
 static bool IsDecimalDigitForRadix(int c, int radix) {
   return '0' <= c && c <= '9' && (c - '0') < radix;
