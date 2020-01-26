@@ -64,6 +64,12 @@ inline void abort_noreturn() { abort(); }
 #endif
 #endif
 
+#if defined(__clang__) && __has_attribute(uninitialized)
+#define DOUBLE_CONVERSION_STACK_UNINITIALIZED __attribute__((uninitialized))
+#else
+#define DOUBLE_CONVERSION_STACK_UNINITIALIZED
+#endif
+
 // Double operations detection based on target architecture.
 // Linux uses a 80bit wide floating point stack on x86. This induces double
 // rounding, which in turn leads to wrong results.

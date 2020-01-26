@@ -551,7 +551,8 @@ double StringToDoubleConverter::StringToIeee(
 
   // The longest form of simplified number is: "-<significant digits>.1eXXX\0".
   const int kBufferSize = kMaxSignificantDigits + 10;
-  char buffer[kBufferSize];  // NOLINT: size is known at compile time.
+  DOUBLE_CONVERSION_STACK_UNINITIALIZED char
+      buffer[kBufferSize];  // NOLINT: size is known at compile time.
   int buffer_pos = 0;
 
   // Copy significant digits of the integer part (if any) to the buffer.
