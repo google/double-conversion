@@ -26,6 +26,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
+#include <limits>
 
 #include "cctest.h"
 #include "double-conversion/diy-fp.h"
@@ -443,4 +444,20 @@ TEST(PreviousDouble) {
   CHECK_EQ(1.7976931348623157e308, Double(Double::Infinity()).PreviousDouble());
   CHECK_EQ(-Double::Infinity(),
            Double(DOUBLE_CONVERSION_UINT64_2PART_C(0xffefffff, ffffffff)).PreviousDouble());
+}
+
+TEST(SignalingNan) {
+  Double nan(Double::NaN());
+  CHECK(nan.IsNan());
+  CHECK(nan.IsQuietNan());
+  CHECK(Double(std::numeric_limits<double>::quiet_NaN()).IsQuietNan());
+  CHECK(Double(std::numeric_limits<double>::signaling_NaN()).IsSignalingNan());
+}
+
+TEST(SignalingNanSingle) {
+  Single nan(Single::NaN());
+  CHECK(nan.IsNan());
+  CHECK(nan.IsQuietNan());
+  CHECK(Single(std::numeric_limits<float>::quiet_NaN()).IsQuietNan());
+  CHECK(Single(std::numeric_limits<float>::signaling_NaN()).IsSignalingNan());
 }
