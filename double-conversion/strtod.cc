@@ -206,8 +206,6 @@ static bool DoubleStrtod(Vector<const char> trimmed,
   // 80 bits wide (as is the case on Linux) then double-rounding occurs and the
   // result is not accurate.
   // We know that Windows32 uses 64 bits and is therefore accurate.
-  // Note that the ARM simulator is compiled for 32bits. It therefore exhibits
-  // the same problem.
   return false;
 #else
   if (trimmed.length() <= kMaxExactDoubleIntegerDecimalDigits) {
