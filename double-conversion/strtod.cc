@@ -202,6 +202,10 @@ static bool DoubleStrtod(Vector<const char> trimmed,
                          int exponent,
                          double* result) {
 #if !defined(DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS)
+  // Avoid "unused parameter" warnings
+  (void) trimmed;
+  (void) exponent;
+  (void) result;
   // On x86 the floating-point stack can be 64 or 80 bits wide. If it is
   // 80 bits wide (as is the case on Linux) then double-rounding occurs and the
   // result is not accurate.
