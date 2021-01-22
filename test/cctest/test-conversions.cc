@@ -1090,6 +1090,98 @@ TEST(DoubleToPrecision) {
   builder.Reset();
   CHECK(dc7.ToPrecision(-Double::NaN(), 1, &builder));
   CHECK_EQ("NaN", builder.Finalize());
+
+  // Test NO_TRAILING_ZERO and its interaction with other flags.
+  flags = DoubleToStringConverter::NO_TRAILING_ZERO;
+  DoubleToStringConverter dc9(flags, "Infinity", "NaN", 'e', 0, 0, 6, 1);
+  flags = DoubleToStringConverter::NO_TRAILING_ZERO |
+      DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT;
+  DoubleToStringConverter dc10(flags, "Infinity", "NaN", 'e', 0, 0, 6, 1);
+  flags = DoubleToStringConverter::NO_TRAILING_ZERO |
+      DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
+      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT;
+  DoubleToStringConverter dc11(flags, "Infinity", "NaN", 'e', 0, 0, 6, 1);
+
+  builder.Reset();
+  CHECK(dc9.ToPrecision(230.001, 5, &builder));
+  CHECK_EQ("230", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc10.ToPrecision(230.001, 5, &builder));
+  CHECK_EQ("230.", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc11.ToPrecision(230.001, 5, &builder));
+  CHECK_EQ("230.0", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToPrecision(230.001, 5, &builder));
+  CHECK_EQ("230.00", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc9.ToPrecision(2300010, 5, &builder));
+  CHECK_EQ("2.3e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc10.ToPrecision(2300010, 5, &builder));
+  CHECK_EQ("2.3e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc11.ToPrecision(2300010, 5, &builder));
+  CHECK_EQ("2.3e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToPrecision(2300010, 5, &builder));
+  CHECK_EQ("2.3000e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc9.ToPrecision(0.02300010, 5, &builder));
+  CHECK_EQ("0.023", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc10.ToPrecision(0.02300010, 5, &builder));
+  CHECK_EQ("0.023", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc11.ToPrecision(0.02300010, 5, &builder));
+  CHECK_EQ("0.023", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToPrecision(0.02300010, 5, &builder));
+  CHECK_EQ("0.023000", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc9.ToPrecision(2000010, 5, &builder));
+  CHECK_EQ("2e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc10.ToPrecision(2000010, 5, &builder));
+  CHECK_EQ("2e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc11.ToPrecision(2000010, 5, &builder));
+  CHECK_EQ("2e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToPrecision(2000010, 5, &builder));
+  CHECK_EQ("2.0000e6", builder.Finalize());
+
+  // Test that rounding up still works with NO_TRAILING_ZERO
+  builder.Reset();
+  CHECK(dc9.ToPrecision(2000080, 5, &builder));
+  CHECK_EQ("2.0001e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc10.ToPrecision(2000080, 5, &builder));
+  CHECK_EQ("2.0001e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc11.ToPrecision(2000080, 5, &builder));
+  CHECK_EQ("2.0001e6", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToPrecision(2000080, 5, &builder));
+  CHECK_EQ("2.0001e6", builder.Finalize());
 }
 
 
