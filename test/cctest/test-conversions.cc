@@ -861,6 +861,33 @@ TEST(DoubleToExponential) {
   builder.Reset();
   CHECK(dc4.ToExponential(-Double::NaN(), 1, &builder));
   CHECK_EQ("NaN", builder.Finalize());
+
+  // Test min_exponent_width
+  DoubleToStringConverter dc5(flags, NULL, NULL, 'e', 0, 0, 0, 0, 2);
+
+  builder.Reset();
+  CHECK(dc5.ToExponential(11111111111.0, 6, &builder));
+  CHECK_EQ("1.111111e10", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToExponential(1111111111.0, 6, &builder));
+  CHECK_EQ("1.111111e09", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToExponential(1111111.0, 6, &builder));
+  CHECK_EQ("1.111111e06", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToExponential(10000000000.0, 6, &builder));
+  CHECK_EQ("1.000000e10", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToExponential(1000000000.0, 6, &builder));
+  CHECK_EQ("1.000000e09", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc5.ToExponential(1.0, 6, &builder));
+  CHECK_EQ("1.000000e00", builder.Finalize());
 }
 
 
