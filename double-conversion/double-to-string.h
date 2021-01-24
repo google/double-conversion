@@ -50,6 +50,28 @@ class DoubleToStringConverter {
   static const int kMinPrecisionDigits = 1;
   static const int kMaxPrecisionDigits = 120;
 
+  // The maximal number of digits that are needed to emit a double in base 10.
+  // A higher precision can be achieved by using more digits, but the shortest
+  // accurate representation of any double will never use more digits than
+  // kBase10MaximalLength.
+  // Note that DoubleToAscii null-terminates its input. So the given buffer
+  // should be at least kBase10MaximalLength + 1 characters long.
+  static const int kBase10MaximalLength = 17;
+
+  // The maximal number of digits that are needed to emit a single in base 10.
+  // A higher precision can be achieved by using more digits, but the shortest
+  // accurate representation of any single will never use more digits than
+  // kBase10MaximalLengthSingle.
+  static const int kBase10MaximalLengthSingle = 9;
+
+  // The length of the longest string that 'ToShortest' can produce when the
+  // converter is instantiated with EcmaScript defaults (see
+  // 'EcmaScriptConverter')
+  // This value does not include the trailing '\0' character.
+  // This amount of characters is needed for negative values that hit the
+  // 'decimal_in_shortest_low' limit. For example: "-0.0000033333333333333333"
+  static const int kMaxCharsEcmaScriptShortest = 25;
+
   enum Flags {
     NO_FLAGS = 0,
     EMIT_POSITIVE_EXPONENT_SIGN = 1,
@@ -137,6 +159,14 @@ class DoubleToStringConverter {
   }
 
   // Returns a converter following the EcmaScript specification.
+  //
+  // Flags: UNIQUE_ZERO and EMIT_POSITIVE_EXPONENT_SIGN.
+  // Special values: "Infinity" and "NaN".
+  // Lower case 'e' for exponential values.
+  // decimal_in_shortest_low: -6
+  // decimal_in_shortest_high: 21
+  // max_leading_padding_zeroes_in_precision_mode: 6
+  // max_trailing_padding_zeroes_in_precision_mode: 0
   static const DoubleToStringConverter& EcmaScriptConverter();
 
   // Computes the shortest string of digits that correctly represent the input
@@ -162,6 +192,21 @@ class DoubleToStringConverter {
   // Returns true if the conversion succeeds. The conversion always succeeds
   // except when the input value is special and no infinity_symbol or
   // nan_symbol has been given to the constructor.
+  //
+  // The length of the longest result is the maximum of the length of the
+  // following string representations (each with possible examples):
+  // - NaN and negative infinity: "NaN", "-Infinity", "-inf".
+  // - -10^(decimal_in_shortest_high - 1):
+  //      "-100000000000000000000", "-1000000000000000.0"
+  // - the longest string in range [0; -10^decimal_in_shortest_low]. Generally,
+  //   this string is 3 + kBase10MaximalLength - decimal_in_shortest_low.
+  //   (Sign, '0', decimal point, padding zeroes for decimal_in_shortest_low,
+  //   and the significant digits).
+  //      "-0.0000033333333333333333", "-0.0012345678901234567"
+  // - the longest exponential representation. (A negative number with
+  //   kBase10MaximalLength significant digits).
+  //      "-1.7976931348623157e+308", "-1.7976931348623157E308"
+  // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToShortest(double value, StringBuilder* result_builder) const {
     return ToShortestIeeeNumber(value, result_builder, SHORTEST);
   }
@@ -202,9 +247,11 @@ class DoubleToStringConverter {
   //     been provided to the constructor,
   //   - 'value' > 10^kMaxFixedDigitsBeforePoint, or
   //   - 'requested_digits' > kMaxFixedDigitsAfterPoint.
-  // The last two conditions imply that the result will never contain more than
-  // 1 + kMaxFixedDigitsBeforePoint + 1 + kMaxFixedDigitsAfterPoint characters
+  // The last two conditions imply that the result for non-special values never
+  // contains more than
+  //  1 + kMaxFixedDigitsBeforePoint + 1 + kMaxFixedDigitsAfterPoint characters
   // (one additional character for the sign, and one for the decimal point).
+  // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToFixed(double value,
                int requested_digits,
                StringBuilder* result_builder) const;
@@ -233,13 +280,16 @@ class DoubleToStringConverter {
   //   - the input value is special and no infinity_symbol or nan_symbol has
   //     been provided to the constructor,
   //   - 'requested_digits' > kMaxExponentialDigits.
-  // The last condition implies that the result will never contain more than
+  //
+  // The last condition implies that the result never contains more than
   // kMaxExponentialDigits + 8 characters (the sign, the digit before the
   // decimal point, the decimal point, the exponent character, the
   // exponent's sign, and at most 3 exponent digits).
+  // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToExponential(double value,
                      int requested_digits,
                      StringBuilder* result_builder) const;
+
 
   // Computes 'precision' leading digits of the given 'value' and returns them
   // either in exponential or decimal format, depending on
@@ -272,9 +322,11 @@ class DoubleToStringConverter {
   //     been provided to the constructor,
   //   - precision < kMinPericisionDigits
   //   - precision > kMaxPrecisionDigits
-  // The last condition implies that the result will never contain more than
+  //
+  // The last condition implies that the result never contains more than
   // kMaxPrecisionDigits + 7 characters (the sign, the decimal point, the
   // exponent character, the exponent's sign, and at most 3 exponent digits).
+  // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToPrecision(double value,
                    int precision,
                    StringBuilder* result_builder) const;
@@ -293,14 +345,6 @@ class DoubleToStringConverter {
     // Fixed number of digits (independent of the decimal point).
     PRECISION
   };
-
-  // The maximal number of digits that are needed to emit a double in base 10.
-  // A higher precision can be achieved by using more digits, but the shortest
-  // accurate representation of any double will never use more digits than
-  // kBase10MaximalLength.
-  // Note that DoubleToAscii null-terminates its input. So the given buffer
-  // should be at least kBase10MaximalLength + 1 characters long.
-  static const int kBase10MaximalLength = 17;
 
   // Converts the given double 'v' to digit characters. 'v' must not be NaN,
   // +Infinity, or -Infinity. In SHORTEST_SINGLE-mode this restriction also
