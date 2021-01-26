@@ -77,7 +77,8 @@ class DoubleToStringConverter {
     EMIT_POSITIVE_EXPONENT_SIGN = 1,
     EMIT_TRAILING_DECIMAL_POINT = 2,
     EMIT_TRAILING_ZERO_AFTER_POINT = 4,
-    UNIQUE_ZERO = 8
+    UNIQUE_ZERO = 8,
+    NO_TRAILING_ZERO = 16
   };
 
   // Flags should be a bit-or combination of the possible Flags-enum.
@@ -89,9 +90,13 @@ class DoubleToStringConverter {
   //    Example: 2345.0 is converted to "2345.".
   //  - EMIT_TRAILING_ZERO_AFTER_POINT: in addition to a trailing decimal point
   //    emits a trailing '0'-character. This flag requires the
-  //    EXMIT_TRAILING_DECIMAL_POINT flag.
+  //    EMIT_TRAILING_DECIMAL_POINT flag.
   //    Example: 2345.0 is converted to "2345.0".
   //  - UNIQUE_ZERO: "-0.0" is converted to "0.0".
+  //  - NO_TRAILING_ZERO: Trailing zeros are removed from the fractional portion
+  //    of the result in precision mode. Matches printf's %g.
+  //    When EMIT_TRAILING_ZERO_AFTER_POINT is also given, one trailing zero is
+  //    preserved.
   //
   // Infinity symbol and nan_symbol provide the string representation for these
   // special values. If the string is NULL and the special value is encountered

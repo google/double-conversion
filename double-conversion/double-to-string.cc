@@ -327,9 +327,21 @@ bool DoubleToStringConverter::ToPrecision(double value,
   int exponent = decimal_point - 1;
 
   int extra_zero = ((flags_ & EMIT_TRAILING_ZERO_AFTER_POINT) != 0) ? 1 : 0;
-  if ((-decimal_point + 1 > max_leading_padding_zeroes_in_precision_mode_) ||
+  bool as_exponential =
+      (-decimal_point + 1 > max_leading_padding_zeroes_in_precision_mode_) ||
       (decimal_point - precision + extra_zero >
-       max_trailing_padding_zeroes_in_precision_mode_)) {
+       max_trailing_padding_zeroes_in_precision_mode_);
+  if ((flags_ & NO_TRAILING_ZERO) != 0) {
+    // Truncate trailing zeros that occur after the decimal point (if exponential,
+    // that is everything after the first digit).
+    int stop = as_exponential ? 1 : std::max(1, decimal_point);
+    while (decimal_rep_length > stop && decimal_rep[decimal_rep_length - 1] == '0') {
+      --decimal_rep_length;
+    }
+    // Clamp precision to avoid the code below re-adding the zeros.
+    precision = std::min(precision, decimal_rep_length);
+  }
+  if (as_exponential) {
     // Fill buffer to contain 'precision' digits.
     // Usually the buffer is already at the correct length, but 'DoubleToAscii'
     // is allowed to return less characters.
