@@ -460,6 +460,11 @@ static bool IsNonZeroDigit(const char d) {
   return ('1' <= d) && (d <= '9');
 }
 
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(maybe_unused)
+[[maybe_unused]]
+#endif
+#endif
 static bool AssertTrimmedDigits(const Vector<const char>& buffer) {
   for(int i = 0; i < buffer.length(); ++i) {
     if(!IsDigit(buffer[i])) {
