@@ -438,7 +438,7 @@ TEST(DoubleToShortestSingle) {
 
 
 TEST(DoubleToFixed) {
-  const int kBufferSize = 128;
+  const int kBufferSize = 168;
   char buffer[kBufferSize];
   StringBuilder builder(buffer, kBufferSize);
   int flags = DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN |
@@ -462,25 +462,59 @@ TEST(DoubleToFixed) {
   CHECK_EQ("0.0", builder.Finalize());
 
   DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxFixedDigitsBeforePoint == 60);
-  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxFixedDigitsAfterPoint == 60);
+  DOUBLE_CONVERSION_ASSERT(DoubleToStringConverter::kMaxFixedDigitsAfterPoint == 100);
   builder.Reset();
   CHECK(dc.ToFixed(
       0.0, DoubleToStringConverter::kMaxFixedDigitsAfterPoint, &builder));
-  CHECK_EQ("0.000000000000000000000000000000000000000000000000000000000000",
+  CHECK_EQ("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
            builder.Finalize());
 
   builder.Reset();
   CHECK(dc.ToFixed(
       9e59, DoubleToStringConverter::kMaxFixedDigitsAfterPoint, &builder));
   CHECK_EQ("899999999999999918767229449717619953810131273674690656206848."
-           "000000000000000000000000000000000000000000000000000000000000",
+           "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
            builder.Finalize());
 
   builder.Reset();
   CHECK(dc.ToFixed(
       -9e59, DoubleToStringConverter::kMaxFixedDigitsAfterPoint, &builder));
   CHECK_EQ("-899999999999999918767229449717619953810131273674690656206848."
-           "000000000000000000000000000000000000000000000000000000000000",
+           "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+           builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToFixed(
+      1e-100, DoubleToStringConverter::kMaxFixedDigitsAfterPoint, &builder));
+  CHECK_EQ("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+           builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToFixed(0.3000000000000000444089209850062616169452667236328125,
+                   DoubleToStringConverter::kMaxFixedDigitsAfterPoint,
+                   &builder));
+  CHECK_EQ("0.3000000000000000444089209850062616169452667236328125000000000000000000000000000000000000000000000000",
+           builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToFixed(1.5e-100,
+                   DoubleToStringConverter::kMaxFixedDigitsAfterPoint,
+                   &builder));
+  CHECK_EQ("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002",
+           builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToFixed(1.15e-99,  // In reality: 1.14999999999999992147301128036734...
+                   DoubleToStringConverter::kMaxFixedDigitsAfterPoint,
+                   &builder));
+  CHECK_EQ("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011",
+           builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToExponential(1.15,
+                   DoubleToStringConverter::kMaxFixedDigitsAfterPoint,
+                   &builder));
+  CHECK_EQ("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011",
            builder.Finalize());
 
   builder.Reset();
