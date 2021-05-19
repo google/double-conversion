@@ -1,3 +1,7 @@
+2021-05-19:
+  Loongarch is a RISC-style command system architecture.
+  Add support for loongarch architecture.
+
 2020-02-16:
   Add support for quiet and signaling NaNs to ieee header.
 
