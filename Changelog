@@ -14,7 +14,7 @@
 	the necessary line.
 
 2019-09-02:
-  Add support for e2k architectur. Thanks to Michael Shigorin.
+  Add support for e2k architecture. Thanks to Michael Shigorin.
 
 2019-08-01:
   Add min exponent width option in double-to-string conversion.
