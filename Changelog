@@ -1,3 +1,12 @@
+2021-12-04:
+  Update version number.
+
+2021-10-04:
+  Consistently use semicolons after DOUBLE_CONVERSION_ASSERT.
+
+2021-07-16:
+  Fix spelling.
+
 2021-05-19:
   Loongarch is a RISC-style command system architecture.
   Add support for loongarch architecture.
