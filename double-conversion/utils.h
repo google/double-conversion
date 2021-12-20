@@ -210,7 +210,7 @@ typedef uint16_t uc16;
   TypeName(const TypeName&);                    \
   void operator=(const TypeName&)
 #endif
-#if defined(DOUBLE_CONVERSION_NON_PREFIXED_MACROS) && !defined(DISALLOW_COPY_AND_ASSIGN)
+#if defined(DOUBLE_CONVERSION_NON_PREFIXED_MACROS) && !defined(DC_DISALLOW_COPY_AND_ASSIGN)
 #define DC_DISALLOW_COPY_AND_ASSIGN DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN
 #endif
 
