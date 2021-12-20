@@ -211,7 +211,7 @@ typedef uint16_t uc16;
   void operator=(const TypeName&)
 #endif
 #if defined(DOUBLE_CONVERSION_NON_PREFIXED_MACROS) && !defined(DISALLOW_COPY_AND_ASSIGN)
-#define DISALLOW_COPY_AND_ASSIGN DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN
+#define DC_DISALLOW_COPY_AND_ASSIGN DOUBLE_CONVERSION_DISALLOW_COPY_AND_ASSIGN
 #endif
 
 // A macro to disallow all the implicit constructors, namely the
