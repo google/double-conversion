@@ -1,3 +1,7 @@
+2021-12-22:
+  Add support of Synopsys ARC64 architecture.
+  Reintroduce macros, if DOUBLE_CONVERSION_NON_PREFIXED_MACROS is set.
+
 2021-12-04:
   Update version number.
 
