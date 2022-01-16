@@ -18,13 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # Fetch the dependencies. Different for each platform.
-      - name: Install dependencies - Linux
-        if: runner.os == 'Linux' && matrix.build_tool == 'scons'
-        run: |
-          sudo apt-get update
-          sudo apt-get install scons
-
       - name: Configure
         # Configure CMake in a 'buildX' subdirectory.
         # We can't use `build` as `BUILD` is already taken by the bazel build file.
@@ -37,6 +30,10 @@ jobs:
       - name: Build
         run: |
           cmake --build buildX
+
+      - name: list all
+        shell: bash
+        run: find .
 
       - name: Test
         working-directory: ${{ github.workspace }}/buildX
