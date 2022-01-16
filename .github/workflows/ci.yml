@@ -26,18 +26,19 @@ jobs:
           sudo apt-get install scons
 
       - name: Configure
-        # Configure CMake in a 'build' subdirectory.
+        # Configure CMake in a 'buildX' subdirectory.
+        # We can't use `build` as `BUILD` is already taken by the bazel build file.
+        # On Mac and Windows this leads to a conflict.
         run: |
-          ls
-          mkdir -p build
-          cd build
+          mkdir -p buildX
+          cd buildX
           cmake -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
       - name: Build
         run: |
-          cmake --build build
+          cmake --build buildX
 
       - name: Test
-        working-directory: ${{ github.workspace }}/build
+        working-directory: ${{ github.workspace }}/buildX
         # Execute all tests.
         run: test/cctest/cctest
