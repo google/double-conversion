@@ -36,6 +36,13 @@ jobs:
         run: find .
 
       - name: Test
+        if: runner.os != 'Windows'
         working-directory: ${{ github.workspace }}/buildX
         # Execute all tests.
         run: test/cctest/cctest
+
+      - name: Test - Windows
+        if: runner.os == 'Windows'
+        working-directory: ${{ github.workspace }}/buildX
+        # Execute all tests.
+        run: test/cctest/${{ matrix.build_type }}/cctest.exe
