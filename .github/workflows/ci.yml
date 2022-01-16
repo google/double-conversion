@@ -34,32 +34,32 @@ jobs:
           choco install scons
 
       - name: Configure CMake
-        if: matrix.build_tool == cmake
+        if: matrix.build_tool == 'cmake'
         # Configure CMake in a 'build' subdirectory.
         run: cmake -B ${{ github.workspace }}/build -DBUILD_TESTING=ON
 
       - name: Build Cmake
-        if: matrix.build_tool == cmake
+        if: matrix.build_tool == 'cmake'
         run: |
           cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
 
       - name: Test Cmake
-        if: matrix.build_tool == cmake
+        if: matrix.build_tool == 'cmake'
         working-directory: ${{ github.workspace }}/build
         # Execute all tests.
         run: test/cctest/cctest
 
       - name: Build Scons Debug
-        if: matrix.build_tool == scons && matrix.build_type == 'Debug'
+        if: matrix.build_tool == 'scons' && matrix.build_type == 'Debug'
         run: |
           scons debug=1
 
       - name: Build Scons Release
-        if: matrix.build_tool == scons && matrix.build_type == 'Release'
+        if: matrix.build_tool == 'scons' && matrix.build_type == 'Release'
         run: |
           scons
 
       - name: Build Scons
-        if: matrix.build_tool == scons
+        if: matrix.build_tool == 'scons'
         run: |
           ./run_tests
