@@ -29,7 +29,11 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build buildX
+          cmake --build buildX --config ${{ matrix.build_type }}
+
+      - name: list all
+        shell: bash
+        run: find .
 
       - name: Test
         if: runner.os != 'Windows'
