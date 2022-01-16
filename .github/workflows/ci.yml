@@ -28,7 +28,8 @@ jobs:
       - name: Configure
         # Configure CMake in a 'build' subdirectory.
         run: |
-          mkdir build
+          ls
+          mkdir -p build
           cd build
           cmake -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
