@@ -1,34 +1,65 @@
-name: CMake
+name: CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Debug
+on: push
 
 jobs:
-  build:
+  ci:
+    strategy:
+      matrix:
+        container: [ ubuntu-latest, macos-latest, windows-latest ]
+        build_type: [ Debug, Release ]
+        build_tool: [ scons, cmake ]
+
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.container }}
 
     steps:
     - uses: actions/checkout@v2
 
+      # Fetch the dependencies. Different for each platform.
+      - name: Install dependencies - Linux
+        if: runner.os == 'Linux' && matrix.build_tool == scons
+        run: |
+          sudo apt-get update
+          sudo apt-get install scons
+      - name: Install dependencies - macOS
+        if: runner.os == 'macOS' && matrix.build_tool == scons
+        run: |
+          brew install scons
+      - name: Install dependencies - Windows
+        if: runner.os == 'Windows' && matrix.build_tool == scons
+        run: |
+          choco install scons
+
     - name: Configure CMake
+      if: matrix.build_tool == cmake
       # Configure CMake in a 'build' subdirectory.
       run: cmake -B ${{github.workspace}}/build -DBUILD_TESTING=ON
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+    - name: Build Cmake
+      if: matrix.build_tool == cmake
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Test
+    - name: Test Cmake
+      if: matrix.build_tool == cmake
       working-directory: ${{github.workspace}}/build
-      # Execute all tests.  
+      # Execute all tests.
       run: test/cctest/cctest
+
+    - name: Build Scons Debug
+      if: matrix.build_tool == scons && matrix.build_type == debug
+      run: |
+        scons debug=1
+
+    - name: Build Scons Release
+      if: matrix.build_tool == scons && matrix.build_type == release
+      run: |
+        scons
+
+    - name: Build Scons
+      if: matrix.build_tool == scons
+      run: |
+        ./run_tests
