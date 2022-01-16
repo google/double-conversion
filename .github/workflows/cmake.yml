@@ -3,7 +3,7 @@ name: CI
 on: push
 
 jobs:
-  ci:
+  build:
     strategy:
       matrix:
         container: [ ubuntu-latest, macos-latest, windows-latest ]
