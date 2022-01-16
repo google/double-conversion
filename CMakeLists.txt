@@ -116,3 +116,22 @@ install(
     NAMESPACE "${namespace}"
     DESTINATION "${config_install_dir}"
 )
+
+if (MSVC)
+  if (NOT BUILD_SHARED_LIBS)
+    # Set the output name for debugger files, otherwise they are not generated:
+    set_target_properties(${PROJECT_NAME}
+      PROPERTIES
+      COMPILE_PDB_NAME_DEBUG ${PROJECT_NAME}
+      COMPILE_PDB_NAME_RELEASE ${PROJECT_NAME}
+      COMPILE_PDB_NAME_MINSIZEREL ${PROJECT_NAME}
+      COMPILE_PDB_NAME_RELWITHDEBINFO ${PROJECT_NAME})
+  endif()
+  # Install companion PDB for Visual Studio
+  install(
+    FILES $<TARGET_PDB_FILE:double-conversion>
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    OPTIONAL
+  )
+endif()
+
