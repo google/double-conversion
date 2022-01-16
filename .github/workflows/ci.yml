@@ -6,8 +6,10 @@ jobs:
   build:
     strategy:
       matrix:
-        container: [ ubuntu-latest, macos-latest, windows-latest ]
-        build_type: [ Debug, Release ]
+        container: [ windows-latest ]
+        build_type: [ Debug ]
+        #container: [ ubuntu-latest, macos-latest, windows-latest ]
+        #build_type: [ Debug, Release ]
 
 
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
