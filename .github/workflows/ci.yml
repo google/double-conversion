@@ -28,12 +28,13 @@ jobs:
       - name: Configure
         # Configure CMake in a 'build' subdirectory.
         run: |
-          mkdir ${{ github.workspace }}/build
-          cmake -B ${{ github.workspace }}/build -DBUILD_TESTING=ON
+          mkdir build
+          cd build
+          cmake -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
       - name: Build
         run: |
-          cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
+          cmake --build build
 
       - name: Test
         working-directory: ${{ github.workspace }}/build
