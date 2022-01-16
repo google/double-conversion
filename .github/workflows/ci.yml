@@ -20,42 +20,42 @@ jobs:
 
       # Fetch the dependencies. Different for each platform.
       - name: Install dependencies - Linux
-        if: runner.os == 'Linux' && matrix.build_tool == "scons"
+        if: runner.os == 'Linux' && matrix.build_tool == 'scons'
         run: |
           sudo apt-get update
           sudo apt-get install scons
       - name: Install dependencies - macOS
-        if: runner.os == 'macOS' && matrix.build_tool == "scons"
+        if: runner.os == 'macOS' && matrix.build_tool == 'scons'
         run: |
           brew install scons
       - name: Install dependencies - Windows
-        if: runner.os == 'Windows' && matrix.build_tool == "scons"
+        if: runner.os == 'Windows' && matrix.build_tool == 'scons'
         run: |
           choco install scons
 
       - name: Configure CMake
         if: matrix.build_tool == cmake
         # Configure CMake in a 'build' subdirectory.
-        run: cmake -B ${{github.workspace}}/build -DBUILD_TESTING=ON
+        run: cmake -B ${{ github.workspace }}/build -DBUILD_TESTING=ON
 
       - name: Build Cmake
         if: matrix.build_tool == cmake
         run: |
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
 
       - name: Test Cmake
         if: matrix.build_tool == cmake
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         # Execute all tests.
         run: test/cctest/cctest
 
       - name: Build Scons Debug
-        if: matrix.build_tool == scons && matrix.build_type == debug
+        if: matrix.build_tool == scons && matrix.build_type == 'Debug'
         run: |
           scons debug=1
 
       - name: Build Scons Release
-        if: matrix.build_tool == scons && matrix.build_type == release
+        if: matrix.build_tool == scons && matrix.build_type == 'Release'
         run: |
           scons
 
