@@ -1,0 +1,50 @@
+name: ci
+
+on: push
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        container: [ ubuntu-latest, macos-latest, windows-latest ]
+        build_type: [ Debug, Release ]
+
+
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ${{ matrix.container }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure
+        # Configure CMake in a 'buildX' subdirectory.
+        # We can't use `build` as `BUILD` is already taken by the bazel build file.
+        # On Mac and Windows this leads to a conflict.
+        run: |
+          mkdir -p buildX
+          cd buildX
+          cmake -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
+
+      - name: Build
+        run: |
+          cmake --build buildX --config ${{ matrix.build_type }}
+
+      - name: Test
+        if: runner.os != 'Windows'
+        working-directory: ${{ github.workspace }}/buildX
+        # Execute all tests.
+        run: |
+          test/cctest/cctest
+          # Also run the ctests. Same tests, but different framework.
+          ctest
+
+      - name: Test - Windows
+        if: runner.os == 'Windows'
+        working-directory: ${{ github.workspace }}/buildX
+        # Execute all tests.
+        run: |
+          test/cctest/${{ matrix.build_type }}/cctest.exe
+          # Also run the ctests. Same tests, but different framework.
+          ctest -C ${{ matrix.build_type }}
