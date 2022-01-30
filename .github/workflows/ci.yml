@@ -33,7 +33,7 @@ jobs:
 
       - name: Build shared
         run: |
-          cmake -DBUILD_SHARED_LIBS=ON buildX
+          cmake -DBUILD_SHARED_LIBS=ON buildX --config ${{ matrix.build_type }}
           cmake --build buildX --config ${{ matrix.build_type }}
 
       - name: Install shared
@@ -42,7 +42,7 @@ jobs:
 
       - name: Build static
         run: |
-          cmake -DBUILD_SHARED_LIBS=OFF buildX
+          cmake -DBUILD_SHARED_LIBS=OFF buildX --config ${{ matrix.build_type }}
           cmake --build buildX --config ${{ matrix.build_type }}
 
       - name: Install static
