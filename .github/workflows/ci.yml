@@ -36,15 +36,15 @@ jobs:
         working-directory: ${{ github.workspace }}/buildX
         # Execute all tests.
         run: |
-          test/cctest/cctest
-          # Also run the ctests. Same tests, but different framework.
           ctest
+          # Also run the tests directly, just in case we forgot to add it to ctest.
+          test/cctest/cctest
 
       - name: Test - Windows
         if: runner.os == 'Windows'
         working-directory: ${{ github.workspace }}/buildX
         # Execute all tests.
         run: |
-          test/cctest/${{ matrix.build_type }}/cctest.exe
-          # Also run the ctests. Same tests, but different framework.
           ctest -C ${{ matrix.build_type }}
+          # Also run the tests directly, just in case we forgot to add it to ctest.
+          test/cctest/${{ matrix.build_type }}/cctest.exe
