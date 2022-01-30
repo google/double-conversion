@@ -47,4 +47,4 @@ jobs:
         run: |
           test/cctest/${{ matrix.build_type }}/cctest.exe
           # Also run the ctests. Same tests, but different framework.
-          ctest
+          ctest -C ${{ matrix.build_type }}
