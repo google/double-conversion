@@ -459,5 +459,9 @@ TEST(SignalingNanSingle) {
   CHECK(nan.IsNan());
   CHECK(nan.IsQuietNan());
   CHECK(Single(std::numeric_limits<float>::quiet_NaN()).IsQuietNan());
+#ifndef _MSC_VER
+  // Visual studio has a bug for generating signaling NaNs:
+  // https://developercommunity.visualstudio.com/t/stdnumeric-limitssignaling-nan-returns-quiet-nan/155064
   CHECK(Single(std::numeric_limits<float>::signaling_NaN()).IsSignalingNan());
+#endif
 }
