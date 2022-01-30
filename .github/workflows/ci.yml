@@ -32,7 +32,6 @@ jobs:
 
       - name: Build static
         run: |
-          cmake -DCMAKE_INSTALL_PREFIX:PATH=/tmp/install_out build
           cmake --build buildX --config ${{ matrix.build_type }}
 
       - name: Install static
@@ -41,7 +40,7 @@ jobs:
 
       - name: Build shared
         run: |
-          cmake -DBUILD_SHARED_LIBS=ON buildx
+          cmake -DBUILD_SHARED_LIBS=ON buildX
           cmake --build buildX --config ${{ matrix.build_type }}
 
       - name: Install shared
