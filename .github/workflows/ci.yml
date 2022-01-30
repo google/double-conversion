@@ -29,11 +29,11 @@ jobs:
           cmake -DBUILD_TESTING=ON \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_INSTALL_PREFIX:PATH=${{ github.workspace }}/install_dir \
+            -DBUILD_SHARED_LIBS=ON \
             ..
 
       - name: Build shared
         run: |
-          cmake -DBUILD_SHARED_LIBS=ON buildX
           cmake --build buildX --config ${{ matrix.build_type }}
 
       - name: Install shared

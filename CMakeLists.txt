@@ -118,3 +118,13 @@ install(
     NAMESPACE "${namespace}"
     DESTINATION "${config_install_dir}"
 )
+
+if (MSVC AND BUILD_SHARED_LIBS)
+  # Install companion PDB for Visual Studio
+  install(
+    FILES $<TARGET_PDB_FILE:double-conversion>
+    TYPE BIN
+    OPTIONAL
+  )
+endif()
+
