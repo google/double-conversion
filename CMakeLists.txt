@@ -123,7 +123,6 @@ if (MSVC AND BUILD_SHARED_LIBS)
   # Install companion PDB for Visual Studio
   install(
     FILES $<TARGET_PDB_FILE:double-conversion>
-    DESTINATION "${CMAKE_INSTALL_BINDIR}"
     TYPE BIN
     OPTIONAL
   )
