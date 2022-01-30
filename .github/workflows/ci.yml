@@ -6,10 +6,8 @@ jobs:
   build:
     strategy:
       matrix:
-        container: [ windows-latest ]
-        build_type: [ Debug ]
-        #container: [ ubuntu-latest, macos-latest, windows-latest ]
-        #build_type: [ Debug, Release ]
+        container: [ ubuntu-latest, macos-latest, windows-latest ]
+        build_type: [ Debug, Release ]
 
 
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
@@ -41,10 +39,16 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: ${{ github.workspace }}/buildX
         # Execute all tests.
-        run: test/cctest/cctest
+        run: |
+          test/cctest/cctest
+          # Also run the ctests. Same tests, but different framework.
+          ctest
 
       - name: Test - Windows
         if: runner.os == 'Windows'
         working-directory: ${{ github.workspace }}/buildX
         # Execute all tests.
-        run: test/cctest/${{ matrix.build_type }}/cctest.exe
+        run: |
+          test/cctest/${{ matrix.build_type }}/cctest.exe
+          # Also run the ctests. Same tests, but different framework.
+          ctest
