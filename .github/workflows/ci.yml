@@ -25,11 +25,28 @@ jobs:
         run: |
           mkdir -p buildX
           cd buildX
-          cmake -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
+          cmake -DBUILD_TESTING=ON \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_INSTALL_PREFIX:PATH=${{ github.workspace }}/install_dir \
+            ..
 
-      - name: Build
+      - name: Build static
         run: |
+          cmake -DCMAKE_INSTALL_PREFIX:PATH=/tmp/install_out build
           cmake --build buildX --config ${{ matrix.build_type }}
+
+      - name: Install static
+        run: |
+          cmake --install buildX --config ${{ matrix.build_type }}
+
+      - name: Build shared
+        run: |
+          cmake -DBUILD_SHARED_LIBS=ON buildx
+          cmake --build buildX --config ${{ matrix.build_type }}
+
+      - name: Install shared
+        run: |
+          cmake --install buildX --config ${{ matrix.build_type }}
 
       - name: Test
         if: runner.os != 'Windows'
