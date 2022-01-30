@@ -75,7 +75,6 @@ static void PrintTestList(CcTest* current) {
 int main(int argc, char* argv[]) {
   int tests_run = 0;
   bool print_run_count = true;
-  printf("Running\n");
   if (argc == 1) {
     // Just run all the tests.
     CcTest* test = CcTest::last();
