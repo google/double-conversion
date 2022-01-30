@@ -19,17 +19,35 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Configure
+        shell: bash
         # Configure CMake in a 'buildX' subdirectory.
         # We can't use `build` as `BUILD` is already taken by the bazel build file.
         # On Mac and Windows this leads to a conflict.
         run: |
           mkdir -p buildX
           cd buildX
-          cmake -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
+          cmake -DBUILD_TESTING=ON \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_INSTALL_PREFIX:PATH=${{ github.workspace }}/install_dir \
+            ..
 
-      - name: Build
+      - name: Build shared
         run: |
+          cmake -DBUILD_SHARED_LIBS=ON buildX
           cmake --build buildX --config ${{ matrix.build_type }}
+
+      - name: Install shared
+        run: |
+          cmake --install buildX --config ${{ matrix.build_type }}
+
+      - name: Build static
+        run: |
+          cmake -DBUILD_SHARED_LIBS=OFF buildX
+          cmake --build buildX --config ${{ matrix.build_type }}
+
+      - name: Install static
+        run: |
+          cmake --install buildX --config ${{ matrix.build_type }}
 
       - name: Test
         if: runner.os != 'Windows'
