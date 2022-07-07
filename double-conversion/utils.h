@@ -34,6 +34,13 @@
 #include <cstdlib>
 #include <cstring>
 
+// For pre-C++11 compatibility
+#if __cplusplus >= 201103L
+#define DOUBLE_CONVERSION_NULLPTR nullptr
+#else
+#define DOUBLE_CONVERSION_NULLPTR NULL
+#endif
+
 #include <cassert>
 #ifndef DOUBLE_CONVERSION_ASSERT
 #define DOUBLE_CONVERSION_ASSERT(condition)         \
@@ -241,9 +248,9 @@ inline int StrLength(const char* string) {
 template <typename T>
 class Vector {
  public:
-  Vector() : start_(NULL), length_(0) {}
+  Vector() : start_(DOUBLE_CONVERSION_NULLPTR), length_(0) {}
   Vector(T* data, int len) : start_(data), length_(len) {
-    DOUBLE_CONVERSION_ASSERT(len == 0 || (len > 0 && data != NULL));
+    DOUBLE_CONVERSION_ASSERT(len == 0 || (len > 0 && data != DOUBLE_CONVERSION_NULLPTR));
   }
 
   // Returns a vector using the same backing storage as this one,
