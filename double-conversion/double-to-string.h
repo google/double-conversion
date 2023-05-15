@@ -102,7 +102,7 @@ class DoubleToStringConverter {
   //  - EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL: when the input number has
   //    exactly one significant digit and is converted into exponent form then a
   //    trailing decimal point is appended to the significand in shortest mode
-  //    or in other modes with one requested digit.
+  //    or in precision mode with one requested digit.
   //  - EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL: in addition to a trailing
   //    decimal point emits a trailing '0'-character. This flag requires the
   //    EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL flag.

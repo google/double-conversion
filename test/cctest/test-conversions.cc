@@ -991,32 +991,6 @@ TEST(DoubleToExponential) {
   builder.Reset();
   CHECK(dc5.ToExponential(1.0, 6, &builder));
   CHECK_EQ("1.000000e00", builder.Finalize());
-
-  // Test examples with one significant digit.
-  flags = DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
-      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT;
-  DoubleToStringConverter dc6(flags, NULL, NULL, 'e', 0, 0, 0, 0);
-  flags = DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
-      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT |
-      DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL;
-  DoubleToStringConverter dc7(flags, NULL, NULL, 'e', 0, 0, 0, 0);
-  flags = DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
-      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT |
-      DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL |
-      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL;
-  DoubleToStringConverter dc8(flags, NULL, NULL, 'e', 0, 0, 0, 0);
-
-  builder.Reset();
-  CHECK(dc6.ToExponential(0.0009, 1, &builder));
-  CHECK_EQ("9e-4", builder.Finalize());
-
-  builder.Reset();
-  CHECK(dc7.ToExponential(0.0009, 1, &builder));
-  CHECK_EQ("9.e-4", builder.Finalize());
-
-  builder.Reset();
-  CHECK(dc8.ToExponential(0.0009, 1, &builder));
-  CHECK_EQ("9.0e-4", builder.Finalize());
 }
 
 
