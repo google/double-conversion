@@ -154,7 +154,8 @@ class DoubleToStringConverter {
   //   ToShortest(0.0009) -> "9.e-4"
   //     with EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL activated.
   //   ToShortest(0.0009) -> "9.0e-4"
-  //     with EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL activated.
+  //     with EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL activated and
+  //     EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL activated.
   //
   // The min_exponent_width is used for exponential representations.
   // The converter adds leading '0's to the exponent until the exponent
