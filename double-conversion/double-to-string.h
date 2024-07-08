@@ -246,6 +246,16 @@ class DoubleToStringConverter {
     return ToShortestIeeeNumber(value, result_builder, SHORTEST_SINGLE);
   }
 
+  // Same as ToShortest, but overloaded for single-precision floats.
+  bool ToShortestString(double value, StringBuilder* result_builder) const {
+      return ToShortestIeeeNumber(value, result_builder, SHORTEST);
+  }
+
+  // Same as ToShortestSingle. Overload, to ease writing generic code that
+  // supports both double and single-precision float input values.
+  bool ToShortestString(float value, StringBuilder* result_builder) const {
+      return ToShortestIeeeNumber(value, result_builder, SHORTEST_SINGLE);
+  }
 
   // Computes a decimal representation with a fixed number of digits after the
   // decimal point. The last emitted digit is rounded.
