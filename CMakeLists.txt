@@ -43,6 +43,7 @@ target_include_directories(
 
 # pick a version #
 set_target_properties(double-conversion PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 3)
+return()
 
 # set up testing if requested
 option(BUILD_TESTING "Build test programs" OFF)
@@ -134,4 +135,3 @@ if (MSVC AND BUILD_SHARED_LIBS)
     OPTIONAL
   )
 endif()
-
