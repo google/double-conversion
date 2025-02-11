@@ -12,6 +12,7 @@ endif()
 
 set(headers
     double-conversion/bignum.h
+    double-conversion/bignum-dtoa.h
     double-conversion/cached-powers.h
     double-conversion/diy-fp.h
     double-conversion/double-conversion.h
