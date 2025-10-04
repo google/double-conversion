@@ -1,7 +1,7 @@
 # This project likely works with older versions, such as 3.5, but that
 # configuration is not tested.
 # When changing the minimum required versions make sure to update the CI.
-cmake_minimum_required(VERSION 4.0.1)
+cmake_minimum_required(VERSION 3.29...4.0.1)
 project(double-conversion VERSION 3.3.0)
 
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" OFF)
