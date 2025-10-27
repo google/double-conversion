@@ -89,6 +89,23 @@ configure_package_config_file(
     INSTALL_DESTINATION "${config_install_dir}"
 )
 
+function(prefix_rel_path var_name install_dir)
+    if(IS_ABSOLUTE "${install_dir}")
+        set(${var_name} "${install_dir}" PARENT_SCOPE)
+    else()
+        set(${var_name} "\${prefix}/${install_dir}" PARENT_SCOPE)
+    endif()
+endfunction()
+
+# Generate pkg-config file
+prefix_rel_path(PKG_CONFIG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+prefix_rel_path(PKG_CONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/double-conversion.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/double-conversion.pc"
+    @ONLY
+)
+
 # Targets:
 #   * <prefix>/lib/libdouble-conversion.a
 #   * header location after install: <prefix>/include/double-conversion/*.h
@@ -107,6 +124,13 @@ install(
 install(
     FILES ${headers}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/double-conversion"
+)
+
+# pkg-config
+#  * <prefix>/lib/pkgconfig/double-conversion.pc
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/double-conversion.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
 # Config
