@@ -19,7 +19,7 @@ jobs:
     name: ${{ matrix.container }} - ${{ matrix.build_type }} - CMake ${{ matrix.cmake_version }}
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Set up CMake
         uses: lukka/get-cmake@bb2faa721a800324b726fec00f7c1ff7641964d1  # v4.02
