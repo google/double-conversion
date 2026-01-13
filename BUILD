@@ -1,5 +1,8 @@
 # Bazel(http://bazel.io) BUILD file
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 licenses(["notice"])
 
 exports_files(["LICENSE"])
