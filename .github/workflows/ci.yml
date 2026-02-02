@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up CMake
-        uses: lukka/get-cmake@dc05ee1ee5ba69770230c73a6a4e947595745cab  # v4.02
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375  # v4.02
         with:
           cmakeVersion: ${{ matrix.cmake_version }}
 
