@@ -463,6 +463,58 @@ TEST(DoubleToShortestSingle) {
 }
 
 
+TEST(DoubleToShortestString) {
+    const DoubleToStringConverter& converter = DoubleToStringConverter::EcmaScriptConverter();
+    const int kBufferSize = DoubleToStringConverter::kMaxCharsEcmaScriptShortest + 1;
+
+    // First check conversion from 0 and 1 for both ToShortestString overloads:
+    for (int i = 0; i <= 1; ++i)
+    {
+        char buffer1[kBufferSize] = "";
+        char buffer2[kBufferSize] = "";
+        StringBuilder builder1(buffer1, kBufferSize);
+        StringBuilder builder2(buffer2, kBufferSize);
+
+        CHECK(converter.ToShortestString(static_cast<double>(i), &builder1));
+        CHECK(converter.ToShortestString(static_cast<float>(i), &builder2));
+
+        const char expected[2] = { static_cast<char>('0' + i), '\0' };
+        CHECK_EQ(expected, builder1.Finalize());
+        CHECK_EQ(expected, builder2.Finalize());
+    }
+    {
+        // Check that ToShortestString behaves like ToShortest, for a double
+        // input value. Use an input value that can be represented by a double,
+        // but not by a single-precision float.
+        const double value = 1e+100;
+
+        char buffer1[kBufferSize] = "";
+        char buffer2[kBufferSize] = "";
+        StringBuilder builder1(buffer1, kBufferSize);
+        StringBuilder builder2(buffer2, kBufferSize);
+
+        CHECK_EQ(converter.ToShortest(value, &builder1),
+                 converter.ToShortestString(value, &builder2));
+        CHECK_EQ(builder1.Finalize(), builder2.Finalize());
+    }
+    {
+        // Check that ToShortestString behaves like ToShortestSingle, for a
+        // single-precision float input value. Use an input value for which
+        // ToShortestSingle yields a different string than ToShortest.
+        const float value = 0.1f;
+
+        char buffer1[kBufferSize] = "";
+        char buffer2[kBufferSize] = "";
+        StringBuilder builder1(buffer1, kBufferSize);
+        StringBuilder builder2(buffer2, kBufferSize);
+
+        CHECK_EQ(converter.ToShortestSingle(value, &builder1),
+                 converter.ToShortestString(value, &builder2));
+        CHECK_EQ(builder1.Finalize(), builder2.Finalize());
+    }
+}
+
+
 TEST(DoubleToFixed) {
   const int kBufferSize = 168;
   char buffer[kBufferSize];
