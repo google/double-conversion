@@ -13,6 +13,24 @@ jobs:
         build_type: [ Debug, Release ]
         # When updating the CMake version, make sure to also update the CMakeLists.txt.
         cmake_version: ["3.29", "4.0.1", latest, latestrc]
+        exclude:
+          # The windows-latest runner ships Visual Studio 18 2026, whose CMake
+          # generator only exists since CMake 4.2. Older CMake can't target it
+          # and falls back to "NMake Makefiles" (not on PATH), failing to
+          # configure. These versions are still exercised on Linux and macOS.
+          - container: windows-latest
+            cmake_version: "3.29"
+          - container: windows-latest
+            cmake_version: "4.0.1"
+        include:
+          # Still test the oldest Windows-capable CMake: 4.2 is the first
+          # release with the "Visual Studio 18 2026" generator.
+          - container: windows-latest
+            build_type: Debug
+            cmake_version: "4.2"
+          - container: windows-latest
+            build_type: Release
+            cmake_version: "4.2"
 
     runs-on: ${{ matrix.container }}
 
