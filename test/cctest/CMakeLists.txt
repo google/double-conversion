@@ -17,7 +17,10 @@ set(CCTEST_SRC
 )
 
 add_executable(cctest ${CCTEST_SRC})
-target_link_libraries(cctest double-conversion)
+# Link through the namespaced alias (rather than the raw "double-conversion"
+# target) so the build exercises the alias the same way an external consumer
+# does. A malformed alias makes this fail to configure. See issue #283.
+target_link_libraries(cctest double-conversion::double-conversion)
 if(MSVC)
     target_compile_options(cctest PRIVATE /bigobj)
 endif()

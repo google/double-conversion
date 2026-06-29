@@ -41,6 +41,10 @@ target_include_directories(
 # pick a version #
 set_target_properties(double-conversion PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 3)
 
+# Alias so the library can be consumed via add_subdirectory()/FetchContent
+# under the same name as the installed package (see install(EXPORT) below).
+add_library(double-conversion::double-conversion ALIAS double-conversion)
+
 # set up testing if requested
 option(BUILD_TESTING "Build test programs" OFF)
 if(BUILD_TESTING)
@@ -67,8 +71,6 @@ set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
 set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
 set(targets_export_name "${PROJECT_NAME}Targets")
 set(namespace "${PROJECT_NAME}::")
-
-add_library(${namespace}::double-conversion ALIAS double-conversion)
 
 # Include module with function 'write_basic_package_version_file'
 include(CMakePackageConfigHelpers)
