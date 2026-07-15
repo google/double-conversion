@@ -29,7 +29,7 @@ jobs:
        path: ./out/artifacts
    - name: Upload Sarif
      if: always() && steps.build.outcome == 'success'
-     uses: github/codeql-action/upload-sarif@9cea5827c668a1fe7165dbce6e80c3f9cf3f83ac
+     uses: github/codeql-action/upload-sarif@f133996fb588ff4e83f1e1d4911404720ac9cb17
      with:
       # Path to SARIF file relative to the root of the repository
       sarif_file: cifuzz-sarif/results.sarif
