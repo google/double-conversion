@@ -341,7 +341,13 @@ static double RadixStringToIeee(Iterator* current,
         }
         if (!isDigit(**current, radix)) break;
         zero_tail = zero_tail && **current == '0';
-        if (!post_decimal) exponent += radix_log_2;
+        if (!post_decimal) {
+          if (exponent <= INT_MAX - radix_log_2) {
+            exponent += radix_log_2;
+          } else {
+            exponent = INT_MAX;
+          }
+        }
       }
 
       if (!parse_as_hex_float &&
