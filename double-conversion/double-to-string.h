@@ -288,6 +288,7 @@ class DoubleToStringConverter {
   // except for the following cases:
   //   - the input value is special and no infinity_symbol or nan_symbol has
   //     been provided to the constructor,
+  //   - 'requested_digits' < 0,
   //   - 'value' > 10^kMaxFixedDigitsBeforePoint, or
   //   - 'requested_digits' > kMaxFixedDigitsAfterPoint.
   // The last two conditions imply that the result for non-special values never
