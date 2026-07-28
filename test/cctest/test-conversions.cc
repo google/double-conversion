@@ -592,6 +592,16 @@ TEST(DoubleToFixed) {
       9e59, DoubleToStringConverter::kMaxFixedDigitsAfterPoint + 1, &builder));
   CHECK_EQ(0, builder.position());
 
+  // A negative digit count would otherwise pad the result with
+  // -requested_digits characters, overrunning the caller's buffer.
+  builder.Reset();
+  CHECK(!dc.ToFixed(1e-30, -1, &builder));
+  CHECK_EQ(0, builder.position());
+
+  builder.Reset();
+  CHECK(!dc.ToFixed(1e-30, -1000, &builder));
+  CHECK_EQ(0, builder.position());
+
   builder.Reset();
   CHECK(dc.ToFixed(3.0, 0, &builder));
   CHECK_EQ("3", builder.Finalize());

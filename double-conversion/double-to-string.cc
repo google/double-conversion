@@ -219,6 +219,7 @@ bool DoubleToStringConverter::ToFixed(double value,
     return HandleSpecialValues(value, result_builder);
   }
 
+  if (requested_digits < 0) return false;
   if (requested_digits > kMaxFixedDigitsAfterPoint) return false;
   if (value >= kFirstNonFixed || value <= -kFirstNonFixed) return false;
 
