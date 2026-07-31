@@ -234,8 +234,9 @@ class DoubleToStringConverter {
   //   and the significant digits).
   //      "-0.0000033333333333333333", "-0.0012345678901234567"
   // - the longest exponential representation. (A negative number with
-  //   kBase10MaximalLength significant digits).
-  //      "-1.7976931348623157e+308", "-1.7976931348623157E308"
+  //   kBase10MaximalLength significant digits, and an exponent padded to
+  //   min_exponent_width digits).
+  //      "-1.7976931348623157e+308", "-1.7976931348623157e+00308"
   // In addition, the buffer must be able to hold the trailing '\0' character.
   //
   // Since the algorithm finds the shortest number of significant digits, it
@@ -326,9 +327,10 @@ class DoubleToStringConverter {
   //   - 'requested_digits' > kMaxExponentialDigits.
   //
   // The last condition implies that the result never contains more than
-  // kMaxExponentialDigits + 8 characters (the sign, the digit before the
+  // kMaxExponentialDigits + 10 characters (the sign, the digit before the
   // decimal point, the decimal point, the exponent character, the
-  // exponent's sign, and at most 3 exponent digits).
+  // exponent's sign, and at most 5 exponent digits; an exponent needs at most
+  // 3 digits, but min_exponent_width may pad it to 5).
   // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToExponential(double value,
                      int requested_digits,
@@ -368,8 +370,14 @@ class DoubleToStringConverter {
   //   - precision > kMaxPrecisionDigits
   //
   // The last condition implies that the result never contains more than
-  // kMaxPrecisionDigits + 7 characters (the sign, the decimal point, the
-  // exponent character, the exponent's sign, and at most 3 exponent digits).
+  // kMaxPrecisionDigits + 9 characters when it is returned in exponential
+  // format (the sign, the digit before the decimal point, the decimal point,
+  // the exponent character, the exponent's sign, and at most 5 exponent
+  // digits; an exponent needs at most 3 digits, but min_exponent_width may
+  // pad it to 5), and never more than
+  // kMaxPrecisionDigits + max_leading_padding_zeroes_in_precision_mode + 2
+  // characters when it is returned in decimal format (the sign, the decimal
+  // point, and the leading zeroes, which include the '0' before the point).
   // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToPrecision(double value,
                    int precision,

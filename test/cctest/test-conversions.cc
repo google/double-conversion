@@ -1324,6 +1324,55 @@ TEST(DoubleToPrecision) {
 }
 
 
+TEST(DoubleToStringMaximumResultLength) {
+  const int kBufferSize = 512;
+  char buffer[kBufferSize];
+  StringBuilder builder(buffer, kBufferSize);
+
+  // A decimal result is bounded by max_leading_padding_zeroes_in_precision_mode
+  // and not by the exponential bound: the sign, the decimal point and the
+  // leading zeroes (which include the '0' before the point) come on top of
+  // 'precision'.
+  const int kMaxLeadingPadding = 6;  // The value used by the EcmaScript
+                                     // converter.
+  const DoubleToStringConverter& dc =
+      DoubleToStringConverter::EcmaScriptConverter();
+
+  builder.Reset();
+  CHECK(dc.ToPrecision(-0.000001, 2, &builder));
+  CHECK_EQ(2 + kMaxLeadingPadding + 2, builder.position());
+  CHECK_EQ("-0.0000010", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc.ToPrecision(
+      -1.2345e-6, DoubleToStringConverter::kMaxPrecisionDigits, &builder));
+  CHECK_EQ(
+      DoubleToStringConverter::kMaxPrecisionDigits + kMaxLeadingPadding + 2,
+      builder.position());
+  builder.Finalize();
+
+  // An exponential result carries up to 5 exponent digits, since
+  // min_exponent_width pads the exponent.
+  int flags = DoubleToStringConverter::UNIQUE_ZERO |
+      DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN;
+  DoubleToStringConverter dc2(flags, "Infinity", "NaN", 'e', -6, 21, 6, 0, 5);
+
+  builder.Reset();
+  CHECK(dc2.ToExponential(
+      -1e-300, DoubleToStringConverter::kMaxExponentialDigits, &builder));
+  CHECK_EQ(DoubleToStringConverter::kMaxExponentialDigits + 10,
+           builder.position());
+  builder.Finalize();
+
+  builder.Reset();
+  CHECK(dc2.ToPrecision(
+      -1e-300, DoubleToStringConverter::kMaxPrecisionDigits, &builder));
+  CHECK_EQ(DoubleToStringConverter::kMaxPrecisionDigits + 9,
+           builder.position());
+  builder.Finalize();
+}
+
+
 TEST(DoubleToStringJavaScript) {
   const int kBufferSize = 128;
   char buffer[kBufferSize];
