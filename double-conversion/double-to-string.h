@@ -327,10 +327,12 @@ class DoubleToStringConverter {
   //   - 'requested_digits' > kMaxExponentialDigits.
   //
   // The last condition implies that the result never contains more than
-  // kMaxExponentialDigits + 10 characters (the sign, the digit before the
+  // kMaxExponentialDigits + 8 characters (the sign, the digit before the
   // decimal point, the decimal point, the exponent character, the
-  // exponent's sign, and at most 5 exponent digits; an exponent needs at most
-  // 3 digits, but min_exponent_width may pad it to 5).
+  // exponent's sign, and at most 3 exponent digits).
+  // If min_exponent_width is greater than 3, the result also needs space
+  // for those additional padding digits. Given that min_exponent_width
+  // is clamped to 5, the result might thus have at most 2 additional characters.
   // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToExponential(double value,
                      int requested_digits,
@@ -370,11 +372,14 @@ class DoubleToStringConverter {
   //   - precision > kMaxPrecisionDigits
   //
   // The last condition implies that the result never contains more than
-  // kMaxPrecisionDigits + 9 characters when it is returned in exponential
+  // kMaxPrecisionDigits + 7 characters when it is returned in exponential
   // format (the sign, the digit before the decimal point, the decimal point,
-  // the exponent character, the exponent's sign, and at most 5 exponent
-  // digits; an exponent needs at most 3 digits, but min_exponent_width may
-  // pad it to 5), and never more than
+  // the exponent character, the exponent's sign, and at most 3 exponent
+  // digits).
+  // If min_exponent_width is greater than 3, the result also needs space
+  // for those additional padding digits. Given that min_exponent_width
+  // is clamped to 5, the result might thus have at most 2 additional characters.
+  // The result has never more than
   // kMaxPrecisionDigits + max_leading_padding_zeroes_in_precision_mode + 2
   // characters when it is returned in decimal format (the sign, the decimal
   // point, and the leading zeroes, which include the '0' before the point).
