@@ -6002,6 +6002,60 @@ TEST(StringToDoubleCaseInsensitiveSpecialValues) {
 }
 
 
+TEST(StringToDoubleNonAsciiSpecialValues) {
+  int processed = 0;
+
+  // Use 1.0 as junk_string_value.
+  StringToDoubleConverter converter(StringToDoubleConverter::NO_FLAGS,
+                                    0.0, 1.0, "Infinity", "NaN");
+
+  // The ASCII spellings are the only ones that match.
+  const uc16 nan16[] = { 'N', 'a', 'N' };
+  CHECK_EQ(Double::NaN(), converter.StringToDouble(nan16, 3, &processed));
+  CHECK_EQ(3, processed);
+
+  const uc16 infinity16[] = { 'I', 'n', 'f', 'i', 'n', 'i', 't', 'y' };
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble(infinity16, 8, &processed));
+  CHECK_EQ(8, processed);
+
+  // Characters whose low byte equals a symbol character must not match it.
+  // U+014E and U+FF4E end in 'N', U+0161 ends in 'a', U+FF49 ends in 'I' and
+  // U+016E ends in 'n'.
+  const uc16 nan_lead[] = { 0x014E, 'a', 'N' };
+  CHECK_EQ(1.0, converter.StringToDouble(nan_lead, 3, &processed));
+  CHECK_EQ(0, processed);
+
+  const uc16 nan_tail[] = { 'N', 0x0161, 'N' };
+  CHECK_EQ(1.0, converter.StringToDouble(nan_tail, 3, &processed));
+  CHECK_EQ(0, processed);
+
+  const uc16 infinity_lead[] = { 0xFF49, 'n', 'f', 'i', 'n', 'i', 't', 'y' };
+  CHECK_EQ(1.0, converter.StringToDouble(infinity_lead, 8, &processed));
+  CHECK_EQ(0, processed);
+
+  const uc16 infinity_tail[] = { 'I', 0x016E, 'f', 'i', 'n', 'i', 't', 'y' };
+  CHECK_EQ(1.0, converter.StringToDouble(infinity_tail, 8, &processed));
+  CHECK_EQ(0, processed);
+
+  // The same holds when the symbols are matched case-insensitively.
+  const int ci_flags = StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY;
+  StringToDoubleConverter ci_converter(ci_flags, 0.0, 1.0, "infinity", "nan");
+
+  const uc16 nan_ci[] = { 'n', 'a', 'N' };
+  CHECK_EQ(Double::NaN(), ci_converter.StringToDouble(nan_ci, 3, &processed));
+  CHECK_EQ(3, processed);
+
+  const uc16 nan_ci_lead[] = { 0x014E, 'a', 'n' };
+  CHECK_EQ(1.0, ci_converter.StringToDouble(nan_ci_lead, 3, &processed));
+  CHECK_EQ(0, processed);
+
+  const uc16 nan_ci_tail[] = { 'n', 'a', 0x014E };
+  CHECK_EQ(1.0, ci_converter.StringToDouble(nan_ci_tail, 3, &processed));
+  CHECK_EQ(0, processed);
+}
+
+
 TEST(StringToTemplate) {
     // Test StringToDoubleConverter::StringTo<T>.
 
