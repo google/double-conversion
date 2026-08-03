@@ -51,13 +51,25 @@ namespace double_conversion {
 
 namespace {
 
-inline char ToLower(char ch) {
-  static const std::ctype<char>& cType =
-      std::use_facet<std::ctype<char> >(std::locale::classic());
-  return cType.tolower(ch);
+// Widens an input character to its unsigned code-unit value. Symbol matching
+// compares characters in this form, so that a 16-bit input character is never
+// truncated into the range of the symbol byte it is compared against.
+inline uint32_t CodeUnit(char ch) {
+  return static_cast<unsigned char>(ch);
 }
 
-inline char Pass(char ch) {
+inline uint32_t CodeUnit(uc16 ch) {
+  return ch;
+}
+
+inline uint32_t ToLower(uint32_t ch) {
+  if (ch > 0x7F) return ch;
+  static const std::ctype<char>& cType =
+      std::use_facet<std::ctype<char> >(std::locale::classic());
+  return static_cast<unsigned char>(cType.tolower(static_cast<char>(ch)));
+}
+
+inline uint32_t Pass(uint32_t ch) {
   return ch;
 }
 
@@ -66,10 +78,11 @@ static inline bool ConsumeSubStringImpl(Iterator* current,
                                         Iterator end,
                                         const char* substring,
                                         Converter converter) {
-  DOUBLE_CONVERSION_ASSERT(converter(**current) == *substring);
+  DOUBLE_CONVERSION_ASSERT(converter(CodeUnit(**current)) == CodeUnit(*substring));
   for (substring++; *substring != '\0'; substring++) {
     ++*current;
-    if (*current == end || converter(**current) != *substring) {
+    if (*current == end ||
+        converter(CodeUnit(**current)) != CodeUnit(*substring)) {
       return false;
     }
   }
@@ -92,10 +105,13 @@ static bool ConsumeSubString(Iterator* current,
 }
 
 // Consumes first character of the str is equal to ch
-inline bool ConsumeFirstCharacter(char ch,
+template <class Char>
+inline bool ConsumeFirstCharacter(Char ch,
                                          const char* str,
                                          bool case_insensitivity) {
-  return case_insensitivity ? ToLower(ch) == str[0] : ch == str[0];
+  const uint32_t c = CodeUnit(ch);
+  const uint32_t first = CodeUnit(str[0]);
+  return case_insensitivity ? ToLower(c) == first : c == first;
 }
 }  // namespace
 
