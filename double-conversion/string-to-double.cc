@@ -251,14 +251,17 @@ static bool IsHexFloatString(Iterator start,
   }
   if (!saw_digit) return false;
   if (*current != 'p' && *current != 'P') return false;
-  if (Advance(&current, separator, 16, end)) return false;
+  // The separator is only allowed between significand digits, not in the
+  // exponent, so advance through the exponent with no separator.
+  const uc16 kNoSeparator = StringToDoubleConverter::kNoSeparator;
+  if (Advance(&current, kNoSeparator, 16, end)) return false;
   if (*current == '+' || *current == '-') {
-    if (Advance(&current, separator, 16, end)) return false;
+    if (Advance(&current, kNoSeparator, 16, end)) return false;
   }
   if (!isDigit(*current, 10)) return false;
-  if (Advance(&current, separator, 16, end)) return true;
+  if (Advance(&current, kNoSeparator, 16, end)) return true;
   while (isDigit(*current, 10)) {
-    if (Advance(&current, separator, 16, end)) return true;
+    if (Advance(&current, kNoSeparator, 16, end)) return true;
   }
   return allow_trailing_junk || !AdvanceToNonspace(&current, end);
 }
@@ -400,15 +403,19 @@ static double RadixStringToIeee(Iterator* current,
 
   if (parse_as_hex_float) {
     DOUBLE_CONVERSION_ASSERT(**current == 'p' || **current == 'P');
-    Advance(current, separator, radix, end);
+    // The separator is only allowed between significand digits, not in the
+    // exponent, so advance through the exponent with no separator. This must
+    // match IsHexFloatString, which validated the string the same way.
+    const uc16 kNoSeparator = StringToDoubleConverter::kNoSeparator;
+    Advance(current, kNoSeparator, radix, end);
     DOUBLE_CONVERSION_ASSERT(*current != end);
     bool is_negative = false;
     if (**current == '+') {
-      Advance(current, separator, radix, end);
+      Advance(current, kNoSeparator, radix, end);
       DOUBLE_CONVERSION_ASSERT(*current != end);
     } else if (**current == '-') {
       is_negative = true;
-      Advance(current, separator, radix, end);
+      Advance(current, kNoSeparator, radix, end);
       DOUBLE_CONVERSION_ASSERT(*current != end);
     }
     int written_exponent = 0;
@@ -418,7 +425,7 @@ static double RadixStringToIeee(Iterator* current,
       if (abs(written_exponent) <= 100 * Double::kMaxExponent) {
         written_exponent = 10 * written_exponent + **current - '0';
       }
-      if (Advance(current, separator, radix, end)) break;
+      if (Advance(current, kNoSeparator, radix, end)) break;
     }
     if (is_negative) written_exponent = -written_exponent;
     exponent += written_exponent;

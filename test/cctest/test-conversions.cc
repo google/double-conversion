@@ -4124,6 +4124,37 @@ TEST(StringToDoubleSeparator) {
            StrToD16("0x0@3.p0", flags, 0.0, &processed, &all_used,
                     char_separator, separator));
   CHECK(all_used);
+
+  // The separator is only allowed between significand digits, not in the
+  // exponent. The decimal exponent already rejects it; the hex-float exponent
+  // must reject it too.
+  separator = '_';
+  flags = StringToDoubleConverter::ALLOW_HEX |
+      StringToDoubleConverter::ALLOW_HEX_FLOATS;
+
+  CHECK_EQ(144.0,  // 0x12p3, separator between significand digits.
+           StrToD("0x1_2p3", flags, 0.0, &processed, &all_used, separator));
+  CHECK(all_used);
+
+  CHECK_EQ(1024.0,  // 0x1p10, no separator in the exponent.
+           StrToD("0x1p10", flags, 0.0, &processed, &all_used, separator));
+  CHECK(all_used);
+
+  CHECK_EQ(Double::NaN(),
+           StrToD("0x1p1_0", flags, 0.0, &processed, &all_used, separator));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(),
+           StrToD("0x1.8p1_0", flags, 0.0, &processed, &all_used, separator));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(),
+           StrToD("0x1p_10", flags, 0.0, &processed, &all_used, separator));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(),
+           StrToD("0x1p10_", flags, 0.0, &processed, &all_used, separator));
+  CHECK_EQ(0, processed);
 }
 
 TEST(StringToDoubleSpecialValues) {
