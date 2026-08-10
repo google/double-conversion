@@ -3099,6 +3099,39 @@ TEST(StringToDoubleHexString) {
   CHECK_EQ(-0.0, StrToD("-0x1p-2000", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
 
+  // Large-but-finite hex-floats must not overflow to infinity. Every value
+  // below is a normal double well within range (2^1023 is the largest power of
+  // two that fits).
+  CHECK_EQ(1.0715086071862673e+301, StrToD("0x1p1000", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(8.9884656743115795e+307, StrToD("0x1p1023", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.6853373139334212e+307, StrToD("0x1.8p1020", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(5.8251712944653672e+299, StrToD("0xdeadp980", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  // Small subnormals must not underflow to zero. 2^-1074 is the smallest
+  // positive double, reachable as "0x2p-1075" or "0x1p-1074".
+  CHECK_EQ(4.9406564584124654e-324, StrToD("0x2p-1075", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(4.9406564584124654e-324, StrToD("0x1p-1074", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.4821969375237396e-323, StrToD("0x3p-1074", flags, 0.0,
+                                           &processed, &all_used));
+  CHECK(all_used);
+
   CHECK_EQ(Double::NaN(), StrToD(" ", flags, Double::NaN(),
                                  &processed, &all_used));
   CHECK_EQ(0, processed);

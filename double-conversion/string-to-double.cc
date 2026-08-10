@@ -433,7 +433,12 @@ static double RadixStringToIeee(Iterator* current,
   }
 
   DOUBLE_CONVERSION_ASSERT(number != 0);
-  double result = Double(DiyFp(number, exponent)).value();
+  // number is an exact integer below 2^kSignificandSize, so number * 2^exponent
+  // can be formed directly. Double(DiyFp(number, exponent)) would instead assume
+  // a normalized significand: a hex-float like "0x1p1000" or "0x2p-1075" reaches
+  // here with a small number and a large exponent, which DiyFpToUint64 then reads
+  // as an overflow (infinity) or underflow (zero) rather than the finite result.
+  double result = ldexp(static_cast<double>(number), exponent);
   return sign ? -result : result;
 }
 
