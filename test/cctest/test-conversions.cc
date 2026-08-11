@@ -5364,6 +5364,29 @@ TEST(StringToFloatHexString) {
   CHECK_EQ(0.0f, StrToF("0x1.p-10000000000000000", flags, 0.0,
                                  &processed, &all_used));
   CHECK(all_used);
+
+  // Hex-floats must be rounded straight to float, without an intermediate
+  // rounding to a double significand. Subnormal results carry fewer than 24
+  // significand bits, so the value below rounds up when taken directly to
+  // float but rounds down if first rounded to a 24-bit normal significand.
+  CHECK_EQ(Single(0x001149a1u).value(),
+           StrToF("0x8a4.d047p-140", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(Single(0x002f3e11u).value(),
+           StrToF("0x2f3.e10ap-137", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  // The double-rounding examples from the hex-integer cases above, written as
+  // hex-floats. Rounding the significand to a double first would land on
+  // 72057594037927936.0f; the direct single rounding gives the value below.
+  CHECK_EQ(72057602627862528.0f,
+           StrToF("0x100000100000008p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(72057602627862528.0f,
+           StrToF("0x1000002FFFFFFF8p0", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
 }
 
 
