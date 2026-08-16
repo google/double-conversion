@@ -6066,6 +6066,51 @@ TEST(StringToDoubleCaseInsensitiveSpecialValues) {
 }
 
 
+TEST(StringToDoubleCaseInsensitiveMixedCaseSymbols) {
+  int processed = 0;
+
+  const int flags = StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY;
+
+  // The symbols carry upper-case letters. Case-insensitive matching must fold
+  // both the input and the symbol, so any casing of the input is accepted,
+  // including the symbol's own spelling.
+  StringToDoubleConverter converter(flags, 0.0, 1.0, "Infinity", "NaN");
+
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble("Infinity", 8, &processed));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble("infinity", 8, &processed));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble("INFINITY", 8, &processed));
+  CHECK_EQ(8, processed);
+
+  CHECK_EQ(Double::NaN(), converter.StringToDouble("nan", 3, &processed));
+  CHECK_EQ(3, processed);
+
+  CHECK_EQ(Double::NaN(), converter.StringToDouble("NAN", 3, &processed));
+  CHECK_EQ(3, processed);
+
+  const uc16 infinity16[] = { 'i', 'N', 'f', 'I', 'n', 'I', 't', 'Y' };
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble(infinity16, 8, &processed));
+  CHECK_EQ(8, processed);
+
+  // A case-sensitive converter with the same symbols still rejects a spelling
+  // that differs only in case.
+  StringToDoubleConverter cs(StringToDoubleConverter::NO_FLAGS,
+                             0.0, 1.0, "Infinity", "NaN");
+  CHECK_EQ(1.0, cs.StringToDouble("infinity", 8, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(Double::Infinity(),
+           cs.StringToDouble("Infinity", 8, &processed));
+  CHECK_EQ(8, processed);
+}
+
+
 TEST(StringToDoubleNonAsciiSpecialValues) {
   int processed = 0;
 

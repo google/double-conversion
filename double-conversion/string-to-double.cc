@@ -78,11 +78,12 @@ static inline bool ConsumeSubStringImpl(Iterator* current,
                                         Iterator end,
                                         const char* substring,
                                         Converter converter) {
-  DOUBLE_CONVERSION_ASSERT(converter(CodeUnit(**current)) == CodeUnit(*substring));
+  DOUBLE_CONVERSION_ASSERT(
+      converter(CodeUnit(**current)) == converter(CodeUnit(*substring)));
   for (substring++; *substring != '\0'; substring++) {
     ++*current;
     if (*current == end ||
-        converter(CodeUnit(**current)) != CodeUnit(*substring)) {
+        converter(CodeUnit(**current)) != converter(CodeUnit(*substring))) {
       return false;
     }
   }
@@ -111,7 +112,7 @@ inline bool ConsumeFirstCharacter(Char ch,
                                          bool case_insensitivity) {
   const uint32_t c = CodeUnit(ch);
   const uint32_t first = CodeUnit(str[0]);
-  return case_insensitivity ? ToLower(c) == first : c == first;
+  return case_insensitivity ? ToLower(c) == ToLower(first) : c == first;
 }
 }  // namespace
 
