@@ -2742,6 +2742,21 @@ TEST(StringToDoubleHexString) {
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
 
+  // Trailing whitespace is junk without ALLOW_TRAILING_SPACES, as for
+  // decimal numbers.
+  CHECK_EQ(Double::NaN(), StrToD("0x12 ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x12\t\n", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  // Same for a significand that overflows 53 bits.
+  CHECK_EQ(Double::NaN(), StrToD("0x10000000000000000 ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
   CHECK_EQ(Double::NaN(), StrToD("+", flags, 0.0, &processed, &all_used));
   CHECK_EQ(0, processed);
 
@@ -3195,6 +3210,29 @@ TEST(StringToDoubleHexString) {
 
   CHECK_EQ(0.0, StrToD("0x1.p-10000000000000000", flags, 0.0,
                                  &processed, &all_used));
+  CHECK(all_used);
+
+  // Trailing whitespace is junk without ALLOW_TRAILING_SPACES, as for
+  // decimal numbers.
+  CHECK_EQ(Double::NaN(), StrToD("0x3p0 ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x3.p0 ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x10000000000000001p0 ", flags, 0.0,
+                                 &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_HEX_FLOATS |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES;
+
+  CHECK_EQ(3.0, StrToD("0x3p0 ", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(3.0, StrToD("0x3.p0 ", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
 }
 
