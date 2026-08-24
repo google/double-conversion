@@ -119,6 +119,20 @@ static void CutToMaxSignificantDigits(Vector<const char> buffer,
 }
 
 
+// The public Strtod entry points accept an arbitrary int exponent, which is
+// later combined with the digit count (exponent + buffer.length()). For
+// exponents near INT_MAX that addition signed-overflows. Any exponent past
+// this range is far outside the representable double range, so clamping it
+// leaves the result unchanged. string-to-double.cc caps its parsed exponent
+// the same way and for the same reason.
+static int ClampExponent(int exponent) {
+  const int kMaxExponent = INT_MAX / 2;
+  if (exponent > kMaxExponent) return kMaxExponent;
+  if (exponent < -kMaxExponent) return -kMaxExponent;
+  return exponent;
+}
+
+
 // Trims the buffer and cuts it to at most kMaxSignificantDecimalDigits.
 // If possible the input-buffer is reused, but if the buffer needs to be
 // modified (due to cutting), then the input needs to be copied into the
@@ -126,6 +140,7 @@ static void CutToMaxSignificantDigits(Vector<const char> buffer,
 static void TrimAndCut(Vector<const char> buffer, int exponent,
                        char* buffer_copy_space, int space_size,
                        Vector<const char>* trimmed, int* updated_exponent) {
+  exponent = ClampExponent(exponent);
   Vector<const char> left_trimmed = TrimLeadingZeros(buffer);
   Vector<const char> right_trimmed = TrimTrailingZeros(left_trimmed);
   exponent += left_trimmed.length() - right_trimmed.length();
@@ -422,6 +437,7 @@ static bool ComputeGuess(Vector<const char> trimmed, int exponent,
     *guess = 0.0;
     return true;
   }
+  exponent = ClampExponent(exponent);
   if (exponent + trimmed.length() - 1 >= kMaxDecimalPower) {
     *guess = Double::Infinity();
     return true;
