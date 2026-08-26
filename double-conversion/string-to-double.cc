@@ -233,7 +233,8 @@ template<class Iterator>
 static bool IsHexFloatString(Iterator start,
                              Iterator end,
                              uc16 separator,
-                             bool allow_trailing_junk) {
+                             bool allow_trailing_junk,
+                             bool allow_trailing_spaces) {
   DOUBLE_CONVERSION_ASSERT(start != end);
 
   Iterator current = start;
@@ -264,7 +265,10 @@ static bool IsHexFloatString(Iterator start,
   while (isDigit(*current, 10)) {
     if (Advance(&current, kNoSeparator, 16, end)) return true;
   }
-  return allow_trailing_junk || !AdvanceToNonspace(&current, end);
+  // Trailing whitespace is junk unless ALLOW_TRAILING_SPACES is set, as it is
+  // for decimal numbers.
+  if (allow_trailing_junk) return true;
+  return allow_trailing_spaces && !AdvanceToNonspace(&current, end);
 }
 
 
@@ -279,12 +283,14 @@ static double RadixStringToIeee(Iterator* current,
                                 uc16 separator,
                                 bool parse_as_hex_float,
                                 bool allow_trailing_junk,
+                                bool allow_trailing_spaces,
                                 double junk_string_value,
                                 bool read_as_double,
                                 bool* result_is_junk) {
   DOUBLE_CONVERSION_ASSERT(*current != end);
   DOUBLE_CONVERSION_ASSERT(!parse_as_hex_float ||
-      IsHexFloatString(*current, end, separator, allow_trailing_junk));
+      IsHexFloatString(*current, end, separator, allow_trailing_junk,
+                       allow_trailing_spaces));
 
   const int kDoubleSize = Double::kSignificandSize;
   const int kSingleSize = Single::kSignificandSize;
@@ -326,7 +332,10 @@ static double RadixStringToIeee(Iterator* current,
     } else if (parse_as_hex_float && (**current == 'p' || **current == 'P')) {
       break;
     } else {
-      if (allow_trailing_junk || !AdvanceToNonspace(current, end)) {
+      // Trailing whitespace is junk unless ALLOW_TRAILING_SPACES is set, as it
+      // is for decimal numbers.
+      if (allow_trailing_junk ||
+          (allow_trailing_spaces && !AdvanceToNonspace(current, end))) {
         break;
       } else {
         return junk_string_value;
@@ -370,10 +379,11 @@ static double RadixStringToIeee(Iterator* current,
         }
       }
 
-      if (!parse_as_hex_float &&
-          !allow_trailing_junk &&
-          AdvanceToNonspace(current, end)) {
-        return junk_string_value;
+      if (!parse_as_hex_float && !allow_trailing_junk) {
+        if (allow_trailing_spaces ? AdvanceToNonspace(current, end)
+                                  : *current != end) {
+          return junk_string_value;
+        }
       }
 
       int middle_value = (1 << (overflow_bits_count - 1));
@@ -562,7 +572,8 @@ double StringToDoubleConverter::StringToIeee(
       if (current == end) return junk_string_value_;  // "0x"
 
       bool parse_as_hex_float = (flags_ & ALLOW_HEX_FLOATS) &&
-                IsHexFloatString(current, end, separator_, allow_trailing_junk);
+                IsHexFloatString(current, end, separator_, allow_trailing_junk,
+                                 allow_trailing_spaces);
 
       if (!parse_as_hex_float && !isDigit(*current, 16)) {
         return junk_string_value_;
@@ -575,6 +586,7 @@ double StringToDoubleConverter::StringToIeee(
                                            separator_,
                                            parse_as_hex_float,
                                            allow_trailing_junk,
+                                           allow_trailing_spaces,
                                            junk_string_value_,
                                            read_as_double,
                                            &result_is_junk);
@@ -748,6 +760,7 @@ double StringToDoubleConverter::StringToIeee(
                                   separator_,
                                   false, // Don't parse as hex_float.
                                   allow_trailing_junk,
+                                  allow_trailing_spaces,
                                   junk_string_value_,
                                   read_as_double,
                                   &result_is_junk);
