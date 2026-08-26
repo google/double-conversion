@@ -284,6 +284,11 @@ static void GenerateCountedDigits(int count, int* decimal_point,
                                   Bignum* numerator, Bignum* denominator,
                                   Vector<char> buffer, int* length) {
   DOUBLE_CONVERSION_ASSERT(count >= 0);
+  if (count == 0) {
+    // No digits requested. The "last digit" store below would write buffer[-1].
+    *length = 0;
+    return;
+  }
   for (int i = 0; i < count - 1; ++i) {
     uint16_t digit;
     digit = numerator->DivideModuloIntBignum(*denominator);
