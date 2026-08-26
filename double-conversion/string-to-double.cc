@@ -294,7 +294,14 @@ static double RadixStringToIeee(Iterator* current,
 
   const int kDoubleSize = Double::kSignificandSize;
   const int kSingleSize = Single::kSignificandSize;
-  const int kSignificandSize = read_as_double? kDoubleSize: kSingleSize;
+  // A hex-float is formed here as a double and rounded to float by the caller
+  // (StringToFloat casts the result). Rounding the significand to single
+  // precision here would double-round both subnormal floats and floats whose
+  // exact significand exceeds 53 bits, so keep the full double significand and
+  // round it to odd, which makes that final single-precision cast correct.
+  const bool round_hex_float_to_single = parse_as_hex_float && !read_as_double;
+  const int kSignificandSize =
+      (read_as_double || parse_as_hex_float) ? kDoubleSize : kSingleSize;
 
   *result_is_junk = true;
 
@@ -386,21 +393,31 @@ static double RadixStringToIeee(Iterator* current,
         }
       }
 
-      int middle_value = (1 << (overflow_bits_count - 1));
-      if (dropped_bits > middle_value) {
-        number++;  // Rounding up.
-      } else if (dropped_bits == middle_value) {
-        // Rounding to even to consistency with decimals: half-way case rounds
-        // up if significant part is odd and down otherwise.
-        if ((number & 1) != 0 || !zero_tail) {
-          number++;  // Rounding up.
+      if (round_hex_float_to_single) {
+        // Round the significand to odd: set the lowest kept bit whenever any
+        // bit was dropped. The caller rounds this double to float; rounding to
+        // nearest here would double-round, but round-to-odd leaves that final
+        // single rounding correct for normal and subnormal results alike.
+        if (dropped_bits != 0 || !zero_tail) {
+          number |= 1;
         }
-      }
+      } else {
+        int middle_value = (1 << (overflow_bits_count - 1));
+        if (dropped_bits > middle_value) {
+          number++;  // Rounding up.
+        } else if (dropped_bits == middle_value) {
+          // Rounding to even to consistency with decimals: half-way case rounds
+          // up if significant part is odd and down otherwise.
+          if ((number & 1) != 0 || !zero_tail) {
+            number++;  // Rounding up.
+          }
+        }
 
-      // Rounding up may cause overflow.
-      if ((number & ((int64_t)1 << kSignificandSize)) != 0) {
-        exponent++;
-        number >>= 1;
+        // Rounding up may cause overflow.
+        if ((number & ((int64_t)1 << kSignificandSize)) != 0) {
+          exponent++;
+          number >>= 1;
+        }
       }
       break;
     }
