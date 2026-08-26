@@ -26,6 +26,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
+#include <climits>
 
 #include "double-conversion/bignum.h"
 #include "cctest.h"
@@ -243,6 +244,13 @@ TEST(Strtod) {
   CHECK_EQ(1.7976931348623157E+308, StrtodChar("17976931348623157", 292));
   CHECK_EQ(1.7976931348623158E+308, StrtodChar("17976931348623158", 292));
   CHECK_EQ(Double::Infinity(), StrtodChar("17976931348623159", 292));
+
+  // Extreme exponents must not overflow the internal exponent arithmetic
+  // (exponent + digit count). They stay out of the double range.
+  CHECK_EQ(Double::Infinity(), StrtodChar("1", INT_MAX));
+  CHECK_EQ(Double::Infinity(), StrtodChar("10", INT_MAX));
+  CHECK_EQ(0.0, StrtodChar("1", INT_MIN));
+  CHECK_EQ(0.0, StrtodChar("10", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -531,6 +539,10 @@ TEST(StrtodTrimmed) {
   CHECK_EQ(1.7976931348623157E+308, StrtodTrimmedChar("17976931348623157", 292));
   CHECK_EQ(1.7976931348623158E+308, StrtodTrimmedChar("17976931348623158", 292));
   CHECK_EQ(Double::Infinity(), StrtodTrimmedChar("17976931348623159", 292));
+
+  // Extreme exponents must not overflow the internal exponent arithmetic.
+  CHECK_EQ(Double::Infinity(), StrtodTrimmedChar("1", INT_MAX));
+  CHECK_EQ(0.0, StrtodTrimmedChar("1", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -824,6 +836,12 @@ TEST(Strtof) {
   CHECK_EQ(3.4028234e+38f, StrtofChar("34028235677", 28));
   CHECK_EQ(Single::Infinity(), StrtofChar("34028235678", 28));
 
+  // Extreme exponents must not overflow the internal exponent arithmetic.
+  CHECK_EQ(Single::Infinity(), StrtofChar("1", INT_MAX));
+  CHECK_EQ(Single::Infinity(), StrtofChar("10", INT_MAX));
+  CHECK_EQ(0.0f, StrtofChar("1", INT_MIN));
+  CHECK_EQ(0.0f, StrtofChar("10", INT_MIN));
+
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
   // the floating-point stack is set to 80bits and the double-rounding
@@ -1014,6 +1032,10 @@ TEST(StrtofTrimmed) {
   CHECK_EQ(3.4028234e+38f, StrtofTrimmedChar("34028235676", 28));
   CHECK_EQ(3.4028234e+38f, StrtofTrimmedChar("34028235677", 28));
   CHECK_EQ(Single::Infinity(), StrtofTrimmedChar("34028235678", 28));
+
+  // Extreme exponents must not overflow the internal exponent arithmetic.
+  CHECK_EQ(Single::Infinity(), StrtofTrimmedChar("1", INT_MAX));
+  CHECK_EQ(0.0f, StrtofTrimmedChar("1", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
