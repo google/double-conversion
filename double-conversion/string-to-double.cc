@@ -518,6 +518,11 @@ double StringToDoubleConverter::StringToIeee(
   // Exponent will be adjusted if insignificant digits of the integer part
   // or insignificant leading zeros of the fractional part are dropped.
   int exponent = 0;
+  // Leading fractional zeros and dropped integer digits are both moved into the
+  // exponent, and both are bounded only by the input length. Saturating the
+  // accumulation at this magnitude keeps it inside int; any exponent this large
+  // is far outside the double range, so the clamped result is unchanged.
+  const int max_exponent = INT_MAX / 2;
   int significant_digits = 0;
   int insignificant_digits = 0;
   bool nonzero_digit_dropped = false;
@@ -671,7 +676,8 @@ double StringToDoubleConverter::StringToIeee(
           *processed_characters_count = static_cast<int>(current - input);
           return SignedZero(sign);
         }
-        exponent--;  // Move this 0 into the exponent.
+        // Saturate to avoid underflow on a pathologically long zero run.
+        if (exponent > -(max_exponent / 2)) exponent--;  // Move this 0 into the exponent.
       }
     }
 
@@ -682,7 +688,7 @@ double StringToDoubleConverter::StringToIeee(
         DOUBLE_CONVERSION_ASSERT(buffer_pos < kBufferSize);
         buffer[buffer_pos++] = static_cast<char>(*current);
         significant_digits++;
-        exponent--;
+        if (exponent > -(max_exponent / 2)) exponent--;
       } else {
         // Ignore insignificant digits in the fractional part.
         nonzero_digit_dropped = nonzero_digit_dropped || *current != '0';
@@ -736,7 +742,6 @@ double StringToDoubleConverter::StringToIeee(
       }
     }
 
-    const int max_exponent = INT_MAX / 2;
     DOUBLE_CONVERSION_ASSERT(-max_exponent / 2 <= exponent && exponent <= max_exponent / 2);
     int num = 0;
     do {
@@ -765,7 +770,15 @@ double StringToDoubleConverter::StringToIeee(
   }
 
   parsing_done:
-  exponent += insignificant_digits;
+  // insignificant_digits counts integer digits dropped past the significand
+  // limit and is bounded only by the input length, so exponent + it can exceed
+  // int. Saturate: such a value is out of the double range regardless.
+  {
+    const int64_t combined =
+        static_cast<int64_t>(exponent) + insignificant_digits;
+    exponent = combined > max_exponent ? max_exponent
+                                       : static_cast<int>(combined);
+  }
 
   if (octal) {
     double result;
