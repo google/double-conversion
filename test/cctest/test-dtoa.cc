@@ -93,6 +93,14 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("0", buffer.start());
   CHECK_EQ(1, point);
 
+  // A positive double below the smallest positive float rounds to +0.0f, so in
+  // single mode it is a zero. It must render as "0" and not spill past the
+  // buffer while generating digits at the double's magnitude.
+  DoubleToAscii(5e-324, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ(1, length);
+  CHECK_EQ("0", buffer.start());
+  CHECK_EQ(1, point);
+
   DoubleToAscii(0.0, FIXED, 2, buffer, &sign, &length, &point);
   CHECK_EQ(1, length);
   CHECK_EQ("0", buffer.start());
