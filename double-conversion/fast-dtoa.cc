@@ -452,6 +452,15 @@ static bool DigitGenCounted(DiyFp w,
   *kappa = divisor_exponent_plus_one;
   *length = 0;
 
+  // With requested_digits <= 0 no digit can be produced. The integral loop
+  // below decrements requested_digits and only stops on an exact 0, so a
+  // non-positive value never trips that break and the loop emits every digit
+  // of 'integrals' past the end of the buffer. DoubleToAscii guards PRECISION
+  // with 0 digits before reaching here, but a direct FastDtoa caller does not.
+  if (requested_digits <= 0) {
+    return false;
+  }
+
   // Loop invariant: buffer = w / 10^kappa  (integer division)
   // The invariant holds for the first iteration: kappa has been initialized
   // with the divisor exponent + 1. And the divisor is the biggest power of ten
