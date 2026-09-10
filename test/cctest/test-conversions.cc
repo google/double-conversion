@@ -3147,6 +3147,31 @@ TEST(StringToDoubleHexString) {
                                            &processed, &all_used));
   CHECK(all_used);
 
+  // Subnormal hex-floats whose significand needs more than 53 bits must be
+  // rounded once onto the subnormal grid. Rounding the significand to 53 bits
+  // and then letting ldexp round it again into the (narrower) subnormal grid
+  // double-rounds and can be off by one ulp; every value below is the correctly
+  // rounded subnormal double.
+  CHECK_EQ(1.776349364538321e-308, StrToD("0xcc5f893a94ec6.a8ap-1074", flags,
+                                          0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(5.862455780606079e-309, StrToD("0x86e5db2.85e4250313p-1051", flags,
+                                          0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(1.2289791039786863e-308, StrToD("0x8d659e52e331.9572a28b71p-1070",
+                                           flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(9.9998826022832853e-310, StrToD("0xb814e4c7b95f7e.86402f0c1p-1082",
+                                           flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(5.4041046266760739e-311, StrToD("0x4f95.aaeb87abfep-1045", flags,
+                                           0.0, &processed, &all_used));
+  CHECK(all_used);
+
   CHECK_EQ(Double::NaN(), StrToD(" ", flags, Double::NaN(),
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
