@@ -315,14 +315,14 @@ bool FastFixedDtoa(double v,
   const uint32_t kMaxUInt32 = 0xFFFFFFFF;
   uint64_t significand = Double(v).Significand();
   int exponent = Double(v).Exponent();
+  *length = 0;
   // v = significand * 2^exponent (with significand a 53bit integer).
   // If the exponent is larger than 20 (i.e. we may have a 73bit number) then we
   // don't know how to compute the representation. 2^73 ~= 9.5*10^21.
   // If necessary this limit could probably be increased, but we don't need
   // more.
   if (exponent > 20) return false;
-  if (fractional_count > 20) return false;
-  *length = 0;
+  if (fractional_count < 0 || fractional_count > 20) return false;
   // At most kDoubleSignificandSize bits of the significand are non-zero.
   // Given a 64 bit integer we have 11 0s followed by 53 potentially non-zero
   // bits:  0..11*..0xxx..53*..xx

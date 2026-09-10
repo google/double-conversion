@@ -513,3 +513,23 @@ TEST(FastFixedDtoaGayFixed) {
     CHECK_EQ(current_test.representation, buffer.start());
   }
 }
+
+TEST(FastFixedDtoaNegativeFractionalCount) {
+  // fractional_count < 0 must return false and not write any digits.
+  char tiny_container[2];
+  tiny_container[1] = 0x7f;
+  Vector<char> tiny(tiny_container, 1);
+  int length;
+  int point;
+  bool status;
+
+  status = FastFixedDtoa(1234567.0, -1, tiny, &length, &point);
+  CHECK(!status);
+  CHECK_EQ(0, length);
+  CHECK_EQ(0x7f, static_cast<int>(tiny_container[1]));
+
+  status = FastFixedDtoa(1234567.0, -5, tiny, &length, &point);
+  CHECK(!status);
+  CHECK_EQ(0, length);
+  CHECK_EQ(0x7f, static_cast<int>(tiny_container[1]));
+}
