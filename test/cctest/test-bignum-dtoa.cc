@@ -260,21 +260,36 @@ TEST(BignumDtoaVariousDoubles) {
 
 TEST(BignumDtoaZeroPrecision) {
   // Requesting zero precision digits must produce an empty representation
-  // without storing the "last digit" at buffer[-1]. A sentinel byte sits
+  // without storing the "last digit" at buffer[-1]. Sentinel bytes sit
   // immediately before the output buffer to catch that store.
   char container[kBufferSize];
   container[0] = '@';
-  Vector<char> buffer(container + 1, kBufferSize - 1);
+  container[1] = '@';
+  Vector<char> buffer(container + 2, kBufferSize - 2);
   int length;
   int point;
 
   BignumDtoa(1.0, BIGNUM_DTOA_PRECISION, 0, buffer, &length, &point);
   CHECK_EQ(0, length);
   CHECK(container[0] == '@');
+  CHECK(container[1] == '@');
 
   BignumDtoa(123.456, BIGNUM_DTOA_PRECISION, 0, buffer, &length, &point);
   CHECK_EQ(0, length);
   CHECK(container[0] == '@');
+  CHECK(container[1] == '@');
+
+  // Negative requested digits must also produce an empty representation
+  // without storing past the start of the buffer.
+  BignumDtoa(1.0, BIGNUM_DTOA_PRECISION, -1, buffer, &length, &point);
+  CHECK_EQ(0, length);
+  CHECK(container[0] == '@');
+  CHECK(container[1] == '@');
+
+  BignumDtoa(123.456, BIGNUM_DTOA_PRECISION, -2, buffer, &length, &point);
+  CHECK_EQ(0, length);
+  CHECK(container[0] == '@');
+  CHECK(container[1] == '@');
 }
 
 
