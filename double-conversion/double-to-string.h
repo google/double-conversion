@@ -80,7 +80,8 @@ class DoubleToStringConverter {
     UNIQUE_ZERO = 8,
     NO_TRAILING_ZERO = 16,
     EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL = 32,
-    EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL = 64
+    EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL = 64,
+    ROUND_HALF_TO_EVEN = 128
   };
 
   // Flags should be a bit-or combination of the possible Flags-enum.
@@ -106,6 +107,8 @@ class DoubleToStringConverter {
   //  - EMIT_TRAILING_ZERO_AFTER_POINT_IN_EXPONENTIAL: in addition to a trailing
   //    decimal point emits a trailing '0'-character. This flag requires the
   //    EMIT_TRAILING_DECIMAL_POINT_IN_EXPONENTIAL flag.
+  //  - ROUND_HALF_TO_EVEN: round halfway cases towards the nearest even number
+  //    (banker's rounding) instead of away from zero. Matches printf, std::to_chars, etc.
   //
   // Infinity symbol and nan_symbol provide the string representation for these
   // special values. If the string is NULL and the special value is encountered
@@ -453,7 +456,8 @@ class DoubleToStringConverter {
                             int buffer_length,
                             bool* sign,
                             int* length,
-                            int* point);
+                            int* point,
+                            bool round_half_to_even = false);
 
  private:
   // Implementation for ToShortest and ToShortestSingle.

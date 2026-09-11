@@ -6310,3 +6310,212 @@ TEST(StringToTemplate) {
         CHECK_EQ(processed1, processed2);
     }
 }
+
+TEST(RoundHalfToEven) {
+  const int kBufferSize = 128;
+  char buffer[kBufferSize];
+  StringBuilder builder(buffer, kBufferSize);
+
+  int default_flags = DoubleToStringConverter::NO_FLAGS;
+  DoubleToStringConverter dc_default(default_flags, "Infinity", "NaN", 'e',
+                                     -6, 21, 6, 0);
+
+  int even_flags = DoubleToStringConverter::ROUND_HALF_TO_EVEN;
+  DoubleToStringConverter dc_even(even_flags, "Infinity", "NaN", 'e',
+                                  -6, 21, 6, 0);
+
+  // ToFixed halfway cases at integer boundaries (requested_digits = 0)
+  // Default rounds half away from zero.
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.5, 0, &builder));
+  CHECK_EQ("1", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(1.5, 0, &builder));
+  CHECK_EQ("2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(2.5, 0, &builder));
+  CHECK_EQ("3", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(3.5, 0, &builder));
+  CHECK_EQ("4", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(4.5, 0, &builder));
+  CHECK_EQ("5", builder.Finalize());
+
+  // ROUND_HALF_TO_EVEN rounds halfway cases to the nearest even number.
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.5, 0, &builder));
+  CHECK_EQ("0", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(1.5, 0, &builder));
+  CHECK_EQ("2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(2.5, 0, &builder));
+  CHECK_EQ("2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(3.5, 0, &builder));
+  CHECK_EQ("4", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(4.5, 0, &builder));
+  CHECK_EQ("4", builder.Finalize());
+
+  // Negative values
+  builder.Reset();
+  CHECK(dc_even.ToFixed(-0.5, 0, &builder));
+  CHECK_EQ("-0", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(-1.5, 0, &builder));
+  CHECK_EQ("-2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(-2.5, 0, &builder));
+  CHECK_EQ("-2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(-3.5, 0, &builder));
+  CHECK_EQ("-4", builder.Finalize());
+
+  // Fractional halfway cases (dyadic fractions representable exactly in binary double)
+  // Issue #251 example: 0.25 -> "0.2" vs "0.3"
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.25, 1, &builder));
+  CHECK_EQ("0.3", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.25, 1, &builder));
+  CHECK_EQ("0.2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.75, 1, &builder));
+  CHECK_EQ("0.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.75, 1, &builder));
+  CHECK_EQ("0.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(1.25, 1, &builder));
+  CHECK_EQ("1.3", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(1.25, 1, &builder));
+  CHECK_EQ("1.2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(1.75, 1, &builder));
+  CHECK_EQ("1.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(1.75, 1, &builder));
+  CHECK_EQ("1.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(2.25, 1, &builder));
+  CHECK_EQ("2.3", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(2.25, 1, &builder));
+  CHECK_EQ("2.2", builder.Finalize());
+
+  // 2 decimal places (multiples of 1/8 = 0.125)
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.125, 2, &builder));
+  CHECK_EQ("0.13", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.125, 2, &builder));
+  CHECK_EQ("0.12", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.375, 2, &builder));
+  CHECK_EQ("0.38", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.375, 2, &builder));
+  CHECK_EQ("0.38", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.625, 2, &builder));
+  CHECK_EQ("0.63", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.625, 2, &builder));
+  CHECK_EQ("0.62", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToFixed(0.875, 2, &builder));
+  CHECK_EQ("0.88", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToFixed(0.875, 2, &builder));
+  CHECK_EQ("0.88", builder.Finalize());
+
+  // ToPrecision with ROUND_HALF_TO_EVEN
+  builder.Reset();
+  CHECK(dc_default.ToPrecision(0.25, 1, &builder));
+  CHECK_EQ("0.3", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToPrecision(0.25, 1, &builder));
+  CHECK_EQ("0.2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToPrecision(0.75, 1, &builder));
+  CHECK_EQ("0.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToPrecision(0.75, 1, &builder));
+  CHECK_EQ("0.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToPrecision(1.25, 2, &builder));
+  CHECK_EQ("1.3", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToPrecision(1.25, 2, &builder));
+  CHECK_EQ("1.2", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_default.ToPrecision(1.75, 2, &builder));
+  CHECK_EQ("1.8", builder.Finalize());
+
+  builder.Reset();
+  CHECK(dc_even.ToPrecision(1.75, 2, &builder));
+  CHECK_EQ("1.8", builder.Finalize());
+
+  // Direct DoubleToAscii check
+  char ascii_buffer[32];
+  bool sign;
+  int length;
+  int point;
+
+  DoubleToStringConverter::DoubleToAscii(0.25, DoubleToStringConverter::FIXED, 1,
+                                        ascii_buffer, sizeof(ascii_buffer),
+                                        &sign, &length, &point, false);
+  CHECK_EQ("3", ascii_buffer);
+
+  DoubleToStringConverter::DoubleToAscii(0.25, DoubleToStringConverter::FIXED, 1,
+                                        ascii_buffer, sizeof(ascii_buffer),
+                                        &sign, &length, &point, true);
+  CHECK_EQ("2", ascii_buffer);
+
+  DoubleToStringConverter::DoubleToAscii(1.25, DoubleToStringConverter::FIXED, 1,
+                                        ascii_buffer, sizeof(ascii_buffer),
+                                        &sign, &length, &point, false);
+  CHECK_EQ("13", ascii_buffer);
+
+  DoubleToStringConverter::DoubleToAscii(1.25, DoubleToStringConverter::FIXED, 1,
+                                        ascii_buffer, sizeof(ascii_buffer),
+                                        &sign, &length, &point, true);
+  CHECK_EQ("12", ascii_buffer);
+}
+

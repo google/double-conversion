@@ -187,7 +187,8 @@ bool DoubleToStringConverter::ToShortestIeeeNumber(
   int decimal_rep_length;
 
   DoubleToAscii(value, mode, 0, decimal_rep, kDecimalRepCapacity,
-                &sign, &decimal_rep_length, &decimal_point);
+                &sign, &decimal_rep_length, &decimal_point,
+                (flags_ & ROUND_HALF_TO_EVEN) != 0);
 
   bool unique_zero = (flags_ & UNIQUE_ZERO) != 0;
   if (sign && (value != 0.0 || !unique_zero)) {
@@ -233,7 +234,8 @@ bool DoubleToStringConverter::ToFixed(double value,
   int decimal_rep_length;
   DoubleToAscii(value, FIXED, requested_digits,
                 decimal_rep, kDecimalRepCapacity,
-                &sign, &decimal_rep_length, &decimal_point);
+                &sign, &decimal_rep_length, &decimal_point,
+                (flags_ & ROUND_HALF_TO_EVEN) != 0);
 
   bool unique_zero = ((flags_ & UNIQUE_ZERO) != 0);
   if (sign && (value != 0.0 || !unique_zero)) {
@@ -274,11 +276,13 @@ bool DoubleToStringConverter::ToExponential(
   if (requested_digits == -1) {
     DoubleToAscii(value, SHORTEST, 0,
                   decimal_rep, kDecimalRepCapacity,
-                  &sign, &decimal_rep_length, &decimal_point);
+                  &sign, &decimal_rep_length, &decimal_point,
+                  (flags_ & ROUND_HALF_TO_EVEN) != 0);
   } else {
     DoubleToAscii(value, PRECISION, requested_digits + 1,
                   decimal_rep, kDecimalRepCapacity,
-                  &sign, &decimal_rep_length, &decimal_point);
+                  &sign, &decimal_rep_length, &decimal_point,
+                  (flags_ & ROUND_HALF_TO_EVEN) != 0);
     DOUBLE_CONVERSION_ASSERT(decimal_rep_length <= requested_digits + 1);
 
     for (int i = decimal_rep_length; i < requested_digits + 1; ++i) {
@@ -322,7 +326,8 @@ bool DoubleToStringConverter::ToPrecision(double value,
 
   DoubleToAscii(value, PRECISION, precision,
                 decimal_rep, kDecimalRepCapacity,
-                &sign, &decimal_rep_length, &decimal_point);
+                &sign, &decimal_rep_length, &decimal_point,
+                (flags_ & ROUND_HALF_TO_EVEN) != 0);
   DOUBLE_CONVERSION_ASSERT(decimal_rep_length <= precision);
 
   bool unique_zero = ((flags_ & UNIQUE_ZERO) != 0);
@@ -391,7 +396,8 @@ void DoubleToStringConverter::DoubleToAscii(double v,
                                             int buffer_length,
                                             bool* sign,
                                             int* length,
-                                            int* point) {
+                                            int* point,
+                                            bool round_half_to_even) {
   Vector<char> vector(buffer, buffer_length);
   DOUBLE_CONVERSION_ASSERT(!Double(v).IsSpecial());
   DOUBLE_CONVERSION_ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
@@ -423,31 +429,33 @@ void DoubleToStringConverter::DoubleToAscii(double v,
     return;
   }
 
-  bool fast_worked;
-  switch (mode) {
-    case SHORTEST:
-      fast_worked = FastDtoa(v, FAST_DTOA_SHORTEST, 0, vector, length, point);
-      break;
-    case SHORTEST_SINGLE:
-      fast_worked = FastDtoa(v, FAST_DTOA_SHORTEST_SINGLE, 0,
-                             vector, length, point);
-      break;
-    case FIXED:
-      fast_worked = FastFixedDtoa(v, requested_digits, vector, length, point);
-      break;
-    case PRECISION:
-      fast_worked = FastDtoa(v, FAST_DTOA_PRECISION, requested_digits,
-                             vector, length, point);
-      break;
-    default:
-      fast_worked = false;
-      DOUBLE_CONVERSION_UNREACHABLE();
+  bool fast_worked = false;
+  if (!round_half_to_even) {
+    switch (mode) {
+      case SHORTEST:
+        fast_worked = FastDtoa(v, FAST_DTOA_SHORTEST, 0, vector, length, point);
+        break;
+      case SHORTEST_SINGLE:
+        fast_worked = FastDtoa(v, FAST_DTOA_SHORTEST_SINGLE, 0,
+                               vector, length, point);
+        break;
+      case FIXED:
+        fast_worked = FastFixedDtoa(v, requested_digits, vector, length, point);
+        break;
+      case PRECISION:
+        fast_worked = FastDtoa(v, FAST_DTOA_PRECISION, requested_digits,
+                               vector, length, point);
+        break;
+      default:
+        fast_worked = false;
+        DOUBLE_CONVERSION_UNREACHABLE();
+    }
+    if (fast_worked) return;
   }
-  if (fast_worked) return;
 
   // If the fast dtoa didn't succeed use the slower bignum version.
   BignumDtoaMode bignum_mode = DtoaToBignumDtoaMode(mode);
-  BignumDtoa(v, bignum_mode, requested_digits, vector, length, point);
+  BignumDtoa(v, bignum_mode, requested_digits, vector, length, point, round_half_to_even);
   vector[*length] = '\0';
 }
 

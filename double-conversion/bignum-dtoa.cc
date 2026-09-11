@@ -76,18 +76,21 @@ static void GenerateShortestDigits(Bignum* numerator, Bignum* denominator,
 // Generates 'requested_digits' after the decimal point.
 static void BignumToFixed(int requested_digits, int* decimal_point,
                           Bignum* numerator, Bignum* denominator,
-                          Vector<char> buffer, int* length);
+                          Vector<char> buffer, int* length,
+                          bool round_half_to_even = false);
 // Generates 'count' digits of numerator/denominator.
 // Once 'count' digits have been produced rounds the result depending on the
 // remainder (remainders of exactly .5 round upwards). Might update the
 // decimal_point when rounding up (for example for 0.9999).
 static void GenerateCountedDigits(int count, int* decimal_point,
                                   Bignum* numerator, Bignum* denominator,
-                                  Vector<char> buffer, int* length);
+                                  Vector<char> buffer, int* length,
+                                  bool round_half_to_even = false);
 
 
 void BignumDtoa(double v, BignumDtoaMode mode, int requested_digits,
-                Vector<char> buffer, int* length, int* decimal_point) {
+                Vector<char> buffer, int* length, int* decimal_point,
+                bool round_half_to_even) {
   DOUBLE_CONVERSION_ASSERT(v > 0);
   DOUBLE_CONVERSION_ASSERT(!Double(v).IsSpecial());
   uint64_t significand;
@@ -155,12 +158,14 @@ void BignumDtoa(double v, BignumDtoaMode mode, int requested_digits,
     case BIGNUM_DTOA_FIXED:
       BignumToFixed(requested_digits, decimal_point,
                     &numerator, &denominator,
-                    buffer, length);
+                    buffer, length,
+                    round_half_to_even);
       break;
     case BIGNUM_DTOA_PRECISION:
       GenerateCountedDigits(requested_digits, decimal_point,
                             &numerator, &denominator,
-                            buffer, length);
+                            buffer, length,
+                            round_half_to_even);
       break;
     default:
       DOUBLE_CONVERSION_UNREACHABLE();
@@ -282,7 +287,8 @@ static void GenerateShortestDigits(Bignum* numerator, Bignum* denominator,
 // exponent (decimal_point), when rounding upwards.
 static void GenerateCountedDigits(int count, int* decimal_point,
                                   Bignum* numerator, Bignum* denominator,
-                                  Vector<char> buffer, int* length) {
+                                  Vector<char> buffer, int* length,
+                                  bool round_half_to_even) {
   DOUBLE_CONVERSION_ASSERT(count >= 0);
   if (count <= 0) {
     // No digits requested. The "last digit" store below would write buffer[count - 1].
@@ -302,7 +308,8 @@ static void GenerateCountedDigits(int count, int* decimal_point,
   // Generate the last digit.
   uint16_t digit;
   digit = numerator->DivideModuloIntBignum(*denominator);
-  if (Bignum::PlusCompare(*numerator, *numerator, *denominator) >= 0) {
+  int compare = Bignum::PlusCompare(*numerator, *numerator, *denominator);
+  if (compare > 0 || (compare == 0 && (round_half_to_even ? (digit % 2 != 0) : true))) {
     digit++;
   }
   DOUBLE_CONVERSION_ASSERT(digit <= 10);
@@ -330,7 +337,8 @@ static void GenerateCountedDigits(int count, int* decimal_point,
 // Input verifies:  1 <= (numerator + delta) / denominator < 10.
 static void BignumToFixed(int requested_digits, int* decimal_point,
                           Bignum* numerator, Bignum* denominator,
-                          Vector<char> buffer, int* length) {
+                          Vector<char> buffer, int* length,
+                          bool round_half_to_even) {
   // Note that we have to look at more than just the requested_digits, since
   // a number could be rounded up. Example: v=0.5 with requested_digits=0.
   // Even though the power of v equals 0 we can't just stop here.
@@ -350,9 +358,11 @@ static void BignumToFixed(int requested_digits, int* decimal_point,
     // Initially the fraction lies in range (1, 10]. Multiply the denominator
     // by 10 so that we can compare more easily.
     denominator->Times10();
-    if (Bignum::PlusCompare(*numerator, *numerator, *denominator) >= 0) {
+    int compare = Bignum::PlusCompare(*numerator, *numerator, *denominator);
+    if (compare > 0 || (compare == 0 && !round_half_to_even)) {
       // If the fraction is >= 0.5 then we have to include the rounded
-      // digit.
+      // digit. In half-to-even, the preceding digit is 0 (which is even),
+      // so exact halfway cases round down to 0.
       buffer[0] = '1';
       *length = 1;
       (*decimal_point)++;
@@ -367,7 +377,8 @@ static void BignumToFixed(int requested_digits, int* decimal_point,
     int needed_digits = (*decimal_point) + requested_digits;
     GenerateCountedDigits(needed_digits, decimal_point,
                           numerator, denominator,
-                          buffer, length);
+                          buffer, length,
+                          round_half_to_even);
   }
 }
 
