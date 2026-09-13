@@ -283,11 +283,25 @@ TEST(BignumDtoaZeroPrecision) {
   // without storing past the start of the buffer.
   BignumDtoa(1.0, BIGNUM_DTOA_PRECISION, -1, buffer, &length, &point);
   CHECK_EQ(0, length);
+  CHECK_EQ(0, point);
   CHECK(container[0] == '@');
   CHECK(container[1] == '@');
 
   BignumDtoa(123.456, BIGNUM_DTOA_PRECISION, -2, buffer, &length, &point);
   CHECK_EQ(0, length);
+  CHECK_EQ(0, point);
+  CHECK(container[0] == '@');
+  CHECK(container[1] == '@');
+
+  BignumDtoa(1.0, BIGNUM_DTOA_FIXED, -1, buffer, &length, &point);
+  CHECK_EQ(0, length);
+  CHECK_EQ(0, point);
+  CHECK(container[0] == '@');
+  CHECK(container[1] == '@');
+
+  BignumDtoa(123.456, BIGNUM_DTOA_FIXED, -2, buffer, &length, &point);
+  CHECK_EQ(0, length);
+  CHECK_EQ(0, point);
   CHECK(container[0] == '@');
   CHECK(container[1] == '@');
 }

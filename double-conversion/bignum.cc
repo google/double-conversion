@@ -231,7 +231,7 @@ void Bignum::SubtractBignum(const Bignum& other) {
 
 
 void Bignum::ShiftLeft(const int shift_amount) {
-  if (used_bigits_ == 0) {
+  if (shift_amount <= 0 || used_bigits_ == 0) {
     return;
   }
   exponent_ += static_cast<int16_t>(shift_amount / kBigitSize);
@@ -323,7 +323,7 @@ void Bignum::MultiplyByPowerOfTen(const int exponent) {
 
   DOUBLE_CONVERSION_ASSERT(exponent >= 0);
 
-  if (exponent == 0) {
+  if (exponent <= 0) {
     return;
   }
   if (used_bigits_ == 0) {
@@ -421,7 +421,7 @@ void Bignum::Square() {
 void Bignum::AssignPowerUInt16(uint16_t base, const int power_exponent) {
   DOUBLE_CONVERSION_ASSERT(base != 0);
   DOUBLE_CONVERSION_ASSERT(power_exponent >= 0);
-  if (power_exponent == 0) {
+  if (power_exponent <= 0) {
     AssignUInt16(1);
     return;
   }
