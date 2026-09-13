@@ -3114,6 +3114,19 @@ TEST(StringToDoubleHexString) {
   CHECK_EQ(-0.0, StrToD("-0x1p-2000", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
 
+  // Extreme exponents in hex-floats must not overflow internal exponent arithmetic.
+  CHECK_EQ(Double::Infinity(),
+           StrToD("0x1p2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0,
+           StrToD("0x1p-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0,
+           StrToD("-0x1p-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
   // Large-but-finite hex-floats must not overflow to infinity. Every value
   // below is a normal double well within range (2^1023 is the largest power of
   // two that fits).
@@ -5336,6 +5349,19 @@ TEST(StringToFloatHexString) {
   CHECK(all_used);
 
   CHECK_EQ(-0.0f, StrToF("-0x1p-2000", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  // Extreme exponents in hex-floats must not overflow internal exponent arithmetic.
+  CHECK_EQ(Single::Infinity(),
+           StrToF("0x1p2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f,
+           StrToF("0x1p-2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0f,
+           StrToF("-0x1p-2147483647", flags, 0.0f, &processed, &all_used));
   CHECK(all_used);
 
   CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),

@@ -307,6 +307,7 @@ static double RadixStringToIeee(Iterator* current,
 
   int64_t number = 0;
   int exponent = 0;
+  const int max_exponent = INT_MAX / 2;
   const int radix = (1 << radix_log_2);
   // Whether we have encountered a '.' and are parsing the decimal digits.
   // Only relevant if parse_as_hex_float is true.
@@ -324,13 +325,13 @@ static double RadixStringToIeee(Iterator* current,
     int digit;
     if (IsDecimalDigitForRadix(**current, radix)) {
       digit = static_cast<char>(**current) - '0';
-      if (post_decimal) exponent -= radix_log_2;
+      if (post_decimal && exponent > -(max_exponent / 2)) exponent -= radix_log_2;
     } else if (IsCharacterDigitForRadix(**current, radix, 'a')) {
       digit = static_cast<char>(**current) - 'a' + 10;
-      if (post_decimal) exponent -= radix_log_2;
+      if (post_decimal && exponent > -(max_exponent / 2)) exponent -= radix_log_2;
     } else if (IsCharacterDigitForRadix(**current, radix, 'A')) {
       digit = static_cast<char>(**current) - 'A' + 10;
-      if (post_decimal) exponent -= radix_log_2;
+      if (post_decimal && exponent > -(max_exponent / 2)) exponent -= radix_log_2;
     } else if (parse_as_hex_float && **current == '.') {
       post_decimal = true;
       Advance(current, separator, radix, end);
@@ -378,10 +379,10 @@ static double RadixStringToIeee(Iterator* current,
         if (!isDigit(**current, radix)) break;
         zero_tail = zero_tail && **current == '0';
         if (!post_decimal) {
-          if (exponent <= INT_MAX - radix_log_2) {
+          if (exponent <= max_exponent - radix_log_2) {
             exponent += radix_log_2;
           } else {
-            exponent = INT_MAX;
+            exponent = max_exponent;
           }
         }
       }
@@ -456,7 +457,14 @@ static double RadixStringToIeee(Iterator* current,
       if (Advance(current, kNoSeparator, radix, end)) break;
     }
     if (is_negative) written_exponent = -written_exponent;
-    exponent += written_exponent;
+    const int64_t combined = static_cast<int64_t>(exponent) + written_exponent;
+    if (combined > max_exponent) {
+      exponent = max_exponent;
+    } else if (combined < -max_exponent) {
+      exponent = -max_exponent;
+    } else {
+      exponent = static_cast<int>(combined);
+    }
   }
 
   if (exponent == 0 || number == 0) {
@@ -468,6 +476,12 @@ static double RadixStringToIeee(Iterator* current,
   }
 
   DOUBLE_CONVERSION_ASSERT(number != 0);
+  if (exponent > 100 * Double::kMaxExponent) {
+    return sign ? -Double::Infinity() : Double::Infinity();
+  }
+  if (exponent < -100 * Double::kMaxExponent) {
+    return SignedZero(sign);
+  }
   // number is an exact integer below 2^kSignificandSize, so number * 2^exponent
   // can be formed directly. Double(DiyFp(number, exponent)) would instead assume
   // a normalized significand: a hex-float like "0x1p1000" or "0x2p-1075" reaches
