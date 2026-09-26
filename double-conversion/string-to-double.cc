@@ -611,7 +611,10 @@ double StringToDoubleConverter::StringToIeee(
                 IsHexFloatString(current, end, separator_, allow_trailing_junk,
                                  allow_trailing_spaces);
 
-      if (!parse_as_hex_float && !isDigit(*current, 16)) {
+      // Without ALLOW_HEX the "0x" prefix only introduces a hex-float, so a
+      // literal that is not one is junk rather than a hex integer.
+      if (!parse_as_hex_float &&
+          (!(flags_ & ALLOW_HEX) || !isDigit(*current, 16))) {
         return junk_string_value_;
       }
 
