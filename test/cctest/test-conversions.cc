@@ -4267,6 +4267,38 @@ TEST(StringToDoubleSpecialValues) {
     CHECK_EQ(1.0, converter.StringToDouble("1234.0", 6, &processed));
     CHECK_EQ(0, processed);
   }
+
+  {
+    // Trailing spaces after a special value count as processed, as they do
+    // after a number, also when trailing junk is allowed too.
+    flags = StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+        StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+    StringToDoubleConverter converter(flags, 0.0, 1.0, "infinity", "NaN");
+
+    CHECK_EQ(42.0, converter.StringToDouble("42  x", 5, &processed));
+    CHECK_EQ(4, processed);
+
+    CHECK_EQ(Double::NaN(), converter.StringToDouble("NaN  x", 6, &processed));
+    CHECK_EQ(5, processed);
+
+    CHECK_EQ(Double::Infinity(),
+             converter.StringToDouble("infinity  x", 11, &processed));
+    CHECK_EQ(10, processed);
+
+    CHECK_EQ(-Double::Infinity(),
+             converter.StringToDouble("-infinity  ", 11, &processed));
+    CHECK_EQ(11, processed);
+
+    const uc16 nan16[] = { 'N', 'a', 'N', ' ', ' ', 'x' };
+    CHECK_EQ(Double::NaN(), converter.StringToDouble(nan16, 6, &processed));
+    CHECK_EQ(5, processed);
+
+    // Without ALLOW_TRAILING_SPACES the spaces are junk and not processed.
+    StringToDoubleConverter junk_only(StringToDoubleConverter::ALLOW_TRAILING_JUNK,
+                                      0.0, 1.0, "infinity", "NaN");
+    CHECK_EQ(Double::NaN(), junk_only.StringToDouble("NaN  x", 6, &processed));
+    CHECK_EQ(3, processed);
+  }
 }
 
 
@@ -6072,6 +6104,28 @@ TEST(StringToFloatSpecialValues) {
     // The match for "1NaN" triggers, and doesn't let the 1234.0 complete.
     CHECK_EQ(1.0f, converter.StringToDouble("1234.0", 6, &processed));
     CHECK_EQ(0, processed);
+  }
+
+  {
+    // Trailing spaces after a special value count as processed, as they do
+    // after a number, also when trailing junk is allowed too.
+    flags = StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+        StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+    StringToDoubleConverter converter(flags, 0.0f, 1.0f, "infinity", "NaN");
+
+    CHECK_EQ(42.0f, converter.StringToFloat("42  x", 5, &processed));
+    CHECK_EQ(4, processed);
+
+    CHECK_EQ(Single::NaN(), converter.StringToFloat("NaN  x", 6, &processed));
+    CHECK_EQ(5, processed);
+
+    CHECK_EQ(Single::Infinity(),
+             converter.StringToFloat("infinity  x", 11, &processed));
+    CHECK_EQ(10, processed);
+
+    CHECK_EQ(-Single::Infinity(),
+             converter.StringToFloat("-infinity  ", 11, &processed));
+    CHECK_EQ(11, processed);
   }
 }
 
