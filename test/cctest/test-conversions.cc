@@ -6148,6 +6148,49 @@ TEST(StringToDoubleFloatWhitespace) {
 }
 
 
+TEST(StringToDoubleNonAsciiByteIsNotWhitespace) {
+  int processed = 0;
+
+  const int flags = StringToDoubleConverter::ALLOW_LEADING_SPACES |
+      StringToDoubleConverter::ALLOW_TRAILING_SPACES |
+      StringToDoubleConverter::ALLOW_SPACES_AFTER_SIGN;
+
+  // Use 1.0 as junk_string_value and 2.0 as empty_string_value.
+  StringToDoubleConverter converter(flags, 2.0, 1.0, NULL, NULL);
+
+  // No byte above 0x7F is whitespace, whether or not 'char' is signed on this
+  // target. The byte 0xA0 is the one that aliases a kWhitespaceTable16 entry
+  // (U+00A0) once it is widened without sign extension.
+  for (int byte = 0x80; byte <= 0xFF; byte++) {
+    const char leading[] = { static_cast<char>(byte), '1' };
+    CHECK_EQ(1.0, converter.StringToDouble(leading, 2, &processed));
+    CHECK_EQ(0, processed);
+
+    const char trailing[] = { '1', static_cast<char>(byte) };
+    CHECK_EQ(1.0, converter.StringToDouble(trailing, 2, &processed));
+    CHECK_EQ(0, processed);
+
+    const char after_sign[] = { '-', static_cast<char>(byte), '2' };
+    CHECK_EQ(1.0, converter.StringToDouble(after_sign, 3, &processed));
+    CHECK_EQ(0, processed);
+
+    // A single such byte is junk, not an empty string.
+    const char alone[] = { static_cast<char>(byte) };
+    CHECK_EQ(1.0, converter.StringToDouble(alone, 1, &processed));
+    CHECK_EQ(0, processed);
+  }
+
+  const char nbsp_byte[] = { static_cast<char>(0xA0), '1' };
+  CHECK_EQ(1.0f, converter.StringToFloat(nbsp_byte, 2, &processed));
+  CHECK_EQ(0, processed);
+
+  // U+00A0 remains whitespace when it arrives as a 16-bit code unit.
+  const uc16 nbsp16[] = { 0x00A0, '1' };
+  CHECK_EQ(1.0, converter.StringToDouble(nbsp16, 2, &processed));
+  CHECK_EQ(2, processed);
+}
+
+
 TEST(StringToDoubleCaseInsensitiveSpecialValues) {
   int processed = 0;
 
