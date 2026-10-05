@@ -425,6 +425,18 @@ TEST(DtoaCorners) {
   CHECK_EQ(1, length);
   CHECK_EQ("1", buffer.start());
   CHECK(!sign);
+
+  DoubleToAscii(1.0, PRECISION, -1, buffer, &sign, &length, &point);
+  CHECK_EQ(0, length);
+  CHECK_EQ(0, point);
+  CHECK_EQ("", buffer.start());
+  CHECK(!sign);
+
+  DoubleToAscii(1.0, FIXED, -1, buffer, &sign, &length, &point);
+  CHECK_EQ(0, length);
+  CHECK_EQ(0, point);
+  CHECK_EQ("", buffer.start());
+  CHECK(!sign);
 }
 
 

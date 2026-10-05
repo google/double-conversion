@@ -403,7 +403,8 @@ void DoubleToStringConverter::DoubleToAscii(double v,
     *sign = false;
   }
 
-  if (mode == PRECISION && requested_digits == 0) {
+  if ((mode == PRECISION && requested_digits <= 0) ||
+      (mode == FIXED && requested_digits < 0)) {
     vector[0] = '\0';
     *length = 0;
     *point = 0;

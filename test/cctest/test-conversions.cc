@@ -3114,6 +3114,19 @@ TEST(StringToDoubleHexString) {
   CHECK_EQ(-0.0, StrToD("-0x1p-2000", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
 
+  // Extreme exponents in hex-floats must not overflow internal exponent arithmetic.
+  CHECK_EQ(Double::Infinity(),
+           StrToD("0x1p2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0,
+           StrToD("0x1p-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0,
+           StrToD("-0x1p-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
   // Large-but-finite hex-floats must not overflow to infinity. Every value
   // below is a normal double well within range (2^1023 is the largest power of
   // two that fits).
@@ -3250,6 +3263,31 @@ TEST(StringToDoubleHexString) {
   CHECK_EQ(Double::NaN(), StrToD("0x10000000000000001p0 ", flags, 0.0,
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
+
+  // Without ALLOW_HEX a hex literal that is not a hex-float is junk.
+  CHECK_EQ(Double::NaN(), StrToD("0x12", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0X1A", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("-0x12", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_HEX_FLOATS |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+
+  CHECK_EQ(Double::NaN(), StrToD("0x12", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x12p", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(), StrToD("0x12z", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(3.0, StrToD("0x3p0z", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(5, processed);
 
   flags = StringToDoubleConverter::ALLOW_HEX_FLOATS |
       StringToDoubleConverter::ALLOW_TRAILING_SPACES;
@@ -5363,6 +5401,19 @@ TEST(StringToFloatHexString) {
   CHECK_EQ(-0.0f, StrToF("-0x1p-2000", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
 
+  // Extreme exponents in hex-floats must not overflow internal exponent arithmetic.
+  CHECK_EQ(Single::Infinity(),
+           StrToF("0x1p2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f,
+           StrToF("0x1p-2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0f,
+           StrToF("-0x1p-2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
   CHECK_EQ(Single::NaN(), StrToF(" ", flags, Single::NaN(),
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
@@ -5450,6 +5501,19 @@ TEST(StringToFloatHexString) {
   CHECK_EQ(72057602627862528.0f,
            StrToF("0x1000002FFFFFFF8p0", flags, 0.0, &processed, &all_used));
   CHECK(all_used);
+
+  // Without ALLOW_HEX a hex literal that is not a hex-float is junk.
+  CHECK_EQ(Single::NaN(), StrToF("0x12", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  flags = StringToDoubleConverter::ALLOW_HEX_FLOATS |
+      StringToDoubleConverter::ALLOW_TRAILING_JUNK;
+
+  CHECK_EQ(Single::NaN(), StrToF("0x12z", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(3.0f, StrToF("0x3p0z", flags, 0.0, &processed, &all_used));
+  CHECK_EQ(5, processed);
 }
 
 
