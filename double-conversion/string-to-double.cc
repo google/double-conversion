@@ -449,10 +449,16 @@ static double RadixStringToIeee(Iterator* current,
     }
     int written_exponent = 0;
     while (IsDecimalDigitForRadix(**current, 10)) {
-      // No need to read exponents if they are too big. That could potentially overflow
-      // the `written_exponent` variable.
-      if (abs(written_exponent) <= 100 * Double::kMaxExponent) {
-        written_exponent = 10 * written_exponent + **current - '0';
+      // Saturate rather than stop reading digits. 'exponent' grows with the
+      // number of significand digits and can cancel a written exponent of any
+      // size, so a dropped digit would change the result.
+      int digit = **current - '0';
+      if (written_exponent >= max_exponent / 10
+          && !(written_exponent == max_exponent / 10
+               && digit <= max_exponent % 10)) {
+        written_exponent = max_exponent;
+      } else {
+        written_exponent = 10 * written_exponent + digit;
       }
       if (Advance(current, kNoSeparator, radix, end)) break;
     }

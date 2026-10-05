@@ -6290,6 +6290,64 @@ TEST(StringToDoubleNonAsciiSpecialValues) {
 }
 
 
+// Writes 'prefix', then 'zeros' times '0', then 'suffix' into the buffer and
+// returns the length. For literals that are too long to spell out.
+static int ZeroPaddedLiteral(char* buffer, const char* prefix, int zeros,
+                             const char* suffix) {
+  int length = 0;
+  for (; *prefix != '\0'; ++prefix) buffer[length++] = *prefix;
+  for (int i = 0; i < zeros; ++i) buffer[length++] = '0';
+  for (; *suffix != '\0'; ++suffix) buffer[length++] = *suffix;
+  return length;
+}
+
+
+TEST(StringToDoubleHexFloatLongExponent) {
+  // Every hex digit of the significand moves its binary exponent by 4, so a
+  // long significand can cancel a written exponent of any size. All digits of
+  // the written exponent therefore count. 250000 zeros stand for 2^1000000.
+  const int kZeros = 250000;
+  static char buffer[kZeros + 16];
+  static uc16 buffer16[kZeros + 16];
+  int processed = 0;
+  int length;
+
+  StringToDoubleConverter converter(StringToDoubleConverter::ALLOW_HEX_FLOATS,
+                                    0.0, Double::NaN(), NULL, NULL);
+
+  // 2^1000000 * 2^-1000000.
+  length = ZeroPaddedLiteral(buffer, "0x1", kZeros, "p-1000000");
+  CHECK_EQ(1.0, converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+  CHECK_EQ(1.0f, converter.StringToFloat(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  for (int i = 0; i < length; i++) {
+    buffer16[i] = buffer[i];
+  }
+  CHECK_EQ(1.0, converter.StringToDouble(buffer16, length, &processed));
+  CHECK_EQ(length, processed);
+
+  // 2^-1000000 * 2^1000000.
+  length = ZeroPaddedLiteral(buffer, "0x0.", kZeros - 1, "1p1000000");
+  CHECK_EQ(1.0, converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+  CHECK_EQ(1.0f, converter.StringToFloat(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  // A written exponent that outweighs the significand still decides the
+  // result.
+  length = ZeroPaddedLiteral(buffer, "0x1", kZeros, "p-10000000");
+  CHECK_EQ(0.0, converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  length = ZeroPaddedLiteral(buffer, "0x0.", kZeros - 1, "1p10000000");
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+}
+
+
 TEST(StringToTemplate) {
     // Test StringToDoubleConverter::StringTo<T>.
 
