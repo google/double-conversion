@@ -3185,6 +3185,34 @@ TEST(StringToDoubleHexString) {
                                            0.0, &processed, &all_used));
   CHECK(all_used);
 
+  // The same holds at the edges of the subnormal range, where rounding the
+  // significand to 53 bits first would land on zero or on the smallest normal:
+  // just above half the smallest subnormal, and more than half an ulp below
+  // the smallest normal.
+  CHECK_EQ(4.9406564584124654e-324, StrToD("0x20000000000001p-1128", flags,
+                                           0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(2.2250738585072009e-308, StrToD("0x7ffffffffffffbp-1077", flags,
+                                           0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  // Their neighbours still round to zero (an exact tie) and to the smallest
+  // normal.
+  CHECK_EQ(0.0, StrToD("0x20000000000000p-1128", flags, 0.0,
+                       &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(2.2250738585072014e-308, StrToD("0x7ffffffffffffep-1077", flags,
+                                           0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  // Rounding the significand to 53 bits carries into a 54th bit here; the exact
+  // value is just below the smallest subnormal and must round to it.
+  CHECK_EQ(4.9406564584124654e-324, StrToD("0xffffffffffffffp-1130", flags,
+                                           0.0, &processed, &all_used));
+  CHECK(all_used);
+
   CHECK_EQ(Double::NaN(), StrToD(" ", flags, Double::NaN(),
                                  &processed, &all_used));
   CHECK_EQ(0, processed);
