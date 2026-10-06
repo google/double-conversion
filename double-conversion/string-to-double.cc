@@ -308,6 +308,16 @@ static double RadixStringToIeee(Iterator* current,
   int64_t number = 0;
   int exponent = 0;
   const int max_exponent = INT_MAX / 2;
+  // A hex-float parsed as a double has its significand rounded to
+  // kSignificandSize bits below. That is the single correct rounding for a normal
+  // result, but a subnormal result is rounded again by ldexp into the narrower
+  // subnormal grid, so rounding to nearest here double-rounds. Retain the exact
+  // significand, its dropped-bit count and a sticky flag so a subnormal result can
+  // be rounded once, directly onto the 2^-1074 grid.
+  int64_t hex_exact_significand = 0;
+  int hex_dropped_bits = 0;
+  bool hex_significand_sticky = false;
+  bool hex_significand_overflowed = false;
   const int radix = (1 << radix_log_2);
   // Whether we have encountered a '.' and are parsing the decimal digits.
   // Only relevant if parse_as_hex_float is true.
@@ -363,6 +373,11 @@ static double RadixStringToIeee(Iterator* current,
 
       int dropped_bits_mask = ((1 << overflow_bits_count) - 1);
       int dropped_bits = static_cast<int>(number) & dropped_bits_mask;
+      if (parse_as_hex_float && read_as_double) {
+        hex_significand_overflowed = true;
+        hex_exact_significand = number;
+        hex_dropped_bits = overflow_bits_count;
+      }
       number >>= overflow_bits_count;
       exponent += overflow_bits_count;
 
@@ -403,6 +418,9 @@ static double RadixStringToIeee(Iterator* current,
           number |= 1;
         }
       } else {
+        if (hex_significand_overflowed) {
+          hex_significand_sticky = !zero_tail;
+        }
         int middle_value = (1 << (overflow_bits_count - 1));
         if (dropped_bits > middle_value) {
           number++;  // Rounding up.
@@ -418,6 +436,9 @@ static double RadixStringToIeee(Iterator* current,
         if ((number & ((int64_t)1 << kSignificandSize)) != 0) {
           exponent++;
           number >>= 1;
+          // The exact significand keeps its scale, so it now sits one more bit
+          // below exponent.
+          hex_dropped_bits++;
         }
       }
       break;
@@ -488,6 +509,32 @@ static double RadixStringToIeee(Iterator* current,
   // here with a small number and a large exponent, which DiyFpToUint64 then reads
   // as an overflow (infinity) or underflow (zero) rather than the finite result.
   double result = ldexp(static_cast<double>(number), exponent);
+  if (hex_significand_overflowed) {
+    // Whether the result is subnormal is decided from the exact significand
+    // and its scale, not from result: result has already been rounded twice,
+    // and the second rounding can land it on zero or on the smallest normal.
+    const int kDenormalExponent = -1074;
+    int scale = exponent - hex_dropped_bits;  // binary scale of the exact LSB
+    int drop = kDenormalExponent - scale;     // low bits to discard for the grid
+    // drop <= 0 is always a normal result. For drop >= 63 the exact value is
+    // below half the smallest subnormal, where the zero from ldexp is correct.
+    if (drop > 0 && drop < 63) {
+      int64_t high = hex_exact_significand >> drop;
+      // The smallest normal is 2^52 on the grid, and the exact value is below
+      // it exactly when high is.
+      if (high < static_cast<int64_t>(Double::kHiddenBit)) {
+        // Subnormal. Round the exact significand once, straight onto the
+        // 2^-1074 subnormal grid, instead of the round-to-nearest-then-ldexp
+        // double rounding.
+        int64_t low = hex_exact_significand & (((int64_t)1 << drop) - 1);
+        int64_t half = (int64_t)1 << (drop - 1);
+        bool round_up = low > half ||
+            (low == half && (hex_significand_sticky || (high & 1) != 0));
+        if (round_up) high++;
+        result = ldexp(static_cast<double>(high), kDenormalExponent);
+      }
+    }
+  }
   return sign ? -result : result;
 }
 
