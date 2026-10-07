@@ -306,7 +306,11 @@ static double RadixStringToIeee(Iterator* current,
   *result_is_junk = true;
 
   int64_t number = 0;
-  int exponent = 0;
+  // The exponent moves by radix_log_2 per input character, so 64 bits hold it
+  // exactly for any input length. Clamping it into the int range while reading
+  // the significand instead would lose magnitude that the written exponent is
+  // allowed to cancel.
+  int64_t unclamped_exponent = 0;
   const int max_exponent = INT_MAX / 2;
   const int radix = (1 << radix_log_2);
   // Whether we have encountered a '.' and are parsing the decimal digits.
@@ -325,13 +329,13 @@ static double RadixStringToIeee(Iterator* current,
     int digit;
     if (IsDecimalDigitForRadix(**current, radix)) {
       digit = static_cast<char>(**current) - '0';
-      if (post_decimal && exponent > -(max_exponent / 2)) exponent -= radix_log_2;
+      if (post_decimal) unclamped_exponent -= radix_log_2;
     } else if (IsCharacterDigitForRadix(**current, radix, 'a')) {
       digit = static_cast<char>(**current) - 'a' + 10;
-      if (post_decimal && exponent > -(max_exponent / 2)) exponent -= radix_log_2;
+      if (post_decimal) unclamped_exponent -= radix_log_2;
     } else if (IsCharacterDigitForRadix(**current, radix, 'A')) {
       digit = static_cast<char>(**current) - 'A' + 10;
-      if (post_decimal && exponent > -(max_exponent / 2)) exponent -= radix_log_2;
+      if (post_decimal) unclamped_exponent -= radix_log_2;
     } else if (parse_as_hex_float && **current == '.') {
       post_decimal = true;
       Advance(current, separator, radix, end);
@@ -364,7 +368,7 @@ static double RadixStringToIeee(Iterator* current,
       int dropped_bits_mask = ((1 << overflow_bits_count) - 1);
       int dropped_bits = static_cast<int>(number) & dropped_bits_mask;
       number >>= overflow_bits_count;
-      exponent += overflow_bits_count;
+      unclamped_exponent += overflow_bits_count;
 
       bool zero_tail = true;
       for (;;) {
@@ -378,13 +382,7 @@ static double RadixStringToIeee(Iterator* current,
         }
         if (!isDigit(**current, radix)) break;
         zero_tail = zero_tail && **current == '0';
-        if (!post_decimal) {
-          if (exponent <= max_exponent - radix_log_2) {
-            exponent += radix_log_2;
-          } else {
-            exponent = max_exponent;
-          }
-        }
+        if (!post_decimal) unclamped_exponent += radix_log_2;
       }
 
       if (!parse_as_hex_float && !allow_trailing_junk) {
@@ -416,7 +414,7 @@ static double RadixStringToIeee(Iterator* current,
 
         // Rounding up may cause overflow.
         if ((number & ((int64_t)1 << kSignificandSize)) != 0) {
-          exponent++;
+          unclamped_exponent++;
           number >>= 1;
         }
       }
@@ -447,30 +445,37 @@ static double RadixStringToIeee(Iterator* current,
       Advance(current, kNoSeparator, radix, end);
       DOUBLE_CONVERSION_ASSERT(*current != end);
     }
-    int written_exponent = 0;
+    // The written exponent is bounded only by the input length, so it still
+    // has to saturate, but stopping short of a written digit would change the
+    // result: the significand's exponent can cancel a written exponent of any
+    // size. Saturate past twice the largest magnitude that exponent can reach
+    // (radix_log_2 per character, over a length that is an int), so that a
+    // saturated written exponent always outweighs the significand and the sum
+    // keeps the sign of the exponent that was written.
+    const int64_t max_written_exponent =
+        2 * static_cast<int64_t>(radix_log_2) * INT_MAX;
+    int64_t written_exponent = 0;
     while (IsDecimalDigitForRadix(**current, 10)) {
-      // Saturate rather than stop reading digits. 'exponent' grows with the
-      // number of significand digits and can cancel a written exponent of any
-      // size, so a dropped digit would change the result.
-      int digit = **current - '0';
-      if (written_exponent >= max_exponent / 10
-          && !(written_exponent == max_exponent / 10
-               && digit <= max_exponent % 10)) {
-        written_exponent = max_exponent;
-      } else {
-        written_exponent = 10 * written_exponent + digit;
+      written_exponent = 10 * written_exponent + (**current - '0');
+      if (written_exponent > max_written_exponent) {
+        written_exponent = max_written_exponent;
       }
       if (Advance(current, kNoSeparator, radix, end)) break;
     }
     if (is_negative) written_exponent = -written_exponent;
-    const int64_t combined = static_cast<int64_t>(exponent) + written_exponent;
-    if (combined > max_exponent) {
-      exponent = max_exponent;
-    } else if (combined < -max_exponent) {
-      exponent = -max_exponent;
-    } else {
-      exponent = static_cast<int>(combined);
-    }
+    unclamped_exponent += written_exponent;
+  }
+
+  // Both parts were accumulated without loss, so clamping their sum now cannot
+  // cancel either of them. Below, an exponent this far out of range only has
+  // to keep its sign.
+  int exponent;
+  if (unclamped_exponent > max_exponent) {
+    exponent = max_exponent;
+  } else if (unclamped_exponent < -max_exponent) {
+    exponent = -max_exponent;
+  } else {
+    exponent = static_cast<int>(unclamped_exponent);
   }
 
   if (exponent == 0 || number == 0) {

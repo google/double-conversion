@@ -6307,8 +6307,8 @@ TEST(StringToDoubleHexFloatLongExponent) {
   // long significand can cancel a written exponent of any size. All digits of
   // the written exponent therefore count. 250000 zeros stand for 2^1000000.
   const int kZeros = 250000;
-  static char buffer[kZeros + 16];
-  static uc16 buffer16[kZeros + 16];
+  static char buffer[kZeros + 32];
+  static uc16 buffer16[kZeros + 32];
   int processed = 0;
   int length;
 
@@ -6344,6 +6344,33 @@ TEST(StringToDoubleHexFloatLongExponent) {
   length = ZeroPaddedLiteral(buffer, "0x0.", kZeros - 1, "1p10000000");
   CHECK_EQ(Double::Infinity(),
            converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  // A written exponent beyond 32 bits, and one beyond the point where it has
+  // to saturate, keep deciding the result in the right direction. No
+  // significand fits in an input long enough to cancel them.
+  length = ZeroPaddedLiteral(buffer, "0x1", kZeros, "p-4294967297");
+  CHECK_EQ(0.0, converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+  CHECK_EQ(0.0f, converter.StringToFloat(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  length = ZeroPaddedLiteral(buffer, "0x0.", kZeros - 1, "1p4294967297");
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  length = ZeroPaddedLiteral(buffer, "0x1", kZeros, "p-99999999999999999999");
+  CHECK_EQ(0.0, converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+
+  length = ZeroPaddedLiteral(buffer, "0x0.", kZeros - 1,
+                             "1p99999999999999999999");
+  CHECK_EQ(Double::Infinity(),
+           converter.StringToDouble(buffer, length, &processed));
+  CHECK_EQ(length, processed);
+  CHECK_EQ(Single::Infinity(),
+           converter.StringToFloat(buffer, length, &processed));
   CHECK_EQ(length, processed);
 }
 
