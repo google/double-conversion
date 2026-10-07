@@ -137,15 +137,29 @@ static const uc16 kWhitespaceTable16[] = {
 static const int kWhitespaceTable16Length = DOUBLE_CONVERSION_ARRAY_SIZE(kWhitespaceTable16);
 
 
-static bool isWhitespace(int x) {
-  if (x < 128) {
-    for (int i = 0; i < kWhitespaceTable7Length; i++) {
-      if (kWhitespaceTable7[i] == x) return true;
-    }
-  } else {
-    for (int i = 0; i < kWhitespaceTable16Length; i++) {
-      if (kWhitespaceTable16[i] == x) return true;
-    }
+static bool isWhitespace7(int x) {
+  for (int i = 0; i < kWhitespaceTable7Length; i++) {
+    if (kWhitespaceTable7[i] == x) return true;
+  }
+  return false;
+}
+
+
+// A char holds a single byte, which cannot encode any of the code points in
+// kWhitespaceTable16 (every entry but 160 is above 0xFF), so the byte path
+// consults the 7-bit table only. Selecting the table from the code-unit type
+// rather than from the promoted value also keeps the result independent of
+// whether 'char' is signed: where it is unsigned, the byte 0xA0 would reach
+// the 16-bit table and match its U+00A0 entry.
+static bool isWhitespace(char x) {
+  return isWhitespace7(x);
+}
+
+
+static bool isWhitespace(uc16 x) {
+  if (x < 128) return isWhitespace7(x);
+  for (int i = 0; i < kWhitespaceTable16Length; i++) {
+    if (kWhitespaceTable16[i] == x) return true;
   }
   return false;
 }
