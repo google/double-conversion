@@ -290,7 +290,6 @@ static void GenerateShortestDigits(Bignum* numerator, Bignum* denominator,
 static void GenerateCountedDigits(int count, int* decimal_point,
                                   Bignum* numerator, Bignum* denominator,
                                   Vector<char> buffer, int* length) {
-  DOUBLE_CONVERSION_ASSERT(count >= 0);
   if (count <= 0) {
     // No digits requested. The "last digit" store below would write buffer[count - 1].
     *length = 0;

@@ -321,8 +321,6 @@ void Bignum::MultiplyByPowerOfTen(const int exponent) {
       { kFive1, kFive2, kFive3, kFive4, kFive5, kFive6,
         kFive7, kFive8, kFive9, kFive10, kFive11, kFive12 };
 
-  DOUBLE_CONVERSION_ASSERT(exponent >= 0);
-
   if (exponent <= 0) {
     return;
   }
@@ -420,7 +418,6 @@ void Bignum::Square() {
 
 void Bignum::AssignPowerUInt16(uint16_t base, const int power_exponent) {
   DOUBLE_CONVERSION_ASSERT(base != 0);
-  DOUBLE_CONVERSION_ASSERT(power_exponent >= 0);
   if (power_exponent <= 0) {
     AssignUInt16(1);
     return;
