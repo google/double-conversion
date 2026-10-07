@@ -411,12 +411,19 @@ void DoubleToStringConverter::DoubleToAscii(double v,
     return;
   }
 
-  // In SHORTEST_SINGLE mode the value is rendered as a single. A positive
-  // double below the smallest positive float rounds to +0.0f, which is a
-  // single zero even though the double is non-zero. Grisu3 would then take the
-  // boundaries from Single(0.0f), whose NormalizedBoundaries precondition
-  // (value > 0) is violated, and emit far more digits than the buffer holds.
-  if (v == 0 || (mode == SHORTEST_SINGLE && static_cast<float>(v) == 0.0f)) {
+  // In SHORTEST_SINGLE mode the value is rendered as a single, so generate the
+  // digits of static_cast<float>(v) rather than of v. Grisu3 takes the
+  // boundaries from the single but the digits from the value it is given, and
+  // a double just below a power of two can round up to it as a single (e.g.
+  // 0.99999999 -> 1.0f). Such a double lies in the binade below the single's
+  // boundaries, and digit generation then yields half the single ("5",
+  // point 0). A positive double below the smallest positive float becomes
+  // +0.0f and is rendered by the zero case below.
+  if (mode == SHORTEST_SINGLE) {
+    v = static_cast<float>(v);
+  }
+
+  if (v == 0) {
     vector[0] = '0';
     vector[1] = '\0';
     *length = 1;
