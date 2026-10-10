@@ -249,8 +249,10 @@ TEST(Strtod) {
   // (exponent + digit count). They stay out of the double range.
   CHECK_EQ(Double::Infinity(), StrtodChar("1", INT_MAX));
   CHECK_EQ(Double::Infinity(), StrtodChar("10", INT_MAX));
+  CHECK_EQ(Double::Infinity(), StrtodChar("10000000000", INT_MAX));
   CHECK_EQ(0.0, StrtodChar("1", INT_MIN));
   CHECK_EQ(0.0, StrtodChar("10", INT_MIN));
+  CHECK_EQ(0.0, StrtodChar("10000000000", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -542,7 +544,9 @@ TEST(StrtodTrimmed) {
 
   // Extreme exponents must not overflow the internal exponent arithmetic.
   CHECK_EQ(Double::Infinity(), StrtodTrimmedChar("1", INT_MAX));
+  CHECK_EQ(Double::Infinity(), StrtodTrimmedChar("12345", INT_MAX));
   CHECK_EQ(0.0, StrtodTrimmedChar("1", INT_MIN));
+  CHECK_EQ(0.0, StrtodTrimmedChar("12345", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -839,8 +843,10 @@ TEST(Strtof) {
   // Extreme exponents must not overflow the internal exponent arithmetic.
   CHECK_EQ(Single::Infinity(), StrtofChar("1", INT_MAX));
   CHECK_EQ(Single::Infinity(), StrtofChar("10", INT_MAX));
+  CHECK_EQ(Single::Infinity(), StrtofChar("10000000000", INT_MAX));
   CHECK_EQ(0.0f, StrtofChar("1", INT_MIN));
   CHECK_EQ(0.0f, StrtofChar("10", INT_MIN));
+  CHECK_EQ(0.0f, StrtofChar("10000000000", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -1035,7 +1041,9 @@ TEST(StrtofTrimmed) {
 
   // Extreme exponents must not overflow the internal exponent arithmetic.
   CHECK_EQ(Single::Infinity(), StrtofTrimmedChar("1", INT_MAX));
+  CHECK_EQ(Single::Infinity(), StrtofTrimmedChar("12345", INT_MAX));
   CHECK_EQ(0.0f, StrtofTrimmedChar("1", INT_MIN));
+  CHECK_EQ(0.0f, StrtofTrimmedChar("12345", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86

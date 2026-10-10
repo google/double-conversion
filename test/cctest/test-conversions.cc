@@ -2440,6 +2440,19 @@ TEST(StringToDoubleVarious) {
 
   CHECK_EQ(Double::NaN(), StrToD(" 42", flags, 0.0, &processed, &all_used));
   CHECK_EQ(0, processed);
+
+  // Extreme exponents in decimal strings must not overflow internal exponent arithmetic.
+  CHECK_EQ(Double::Infinity(), StrToD("1e2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0, StrToD("1e-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0, StrToD("-1e-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0, StrToD("0.0000000001e-2147483647", flags, 0.0, &processed, &all_used));
+  CHECK(all_used);
 }
 
 
@@ -4746,6 +4759,19 @@ TEST(StringToFloatVarious) {
 
   CHECK_EQ(Double::NaN(), StrToF(" 42", flags, 0.0f, &processed, &all_used));
   CHECK_EQ(0, processed);
+
+  // Extreme exponents in decimal strings must not overflow internal exponent arithmetic.
+  CHECK_EQ(Single::Infinity(), StrToF("1e2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("1e-2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(-0.0f, StrToF("-1e-2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(0.0f, StrToF("0.0000000001e-2147483647", flags, 0.0f, &processed, &all_used));
+  CHECK(all_used);
 }
 
 TEST(StringToFloatEmptyString) {
