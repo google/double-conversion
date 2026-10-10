@@ -840,8 +840,13 @@ double StringToDoubleConverter::StringToIeee(
   {
     const int64_t combined =
         static_cast<int64_t>(exponent) + insignificant_digits;
-    exponent = combined > max_exponent ? max_exponent
-                                       : static_cast<int>(combined);
+    if (combined > max_exponent) {
+      exponent = max_exponent;
+    } else if (combined < -max_exponent) {
+      exponent = -max_exponent;
+    } else {
+      exponent = static_cast<int>(combined);
+    }
   }
 
   if (octal) {
