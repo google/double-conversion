@@ -394,7 +394,6 @@ void DoubleToStringConverter::DoubleToAscii(double v,
                                             int* point) {
   Vector<char> vector(buffer, buffer_length);
   DOUBLE_CONVERSION_ASSERT(!Double(v).IsSpecial());
-  DOUBLE_CONVERSION_ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
 
   if (Double(v).Sign() < 0) {
     *sign = true;
@@ -410,6 +409,7 @@ void DoubleToStringConverter::DoubleToAscii(double v,
     *point = 0;
     return;
   }
+  DOUBLE_CONVERSION_ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
 
   // In SHORTEST_SINGLE mode the value is rendered as a single. A positive
   // double below the smallest positive float rounds to +0.0f, which is a
