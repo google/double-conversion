@@ -394,7 +394,6 @@ void DoubleToStringConverter::DoubleToAscii(double v,
                                             int* point) {
   Vector<char> vector(buffer, buffer_length);
   DOUBLE_CONVERSION_ASSERT(!Double(v).IsSpecial());
-  DOUBLE_CONVERSION_ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE || requested_digits >= 0);
 
   if (Double(v).Sign() < 0) {
     *sign = true;
