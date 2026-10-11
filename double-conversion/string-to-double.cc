@@ -614,6 +614,9 @@ double StringToDoubleConverter::StringToIeee(
       if (!allow_trailing_junk && AdvanceToNonspace(&current, end)) {
         return junk_string_value_;
       }
+      if (allow_trailing_spaces) {
+        AdvanceToNonspace(&current, end);
+      }
 
       *processed_characters_count = static_cast<int>(current - input);
       return sign ? -Double::Infinity() : Double::Infinity();
@@ -631,6 +634,9 @@ double StringToDoubleConverter::StringToIeee(
       }
       if (!allow_trailing_junk && AdvanceToNonspace(&current, end)) {
         return junk_string_value_;
+      }
+      if (allow_trailing_spaces) {
+        AdvanceToNonspace(&current, end);
       }
 
       *processed_characters_count = static_cast<int>(current - input);
