@@ -101,6 +101,17 @@ TEST(DtoaVariousDoubles) {
   CHECK_EQ("0", buffer.start());
   CHECK_EQ(1, point);
 
+  // A double just below a power of two can round up to it as a single. It must
+  // render as that single, not as half of it.
+  DoubleToAscii(0.99999999, SHORTEST_SINGLE, 0, buffer, &sign, &length, &point);
+  CHECK_EQ("1", buffer.start());
+  CHECK_EQ(1, point);
+
+  DoubleToAscii(1023.999999, SHORTEST_SINGLE, 0,
+                buffer, &sign, &length, &point);
+  CHECK_EQ("1024", buffer.start());
+  CHECK_EQ(4, point);
+
   DoubleToAscii(0.0, FIXED, 2, buffer, &sign, &length, &point);
   CHECK_EQ(1, length);
   CHECK_EQ("0", buffer.start());
