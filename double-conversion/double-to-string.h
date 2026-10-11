@@ -380,9 +380,15 @@ class DoubleToStringConverter {
   // for those additional padding digits. Given that min_exponent_width
   // is clamped to 5, the result might thus have at most 2 additional characters.
   // The result has never more than
-  // kMaxPrecisionDigits + max_leading_padding_zeroes_in_precision_mode + 2
+  // kMaxPrecisionDigits
+  //   + max(max_leading_padding_zeroes_in_precision_mode,
+  //         max_trailing_padding_zeroes_in_precision_mode)
+  //   + 2
   // characters when it is returned in decimal format (the sign, the decimal
-  // point, and the leading zeroes, which include the '0' before the point).
+  // point, and the padding zeroes). A small-magnitude value pads with leading
+  // zeroes (which include the '0' before the point), while a large-magnitude
+  // value pads with trailing zeroes before the point; whichever padding limit
+  // is larger bounds the result.
   // In addition, the buffer must be able to hold the trailing '\0' character.
   bool ToPrecision(double value,
                    int precision,

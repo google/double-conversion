@@ -1370,6 +1370,24 @@ TEST(DoubleToStringMaximumResultLength) {
   CHECK_EQ(DoubleToStringConverter::kMaxPrecisionDigits + 9,
            builder.position());
   builder.Finalize();
+
+  // A large-magnitude value pads with trailing zeroes before the point, so the
+  // decimal result is bounded by max_trailing_padding_zeroes_in_precision_mode
+  // rather than the leading padding.
+  const int kMaxTrailingPadding = 30;
+  int trailing_flags = flags |
+      DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
+      DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT;
+  DoubleToStringConverter dc3(trailing_flags, "Infinity", "NaN", 'e', -6, 21, 0,
+                              kMaxTrailingPadding, 5);
+
+  builder.Reset();
+  CHECK(dc3.ToPrecision(
+      -1.54e148, DoubleToStringConverter::kMaxPrecisionDigits, &builder));
+  CHECK_EQ(
+      DoubleToStringConverter::kMaxPrecisionDigits + kMaxTrailingPadding + 2,
+      builder.position());
+  builder.Finalize();
 }
 
 
