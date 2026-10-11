@@ -62,6 +62,42 @@ static float StrtofTrimmedChar(const char* str, int exponent) {
 }
 
 
+// These regression tests need slightly more than 1 GiB on 32-bit-int targets.
+// Keep them opt-in so ordinary test runs do not require that much memory:
+// DOUBLE_CONVERSION_RUN_LARGE_TESTS=1 test/cctest/cctest StrtodLargeTrailingZeros
+// DOUBLE_CONVERSION_RUN_LARGE_TESTS=1 test/cctest/cctest StrtodLargeSignificand
+static void CheckLargeExponent(bool trailing_zeros) {
+  const char* run_large_tests = getenv("DOUBLE_CONVERSION_RUN_LARGE_TESTS");
+  if (run_large_tests == NULL || strcmp(run_large_tests, "1") != 0) return;
+
+  // TrimAndCut initially clamps INT_MAX to INT_MAX / 2. The adjustment for
+  // either trailing zeros or digits beyond the 780-digit limit must still
+  // exceed INT_MAX when added to that clamped exponent.
+  const int length = INT_MAX / 2 + 1000;
+  char* digits = new char[length];
+  memset(digits, '0', length);
+  digits[0] = '1';
+  if (!trailing_zeros) digits[length - 1] = '1';
+
+  Vector<const char> buffer(digits, length);
+  CHECK_EQ(Double::Infinity(), Strtod(buffer, INT_MAX));
+  CHECK_EQ(Single::Infinity(), Strtof(buffer, INT_MAX));
+  delete[] digits;
+}
+
+
+TEST(StrtodLargeTrailingZeros) {
+  // Exercise the exponent adjustment in TrimAndCut.
+  CheckLargeExponent(true);
+}
+
+
+TEST(StrtodLargeSignificand) {
+  // Exercise the exponent adjustment in CutToMaxSignificantDigits.
+  CheckLargeExponent(false);
+}
+
+
 TEST(Strtod) {
   Vector<const char> vector;
 
@@ -249,8 +285,10 @@ TEST(Strtod) {
   // (exponent + digit count). They stay out of the double range.
   CHECK_EQ(Double::Infinity(), StrtodChar("1", INT_MAX));
   CHECK_EQ(Double::Infinity(), StrtodChar("10", INT_MAX));
+  CHECK_EQ(Double::Infinity(), StrtodChar("10000000000", INT_MAX));
   CHECK_EQ(0.0, StrtodChar("1", INT_MIN));
   CHECK_EQ(0.0, StrtodChar("10", INT_MIN));
+  CHECK_EQ(0.0, StrtodChar("10000000000", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -542,7 +580,9 @@ TEST(StrtodTrimmed) {
 
   // Extreme exponents must not overflow the internal exponent arithmetic.
   CHECK_EQ(Double::Infinity(), StrtodTrimmedChar("1", INT_MAX));
+  CHECK_EQ(Double::Infinity(), StrtodTrimmedChar("12345", INT_MAX));
   CHECK_EQ(0.0, StrtodTrimmedChar("1", INT_MIN));
+  CHECK_EQ(0.0, StrtodTrimmedChar("12345", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -839,8 +879,10 @@ TEST(Strtof) {
   // Extreme exponents must not overflow the internal exponent arithmetic.
   CHECK_EQ(Single::Infinity(), StrtofChar("1", INT_MAX));
   CHECK_EQ(Single::Infinity(), StrtofChar("10", INT_MAX));
+  CHECK_EQ(Single::Infinity(), StrtofChar("10000000000", INT_MAX));
   CHECK_EQ(0.0f, StrtofChar("1", INT_MIN));
   CHECK_EQ(0.0f, StrtofChar("10", INT_MIN));
+  CHECK_EQ(0.0f, StrtofChar("10000000000", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86
@@ -1035,7 +1077,9 @@ TEST(StrtofTrimmed) {
 
   // Extreme exponents must not overflow the internal exponent arithmetic.
   CHECK_EQ(Single::Infinity(), StrtofTrimmedChar("1", INT_MAX));
+  CHECK_EQ(Single::Infinity(), StrtofTrimmedChar("12345", INT_MAX));
   CHECK_EQ(0.0f, StrtofTrimmedChar("1", INT_MIN));
+  CHECK_EQ(0.0f, StrtofTrimmedChar("12345", INT_MIN));
 
   // The following number is the result of 89255.0/1e-22. Both floating-point
   // numbers can be accurately represented with doubles. However on Linux,x86

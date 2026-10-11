@@ -92,6 +92,20 @@ static const int kExactPowersOfTenSize = DOUBLE_CONVERSION_ARRAY_SIZE(exact_powe
 // we round up to 780.
 static const int kMaxSignificantDecimalDigits = 780;
 
+// The public Strtod entry points accept an arbitrary int exponent, which is
+// later combined with the digit count (exponent + buffer.length()). For
+// exponents near INT_MAX that addition signed-overflows. Any exponent past
+// this range is far outside the representable double range, so clamping it
+// leaves the result unchanged. string-to-double.cc caps its parsed exponent
+// the same way and for the same reason.
+static int ClampExponent(int exponent) {
+  const int kMaxExponent = INT_MAX / 2;
+  if (exponent > kMaxExponent) return kMaxExponent;
+  if (exponent < -kMaxExponent) return -kMaxExponent;
+  return exponent;
+}
+
+
 static Vector<const char> TrimLeadingZeros(Vector<const char> buffer) {
   for (int i = 0; i < buffer.length(); i++) {
     if (buffer[i] != '0') {
@@ -114,22 +128,9 @@ static void CutToMaxSignificantDigits(Vector<const char> buffer,
   // Set the last digit to be non-zero. This is sufficient to guarantee
   // correct rounding.
   significant_buffer[kMaxSignificantDecimalDigits - 1] = '1';
-  *significant_exponent =
-      exponent + (buffer.length() - kMaxSignificantDecimalDigits);
-}
-
-
-// The public Strtod entry points accept an arbitrary int exponent, which is
-// later combined with the digit count (exponent + buffer.length()). For
-// exponents near INT_MAX that addition signed-overflows. Any exponent past
-// this range is far outside the representable double range, so clamping it
-// leaves the result unchanged. string-to-double.cc caps its parsed exponent
-// the same way and for the same reason.
-static int ClampExponent(int exponent) {
-  const int kMaxExponent = INT_MAX / 2;
-  if (exponent > kMaxExponent) return kMaxExponent;
-  if (exponent < -kMaxExponent) return -kMaxExponent;
-  return exponent;
+  const int64_t updated =
+      static_cast<int64_t>(exponent) + (buffer.length() - kMaxSignificantDecimalDigits);
+  *significant_exponent = ClampExponent(updated > INT_MAX ? INT_MAX : (updated < -INT_MAX ? -INT_MAX : static_cast<int>(updated)));
 }
 
 
@@ -143,7 +144,9 @@ static void TrimAndCut(Vector<const char> buffer, int exponent,
   exponent = ClampExponent(exponent);
   Vector<const char> left_trimmed = TrimLeadingZeros(buffer);
   Vector<const char> right_trimmed = TrimTrailingZeros(left_trimmed);
-  exponent += left_trimmed.length() - right_trimmed.length();
+  const int64_t trailing_zeros = left_trimmed.length() - right_trimmed.length();
+  const int64_t intermediate = static_cast<int64_t>(exponent) + trailing_zeros;
+  exponent = ClampExponent(intermediate > INT_MAX ? INT_MAX : (intermediate < -INT_MAX ? -INT_MAX : static_cast<int>(intermediate)));
   if (right_trimmed.length() > kMaxSignificantDecimalDigits) {
     (void) space_size;  // Mark variable as used.
     DOUBLE_CONVERSION_ASSERT(space_size >= kMaxSignificantDecimalDigits);
@@ -482,6 +485,7 @@ static bool AssertTrimmedDigits(const Vector<const char>& buffer) {
 double StrtodTrimmed(Vector<const char> trimmed, int exponent) {
   DOUBLE_CONVERSION_ASSERT(trimmed.length() <= kMaxSignificantDecimalDigits);
   DOUBLE_CONVERSION_ASSERT(AssertTrimmedDigits(trimmed));
+  exponent = ClampExponent(exponent);
   double guess;
   const bool is_correct = ComputeGuess(trimmed, exponent, &guess);
   if (is_correct) {
@@ -547,6 +551,7 @@ float Strtof(Vector<const char> buffer, int exponent) {
 float StrtofTrimmed(Vector<const char> trimmed, int exponent) {
   DOUBLE_CONVERSION_ASSERT(trimmed.length() <= kMaxSignificantDecimalDigits);
   DOUBLE_CONVERSION_ASSERT(AssertTrimmedDigits(trimmed));
+  exponent = ClampExponent(exponent);
 
   double double_guess;
   bool is_correct = ComputeGuess(trimmed, exponent, &double_guess);
