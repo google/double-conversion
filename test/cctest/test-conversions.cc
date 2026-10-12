@@ -3596,6 +3596,20 @@ TEST(StringToDoubleOctalString) {
            StrToD("01234567e0", flags, Double::NaN(), &processed, &all_used));
   CHECK_EQ(0, processed);
 
+  CHECK_EQ(Double::NaN(),
+           StrToD("00.5", flags, Double::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(Double::NaN(),
+           StrToD("00e2", flags, Double::NaN(), &processed, &all_used));
+  CHECK_EQ(0, processed);
+
+  CHECK_EQ(0.5, StrToD("0.5", flags, Double::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
+  CHECK_EQ(8.5, StrToD("008.5", flags, Double::NaN(), &processed, &all_used));
+  CHECK(all_used);
+
 
   flags = StringToDoubleConverter::ALLOW_OCTALS |
       StringToDoubleConverter::ALLOW_TRAILING_JUNK;
@@ -3752,6 +3766,14 @@ TEST(StringToDoubleOctalString) {
   CHECK_EQ(342391.0,
            StrToD("01234567e", flags, Double::NaN(), &processed, &all_used));
   CHECK_EQ(8, processed);
+
+  CHECK_EQ(0.0,
+           StrToD("00.5", flags, Double::NaN(), &processed, &all_used));
+  CHECK_EQ(2, processed);
+
+  CHECK_EQ(0.0,
+           StrToD("00e2", flags, Double::NaN(), &processed, &all_used));
+  CHECK_EQ(2, processed);
 
   flags = StringToDoubleConverter::ALLOW_OCTALS |
       StringToDoubleConverter::ALLOW_TRAILING_SPACES |
