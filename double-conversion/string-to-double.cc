@@ -670,6 +670,7 @@ double StringToDoubleConverter::StringToIeee(
   }
 
   bool leading_zero = false;
+  bool multiple_leading_zeros = false;
   if (*current == '0') {
     if (Advance(&current, separator_, 10, end)) {
       *processed_characters_count = static_cast<int>(current - input);
@@ -716,6 +717,7 @@ double StringToDoubleConverter::StringToIeee(
 
     // Ignore leading zeros in the integer part.
     while (*current == '0') {
+      multiple_leading_zeros = true;
       if (Advance(&current, separator_, 10, end)) {
         *processed_characters_count = static_cast<int>(current - input);
         return SignedZero(sign);
@@ -747,7 +749,9 @@ double StringToDoubleConverter::StringToIeee(
   }
 
   if (significant_digits == 0) {
-    octal = false;
+    if (!multiple_leading_zeros) {
+      octal = false;
+    }
   }
 
   if (*current == '.') {
@@ -882,19 +886,23 @@ double StringToDoubleConverter::StringToIeee(
 
   if (octal) {
     double result;
-    bool result_is_junk;
-    char* start = buffer;
-    result = RadixStringToIeee<3>(&start,
-                                  buffer + buffer_pos,
-                                  sign,
-                                  separator_,
-                                  false, // Don't parse as hex_float.
-                                  allow_trailing_junk,
-                                  allow_trailing_spaces,
-                                  junk_string_value_,
-                                  read_as_double,
-                                  &result_is_junk);
-    DOUBLE_CONVERSION_ASSERT(!result_is_junk);
+    if (buffer_pos == 0) {
+      result = SignedZero(sign);
+    } else {
+      bool result_is_junk;
+      char* start = buffer;
+      result = RadixStringToIeee<3>(&start,
+                                    buffer + buffer_pos,
+                                    sign,
+                                    separator_,
+                                    false, // Don't parse as hex_float.
+                                    allow_trailing_junk,
+                                    allow_trailing_spaces,
+                                    junk_string_value_,
+                                    read_as_double,
+                                    &result_is_junk);
+      DOUBLE_CONVERSION_ASSERT(!result_is_junk);
+    }
     *processed_characters_count = static_cast<int>(current - input);
     return result;
   }
