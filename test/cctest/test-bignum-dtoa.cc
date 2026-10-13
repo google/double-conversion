@@ -93,6 +93,12 @@ TEST(BignumDtoaVariousDoubles) {
   CHECK_EQ("15", buffer.start());
   CHECK_EQ(1, point);
 
+  BignumDtoa(0.25, BIGNUM_DTOA_FIXED, 1, buffer, &length, &point);
+  CHECK_GE(1, length - point);
+  TrimRepresentation(buffer);
+  CHECK_EQ("3", buffer.start());
+  CHECK_EQ(0, point);
+
   double min_double = 5e-324;
   BignumDtoa(min_double, BIGNUM_DTOA_SHORTEST, 0, buffer, &length, &point);
   CHECK_EQ("5", buffer.start());
