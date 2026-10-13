@@ -436,7 +436,7 @@ class DoubleToStringConverter {
   //   with '0's.
   //   Example: toFixed(0.001, 5) is allowed to return buffer="1", point=-2.
   //   Halfway cases are rounded towards +/-Infinity (away from 0). The call
-  //   toFixed(0.15, 2) thus returns buffer="2", point=0.
+  //   toFixed(0.25, 1) thus returns buffer="3", point=0.
   //   The returned buffer may contain digits that would be truncated from the
   //   shortest representation of the input.
   //  - PRECISION: produces 'requested_digits' where the first digit is not '0'.
