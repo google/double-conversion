@@ -230,7 +230,10 @@ static bool Advance (Iterator* it, uc16 separator, int base, Iterator& end) {
   ++(*it);
   if (*it == end) return true;
   if (*it + 1 == end) return false;
-  if (**it == separator && isDigit(*(*it + 1), base)) {
+  // Match the separator on the input's code-unit value: a char above 0x7F
+  // must not sign-extend, or whether it matches a separator above 0x7F (such
+  // as U+00A0) would depend on the signedness of 'char'.
+  if (CodeUnit(**it) == separator && isDigit(*(*it + 1), base)) {
     ++(*it);
   }
   return *it == end;
