@@ -6342,6 +6342,40 @@ TEST(StringToDoubleNonAsciiByteIsNotWhitespace) {
 }
 
 
+TEST(StringToDoubleNonAsciiSeparator) {
+  int processed = 0;
+
+  // U+00A0 (no-break space), the typographic thousands separator, as the
+  // configured digit separator. Use 2.0 as empty_string_value and 1.0 as
+  // junk_string_value.
+  StringToDoubleConverter converter(StringToDoubleConverter::NO_FLAGS,
+                                    2.0, 1.0, NULL, NULL, 0x00A0);
+
+  // A byte string carries that separator as the byte 0xA0. It is matched on
+  // its code-unit value, whether or not 'char' is signed on this target.
+  const char integral[] = { '1', static_cast<char>(0xA0), '0', '0', '0' };
+  CHECK_EQ(1000.0, converter.StringToDouble(integral, 5, &processed));
+  CHECK_EQ(5, processed);
+  CHECK_EQ(1000.0f, converter.StringToFloat(integral, 5, &processed));
+  CHECK_EQ(5, processed);
+
+  const char fractional[] =
+      { '1', '2', '.', '3', static_cast<char>(0xA0), '4' };
+  CHECK_EQ(12.34, converter.StringToDouble(fractional, 6, &processed));
+  CHECK_EQ(6, processed);
+
+  // The equivalent 16-bit input matches the separator the same way.
+  const uc16 integral16[] = { '1', 0x00A0, '0', '0', '0' };
+  CHECK_EQ(1000.0, converter.StringToDouble(integral16, 5, &processed));
+  CHECK_EQ(5, processed);
+
+  // A separator byte that is not between two digits stays junk.
+  const char trailing[] = { '1', static_cast<char>(0xA0) };
+  CHECK_EQ(1.0, converter.StringToDouble(trailing, 2, &processed));
+  CHECK_EQ(0, processed);
+}
+
+
 TEST(StringToDoubleCaseInsensitiveSpecialValues) {
   int processed = 0;
 
