@@ -106,10 +106,13 @@ static bool ConsumeSubString(Iterator* current,
 }
 
 // Consumes first character of the str is equal to ch
+// An empty str never matches, not even a '\0' in the input: ConsumeSubString
+// would otherwise step past its terminator.
 template <class Char>
 inline bool ConsumeFirstCharacter(Char ch,
                                          const char* str,
                                          bool case_insensitivity) {
+  if (str[0] == '\0') return false;
   const uint32_t c = CodeUnit(ch);
   const uint32_t first = CodeUnit(str[0]);
   return case_insensitivity ? ToLower(c) == ToLower(first) : c == first;
