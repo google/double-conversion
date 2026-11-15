@@ -438,6 +438,10 @@ TEST(FastFixedVariousDoubles) {
   CHECK_EQ("1", buffer.start());
   CHECK_EQ(1, point);
 
+  CHECK(FastFixedDtoa(0.25, 1, buffer, &length, &point));
+  CHECK_EQ("3", buffer.start());
+  CHECK_EQ(0, point);
+
   CHECK(FastFixedDtoa(1e-23, 10, buffer, &length, &point));
   CHECK_EQ("", buffer.start());
   CHECK_EQ(-10, point);

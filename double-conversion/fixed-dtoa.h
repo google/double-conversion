@@ -42,7 +42,7 @@ namespace double_conversion {
 // Example: FastFixedDtoa(0.001, 5, ...) is allowed to return buffer = "1", and
 // decimal_point = -2.
 // Halfway cases are rounded towards +/-Infinity (away from 0). The call
-// FastFixedDtoa(0.15, 2, ...) thus returns buffer = "2", decimal_point = 0.
+// FastFixedDtoa(0.25, 1, ...) thus returns buffer = "3", decimal_point = 0.
 // The returned buffer may contain digits that would be truncated from the
 // shortest representation of the input.
 //

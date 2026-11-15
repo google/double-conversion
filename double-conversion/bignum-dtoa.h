@@ -64,8 +64,8 @@ enum BignumDtoaMode {
 //   'requested_digits' digits after the decimal point. The produced digits
 //   might be too short in which case the caller has to fill the gaps with '0's.
 //   Example: toFixed(0.001, 5) is allowed to return buffer="1", point=-2.
-//   Halfway cases are rounded up. The call toFixed(0.15, 2) thus returns
-//     buffer="2", point=0.
+//   Halfway cases are rounded up. The call toFixed(0.25, 1) thus returns
+//     buffer="3", point=0.
 //   Note: the length of the returned buffer has no meaning wrt the significance
 //   of its digits. That is, just because it contains '0's does not mean that
 //   any other digit would not satisfy the internal identity requirement.
