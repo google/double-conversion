@@ -4386,6 +4386,47 @@ TEST(StringToDoubleSpecialValues) {
 }
 
 
+TEST(StringToDoubleEmptySpecialValueSymbols) {
+  int processed = 0;
+  // An empty symbol never matches. Here the empty symbol is followed by "x" in
+  // memory, so reading past its terminator would match the input "\0x".
+  static const char kEmptyThenX[] = { '\0', 'x', '\0' };
+  const char input[] = { '\0', 'x' };
+  const uc16 input16[] = { '\0', 'x' };
+
+  // Use 1.0 as junk_string_value.
+  StringToDoubleConverter empty_infinity(StringToDoubleConverter::NO_FLAGS,
+                                         0.0, 1.0, kEmptyThenX, "NaN");
+  CHECK_EQ(1.0, empty_infinity.StringToDouble(input, 2, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(1.0, empty_infinity.StringToDouble(input16, 2, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(1.0, empty_infinity.StringToDouble("-\0x", 3, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(Double::NaN(), empty_infinity.StringToDouble("NaN", 3, &processed));
+  CHECK_EQ(3, processed);
+  CHECK_EQ(1.5, empty_infinity.StringToDouble("1.5", 3, &processed));
+  CHECK_EQ(3, processed);
+
+  StringToDoubleConverter empty_nan(StringToDoubleConverter::NO_FLAGS,
+                                    0.0, 1.0, "infinity", kEmptyThenX);
+  CHECK_EQ(1.0, empty_nan.StringToDouble(input, 2, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(1.0, empty_nan.StringToDouble(input16, 2, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(Double::Infinity(),
+           empty_nan.StringToDouble("infinity", 8, &processed));
+  CHECK_EQ(8, processed);
+
+  StringToDoubleConverter empty_ci(
+      StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY,
+      0.0, 1.0, kEmptyThenX, kEmptyThenX);
+  CHECK_EQ(1.0, empty_ci.StringToDouble(input, 2, &processed));
+  CHECK_EQ(0, processed);
+  CHECK_EQ(1.0f, empty_ci.StringToFloat(input, 2, &processed));
+  CHECK_EQ(0, processed);
+}
+
 TEST(StringToDoubleCommentExamples) {
   // Make sure the examples in the comments are correct.
   int flags;
